@@ -127,9 +127,9 @@ function NavItem({
       aria-current={isActive ? "page" : undefined}
       className={cn(
         "relative py-1 whitespace-nowrap transition-colors",
-        // Primary sections read a step larger than the supporting row, and are
-        // set in caps so the two rows are told apart by more than size alone.
-        emphasis ? "text-lg font-medium uppercase" : "text-base",
+        // Both rows are set at the same size, so caps and weight are what tell
+        // the primary sections apart from the supporting ones.
+        emphasis ? "text-base font-medium uppercase" : "text-base",
         isActive ? "text-brand-600" : "text-ink-700 hover:text-ink-950",
       )}
     >

@@ -30,8 +30,8 @@ npx tsc --noEmit  # typecheck
 
 | Route | Contents |
 |-------|----------|
-| `/` | Hero, studio film, firm stats, markets, featured projects, issues, latest news |
-| `/markets`, `/markets/[slug]` | 14 markets; each with capabilities, stats, projects and related services |
+| `/` | Hero, studio film, firm stats, six markets as looping films, featured projects, issues, latest news |
+| `/markets`, `/markets/[slug]` | 14 markets, the index card for each one playing its film; detail pages add capabilities, stats, projects and related services |
 | `/services`, `/services/[slug]` | 12 services plus in-house digital tools; each with deliverables and projects |
 | `/projects`, `/projects/[slug]` | 20 projects, filterable by market; detail pages with client, stats and highlights |
 | `/about-us` | Intro, stats, founder quote, values, history timeline, leadership, commitments |
@@ -103,7 +103,8 @@ POST /api/enquiries
 - **One card, one grid.** Every entity is mapped to a single `CardItem` shape by
   `src/lib/content/mappers.ts`, so `ContentCard`, `CardGrid` and
   `FilterableGrid` render markets, services, projects, news, issues and digital
-  tools alike. A new entity needs a mapper, not a new component.
+  tools alike. A new entity needs a mapper, not a new component. The market
+  films arrived this way: one optional field on `CardItem`, set by one mapper.
 - **Filters are derived from content.** `src/lib/content/filters.ts` builds
   filter options from the data, so adding a market or category never requires a
   UI change.
@@ -133,15 +134,42 @@ backend supplies URLs, `next/image` takes over — no component changes.
 (`src/components/ui/Video.tsx`) picks the treatment from whichever field is set:
 `url` for a self-hosted file (our own controls, muted autoplay, paused for
 anyone who asks for reduced motion), `embedUrl` for a YouTube/Vimeo player, and
-the poster alone until either exists. The home page film is content, not markup
-— set it in `src/data/home.ts` or return it from `GET /api/pages/home`.
+the poster alone until either exists. Films are content, not markup: the home
+page's is set in `src/data/home.ts`, each market's in the `film` field on
+`src/data/markets.ts`, and both arrive as `Film` from the repository. A market
+without a `film` simply skips the band.
 
-There is no real footage yet, so the home page plays
-`public/video/studio-placeholder.webm`: a silent twelve-second loop that opens on
-the poster's own frame — the same graphite gradient, with drafting linework and
+There is no real footage yet. The home page plays
+`public/video/studio-placeholder.webm` — a silent twelve-second loop that opens
+on the poster's own frame, the same graphite gradient with drafting linework and
 soft massing panning across it at two speeds so it reads as a film rather than a
-still. It stands in for one the way the gradients stand in for photography;
-replace the one `url` in `src/data/home.ts` when the real cut exists.
+still. Each market plays a ten-second loop of its own from
+`public/video/markets/`, drawing that market's subject: a transport corridor in
+plan, rotors over a transmission line, ripples across a catchment, floor plates
+stacking. Each one is built on the same gradient its poster seed resolves to, so
+hero, poster and film are one continuous image.
+
+Those films carry the market listings as well as the market pages. The home
+page's markets band shows the first six — `MarketFilmStrip`, letterbox tiles
+carrying the same name, tagline and link a market card did, with motion on top —
+and `/markets` plays all fourteen inside its ordinary cards, because `CardItem`
+has an optional `video` and `ContentCard` prefers it to the still. That is the
+whole change: `marketToCard` sets the field, so the index keeps its search, its
+filtering and its live result count rather than being swapped for a bespoke grid.
+
+Both use `LoopingVideo` rather than `Video`: no per-tile controls, and playback
+driven by an `IntersectionObserver` so only what is on screen decodes. With
+`preload="none"`, tiles below the fold cost nothing until you scroll to them.
+Play state is a context — `FilmPlaybackProvider` in `ui/FilmPlayback.tsx` — so
+one `FilmPlaybackToggle` governs a whole page without `CardGrid` or
+`FilterableGrid` needing to know a card might be moving. `/markets` hosts it in
+`FilterableGrid`'s `toolbarAction` slot, opposite the search box.
+
+Those films are generated, not shot — `scripts/generate-market-films.py` draws
+the frames with PIL and encodes VP9/WebM through GStreamer. Run it with no
+arguments to rebuild all fourteen, or pass slugs to redo a subset. They stand in
+for film the way the gradients stand in for photography: drop a real cut in over
+the same filename, or swap `url` for an `embedUrl` if it lives on a platform.
 
 ### Forms
 
@@ -157,4 +185,8 @@ Skip link, `aria-current` on active navigation and breadcrumbs, labelled
 controls with an `aria-describedby` chain for hints and errors, `aria-expanded`
 / `aria-controls` on the accordion and mobile menu, `dl` markup for statistics,
 `role="img"` on gradient placeholders, live regions on filtered result counts,
-and `prefers-reduced-motion` handling for the reveal animation.
+and `prefers-reduced-motion` handling for the reveal animation and for both film
+treatments. The market films loop indefinitely, so every page showing a set of
+them carries one `aria-pressed` control that stops all of them at once — the
+preference decides where that control starts, but never overrules an explicit
+press.

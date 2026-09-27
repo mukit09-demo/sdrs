@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CardGrid } from "@/components/sections/CardGrid";
 import { CtaBand } from "@/components/sections/CtaBand";
 import { DetailList } from "@/components/sections/DetailList";
+import { FilmBand } from "@/components/sections/FilmBand";
 import { PageHero } from "@/components/sections/PageHero";
 import { Section } from "@/components/sections/Section";
 import { SectionHeader } from "@/components/sections/SectionHeader";
@@ -59,6 +60,10 @@ export default async function MarketPage({ params }: MarketPageProps) {
           { label: market.name },
         ]}
       />
+
+      {market.film && (
+        <FilmBand video={market.film.video} caption={market.film.caption} />
+      )}
 
       <Section>
         <div className="grid gap-14 lg:grid-cols-[1.4fr_1fr]">

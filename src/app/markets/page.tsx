@@ -3,6 +3,10 @@ import { CtaBand } from "@/components/sections/CtaBand";
 import { FilterableGrid } from "@/components/sections/FilterableGrid";
 import { PageHero } from "@/components/sections/PageHero";
 import { Section } from "@/components/sections/Section";
+import {
+  FilmPlaybackProvider,
+  FilmPlaybackToggle,
+} from "@/components/ui/FilmPlayback";
 import { routes } from "@/lib/config/routes";
 import { content } from "@/lib/content";
 import { marketToCard } from "@/lib/content/mappers";
@@ -26,12 +30,19 @@ export default async function MarketsPage() {
       />
 
       <Section>
-        <FilterableGrid
-          items={markets.map(marketToCard)}
-          searchPlaceholder="Search markets"
-          itemNoun={{ singular: "market", plural: "markets" }}
-          columns={3}
-        />
+        {/* Every market card plays its own film, so one toggle sits on the
+            search row and governs all fourteen. `panorama` because the films
+            are 21:9 — the default 4:3 crop would throw away the drawing. */}
+        <FilmPlaybackProvider>
+          <FilterableGrid
+            items={markets.map(marketToCard)}
+            searchPlaceholder="Search markets"
+            itemNoun={{ singular: "market", plural: "markets" }}
+            columns={3}
+            ratio="panorama"
+            toolbarAction={<FilmPlaybackToggle />}
+          />
+        </FilmPlaybackProvider>
       </Section>
 
       <CtaBand

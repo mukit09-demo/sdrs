@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useState, type ReactNode } from "react";
 import { CardGrid, type CardGridProps } from "@/components/sections/CardGrid";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { CloseIcon, SearchIcon } from "@/components/ui/Icon";
@@ -16,6 +16,11 @@ export interface FilterableGridProps
   showSearch?: boolean;
   /** Noun used in the result count, e.g. "3 projects". */
   itemNoun?: { singular: string; plural: string };
+  /**
+   * A control for the grid itself, placed opposite the search box. Used for the
+   * film pause toggle on `/markets`; anything governing the whole set fits.
+   */
+  toolbarAction?: ReactNode;
 }
 
 /** `groupId → selected option value`. One selection per group. */
@@ -35,6 +40,7 @@ export function FilterableGrid({
   searchPlaceholder = "Search",
   showSearch = true,
   itemNoun = { singular: "result", plural: "results" },
+  toolbarAction,
   columns,
   variant,
   ratio,
@@ -78,22 +84,34 @@ export function FilterableGrid({
 
   return (
     <div>
-      {(showSearch || filterGroups.length > 0) && (
+      {(showSearch || filterGroups.length > 0 || toolbarAction) && (
         <div className="flex flex-col gap-8 border-b border-ink-200 pb-8">
-          {showSearch && (
-            <div className="relative max-w-md">
-              <label htmlFor={searchId} className="sr-only">
-                {searchPlaceholder}
-              </label>
-              <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-ink-400" />
-              <input
-                id={searchId}
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={searchPlaceholder}
-                className="w-full border border-ink-300 bg-white py-3 pr-4 pl-12 text-ink-900 transition-colors placeholder:text-ink-400 hover:border-ink-400 focus:border-ink-900 focus:outline-none"
-              />
+          {(showSearch || toolbarAction) && (
+            // Search and the grid's own control share a row: both act on the
+            // set below, so they belong on the same line rather than stacked.
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+              {showSearch && (
+                <div className="relative w-full max-w-md">
+                  <label htmlFor={searchId} className="sr-only">
+                    {searchPlaceholder}
+                  </label>
+                  <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-ink-400" />
+                  <input
+                    id={searchId}
+                    type="search"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder={searchPlaceholder}
+                    className="w-full border border-ink-300 bg-white py-3 pr-4 pl-12 text-ink-900 transition-colors placeholder:text-ink-400 hover:border-ink-400 focus:border-ink-900 focus:outline-none"
+                  />
+                </div>
+              )}
+
+              {toolbarAction && (
+                <div className="shrink-0 self-start sm:self-auto">
+                  {toolbarAction}
+                </div>
+              )}
             </div>
           )}
 

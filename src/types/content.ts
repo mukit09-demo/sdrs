@@ -41,6 +41,16 @@ export interface MediaVideo {
   captionsUrl?: string;
 }
 
+/**
+ * A film and the line that says what it shows. Used by the home page and by any
+ * market with footage of its own.
+ */
+export interface Film {
+  video: MediaVideo;
+  /** One line placed under the film, saying what it shows. */
+  caption?: string;
+}
+
 /** A headline figure, e.g. `{ value: "714", unit: "MW", label: "…" }`. */
 export interface Stat {
   value: string;
@@ -54,6 +64,8 @@ export interface Market {
   tagline: string;
   description: string;
   image: MediaImage;
+  /** The market's own film, shown under the hero. Omit and the band is skipped. */
+  film?: Film;
   /** What the practice actually does in this market. */
   capabilities: string[];
   stats: Stat[];
@@ -170,11 +182,7 @@ export interface ValueItem {
 
 export interface HomeContent {
   /** The film that opens the home page, directly under the hero statement. */
-  film: {
-    video: MediaVideo;
-    /** One line placed under the film, saying what it shows. */
-    caption?: string;
-  };
+  film: Film;
 }
 
 export interface AboutContent {
@@ -345,6 +353,11 @@ export interface CardItem {
   eyebrow?: string;
   summary?: string;
   image: MediaImage;
+  /**
+   * A film to play in the card's frame instead of the still. `image` stays
+   * required and remains the poster, so a card renders either way.
+   */
+  video?: MediaVideo;
   /** Short facts rendered as a dot-separated row under the summary. */
   meta?: string[];
   /** Values matched against the active filter selection. */

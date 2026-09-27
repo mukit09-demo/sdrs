@@ -1,17 +1,13 @@
 import { CardGrid } from "@/components/sections/CardGrid";
 import { CtaBand } from "@/components/sections/CtaBand";
 import { FilmBand } from "@/components/sections/FilmBand";
+import { MarketFilmStrip } from "@/components/sections/MarketFilmStrip";
 import { Section } from "@/components/sections/Section";
 import { SectionHeader } from "@/components/sections/SectionHeader";
 import { PageHero } from "@/components/sections/PageHero";
 import { StatList } from "@/components/ui/StatList";
 import { content } from "@/lib/content";
-import {
-  articleToCard,
-  issueToCard,
-  marketToCard,
-  projectToCard,
-} from "@/lib/content/mappers";
+import { articleToCard, issueToCard, projectToCard } from "@/lib/content/mappers";
 import { routes } from "@/lib/config/routes";
 
 /**
@@ -51,19 +47,16 @@ export default async function HomePage() {
       </Section>
 
       <Section>
-        <SectionHeader
-          eyebrow="Markets"
-          title="The sectors we work across"
-          description="From transport networks to data centres, our teams bring together every discipline a place needs."
-          action={{ label: "All markets", href: routes.markets }}
+        <MarketFilmStrip
+          markets={markets.slice(0, 6)}
+          header={{
+            eyebrow: "Markets",
+            title: "The sectors we work across",
+            description:
+              "From transport networks to data centres, our teams bring together every discipline a place needs.",
+            action: { label: "All markets", href: routes.markets },
+          }}
         />
-        <div className="mt-14">
-          <CardGrid
-            items={markets.slice(0, 6).map(marketToCard)}
-            columns={3}
-            priorityCount={3}
-          />
-        </div>
       </Section>
 
       <Section tone="dark">

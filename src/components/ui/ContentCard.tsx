@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "@/components/ui/Icon";
+import { LoopingVideo } from "@/components/ui/LoopingVideo";
 import { Media } from "@/components/ui/Media";
 import { cn } from "@/lib/utils/cn";
 import type { CardItem } from "@/types/content";
@@ -80,8 +81,8 @@ export function ContentCard({
         href={item.href}
         className={cn("group relative block overflow-hidden", className)}
       >
-        <Media
-          image={item.image}
+        <CardFrame
+          item={item}
           ratio={ratio}
           priority={priority}
           overlay
@@ -117,8 +118,8 @@ export function ContentCard({
 
   return (
     <Link href={item.href} className={cn("group flex flex-col", className)}>
-      <Media
-        image={item.image}
+      <CardFrame
+        item={item}
         ratio={ratio}
         priority={priority}
         sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 100vw"
@@ -147,6 +148,42 @@ export function ContentCard({
         </span>
       </div>
     </Link>
+  );
+}
+
+/**
+ * The card's image frame — a film if the item has one, the still otherwise.
+ *
+ * Both crop to the same `mediaRatios` box, so a grid mixing moving and still
+ * cards stays on one baseline. `LoopingVideo` takes its play state from the
+ * page's `FilmPlaybackProvider`, which is why nothing has to be threaded
+ * through `CardGrid`.
+ */
+function CardFrame({
+  item,
+  ratio,
+  priority,
+  sizes,
+  overlay = false,
+}: {
+  item: CardItem;
+  ratio: CardRatio;
+  priority: boolean;
+  sizes: string;
+  overlay?: boolean;
+}) {
+  if (item.video) {
+    return <LoopingVideo video={item.video} ratio={ratio} overlay={overlay} />;
+  }
+
+  return (
+    <Media
+      image={item.image}
+      ratio={ratio}
+      priority={priority}
+      overlay={overlay}
+      sizes={sizes}
+    />
   );
 }
 

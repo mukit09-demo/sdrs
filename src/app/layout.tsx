@@ -43,9 +43,23 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
+      // `globals.css` sets `scroll-behavior: smooth` so in-page anchors glide.
+      // Next 16 no longer suspends that during route changes unless told to, and
+      // a navigation that smooth-scrolls to the top of the new page feels slow.
+      // This opts back in: smooth for anchors, instant for navigation.
+      data-scroll-behavior="smooth"
       className={`${inter.variable} ${interTight.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-white">
+      {/* Browser extensions — Grammarly, password managers — add their own
+          attributes to `<body>` before React hydrates, which React then reports
+          as a mismatch we cannot fix from here. This is deliberately on `<body>`
+          rather than higher up: the flag is shallow, covering only this
+          element's own attributes, so a genuine mismatch anywhere inside the
+          app still warns. */}
+      <body
+        suppressHydrationWarning
+        className="flex min-h-full flex-col bg-white"
+      >
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[60] focus:bg-ink-950 focus:px-4 focus:py-2 focus:text-white"

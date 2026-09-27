@@ -27,6 +27,8 @@ export function marketToCard(market: Market): CardItem {
     title: market.name,
     summary: market.tagline,
     image: market.image,
+    // Every market carries a film, so the index moves rather than sitting still.
+    video: market.film?.video,
     tags: [market.slug],
   };
 }
