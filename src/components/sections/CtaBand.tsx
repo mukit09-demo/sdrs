@@ -6,8 +6,12 @@ import type { MediaImage } from "@/types/content";
 export interface CtaBandProps {
   title: string;
   description?: string;
+  /**
+   * The single action for the band. Deliberately one button and not two: a
+   * navigational second button ("See our markets") competes with the one thing
+   * the band is for, and the nav already covers it.
+   */
   primaryAction: { label: string; href: string };
-  secondaryAction?: { label: string; href: string };
   /** Background artwork. Omit for a flat dark band. */
   image?: MediaImage;
 }
@@ -17,7 +21,6 @@ export function CtaBand({
   title,
   description,
   primaryAction,
-  secondaryAction,
   image,
 }: CtaBandProps) {
   return (
@@ -44,20 +47,10 @@ export function CtaBand({
           )}
         </div>
 
-        <div className="flex flex-wrap gap-4 md:shrink-0">
+        <div className="md:shrink-0">
           <Button href={primaryAction.href} size="lg" icon="arrow">
             {primaryAction.label}
           </Button>
-          {secondaryAction && (
-            <Button
-              href={secondaryAction.href}
-              variant="inverse"
-              size="lg"
-              icon="arrow"
-            >
-              {secondaryAction.label}
-            </Button>
-          )}
         </div>
       </Container>
     </section>

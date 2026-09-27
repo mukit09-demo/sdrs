@@ -52,6 +52,14 @@
   --color-brand-800: #851111;
   --color-brand-900: #711515;
 
+  /* The width at which the whole navigation row fits on one line beside the
+     logo lockup and the contact button. It sits well above `lg` because the
+     type scale here is a notch larger than Tailwind's default and the primary
+     sections are set in caps: the row needs 1200px, so this leaves a little
+     headroom. Below it, `<SiteHeader>` uses the drawer. Re-measure and widen
+     this if a section is renamed or added — the row must never wrap. */
+  --breakpoint-navbar: 1240px;
+
   --radius-card: 0.125rem;
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);

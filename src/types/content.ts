@@ -23,6 +23,24 @@ export interface MediaImage {
   seed?: string;
 }
 
+/**
+ * A video reference, and the counterpart to `MediaImage`: both asset fields are
+ * optional, so a band can reserve its space and render the poster before any
+ * footage exists.
+ */
+export interface MediaVideo {
+  /** Direct file URL (MP4/WebM), self-hosted or from the backend's CDN. */
+  url?: string;
+  /** Player URL for a platform embed (YouTube/Vimeo). Used when `url` is absent. */
+  embedUrl?: string;
+  /** Always required — describes the film to assistive technology. */
+  alt: string;
+  /** Still frame, shown before playback and in place of missing footage. */
+  poster: MediaImage;
+  /** WebVTT captions track. Expected for anything with speech. */
+  captionsUrl?: string;
+}
+
 /** A headline figure, e.g. `{ value: "714", unit: "MW", label: "…" }`. */
 export interface Stat {
   value: string;
@@ -150,6 +168,15 @@ export interface ValueItem {
   description: string;
 }
 
+export interface HomeContent {
+  /** The film that opens the home page, directly under the hero statement. */
+  film: {
+    video: MediaVideo;
+    /** One line placed under the film, saying what it shows. */
+    caption?: string;
+  };
+}
+
 export interface AboutContent {
   intro: string;
   stats: Stat[];
@@ -195,6 +222,78 @@ export interface CareersContent {
   benefits: Benefit[];
   applicationProcess: ProcessStep[];
   profiles: Person[];
+}
+
+export type ResearchTheme =
+  | "Climate and carbon"
+  | "Materials"
+  | "Resilience"
+  | "Mobility"
+  | "Digital and data";
+
+/** Where a programme has got to — rendered as the card's eyebrow. */
+export type ResearchStatus = "Active" | "Field trial" | "Published";
+
+export interface ResearchProgramme {
+  slug: Slug;
+  title: string;
+  theme: ResearchTheme;
+  status: ResearchStatus;
+  summary: string;
+  /** Year the programme was funded. */
+  startedYear: number;
+  /** Reuses `Author` — a name and a role is all a research lead needs here. */
+  lead: Author;
+  /** Universities, institutes and clients working on it with us. */
+  partners: string[];
+  /** What the programme has produced so far. */
+  outputs: string[];
+  image: MediaImage;
+}
+
+export type TrainingFormat = "In person" | "Online" | "Hybrid";
+export type TrainingLevel = "Introductory" | "Intermediate" | "Advanced";
+
+export interface TrainingCourse {
+  slug: Slug;
+  title: string;
+  discipline: string;
+  format: TrainingFormat;
+  level: TrainingLevel;
+  /** Human-readable length, e.g. `"2 days"` or `"6 weeks, part time"`. */
+  duration: string;
+  summary: string;
+  /** What a participant can do by the end of it. */
+  outcomes: string[];
+  /** ISO-8601 date (`YYYY-MM-DD`) the next cohort starts. */
+  nextStartsAt: string;
+  image: MediaImage;
+}
+
+export interface Publication {
+  title: string;
+  /** Journal, conference or series it appeared in. */
+  venue: string;
+  year: number;
+  /** Where to read it. External URLs are fine. */
+  href: string;
+}
+
+export interface ResearchContent {
+  intro: string;
+  stats: Stat[];
+  programmes: ResearchProgramme[];
+  courses: TrainingCourse[];
+  /** How a question becomes funded research here. */
+  researchProcess: ProcessStep[];
+  publications: Publication[];
+  /** Institutions we publish and teach with. */
+  partners: string[];
+  directorQuote: {
+    quote: string;
+    attribution: string;
+    detail?: string;
+  };
 }
 
 export type OfficeRegion =

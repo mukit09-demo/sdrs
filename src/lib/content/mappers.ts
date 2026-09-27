@@ -7,7 +7,9 @@ import type {
   Issue,
   Market,
   Project,
+  ResearchProgramme,
   Service,
+  TrainingCourse,
 } from "@/types/content";
 
 /**
@@ -79,6 +81,41 @@ export function issueToCard(issue: Issue): CardItem {
     eyebrow: "Issue",
     summary: issue.summary,
     image: issue.image,
+  };
+}
+
+/**
+ * Programmes have no detail route in this build, so — like issues — the card
+ * links back to its own index. Point `href` at a programme page once one exists.
+ */
+export function researchProgrammeToCard(programme: ResearchProgramme): CardItem {
+  return {
+    id: programme.slug,
+    href: routes.research,
+    title: programme.title,
+    eyebrow: programme.status,
+    summary: programme.summary,
+    image: programme.image,
+    meta: [programme.theme, `Since ${programme.startedYear}`],
+    tags: [programme.theme, programme.status],
+  };
+}
+
+/** Courses link to the enquiry form — registering interest is the next step. */
+export function trainingCourseToCard(course: TrainingCourse): CardItem {
+  return {
+    id: course.slug,
+    href: routes.contact,
+    title: course.title,
+    eyebrow: course.discipline,
+    summary: course.summary,
+    image: course.image,
+    meta: [
+      course.format,
+      course.duration,
+      `Next: ${formatShortDate(course.nextStartsAt)}`,
+    ],
+    tags: [course.format, course.level, course.discipline],
   };
 }
 

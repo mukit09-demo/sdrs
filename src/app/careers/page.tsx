@@ -97,7 +97,6 @@ export default async function CareersPage() {
         title="Can't see the right role yet?"
         description="Send us your details and tell us what you want to work on. Our recruitment team reviews every enquiry."
         primaryAction={{ label: "Register your interest", href: routes.contact }}
-        secondaryAction={{ label: "About the firm", href: routes.about }}
         image={{ alt: "Engineers at a workshop table", seed: "careers-cta" }}
       />
     </>

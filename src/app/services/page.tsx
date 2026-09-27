@@ -56,7 +56,6 @@ export default async function ServicesPage() {
         title="Need a combination rather than a single service?"
         description="That is the normal case. Tell us the outcome you are after and we will assemble the team around it."
         primaryAction={{ label: "Contact us", href: routes.contact }}
-        secondaryAction={{ label: "See our markets", href: routes.markets }}
       />
     </>
   );

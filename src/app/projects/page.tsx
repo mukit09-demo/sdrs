@@ -43,7 +43,6 @@ export default async function ProjectsPage() {
         title="Every project here started as a question."
         description="Bring us yours — including the ones without an obvious answer."
         primaryAction={{ label: "Contact us", href: routes.contact }}
-        secondaryAction={{ label: "Read our news", href: routes.news }}
       />
     </>
   );

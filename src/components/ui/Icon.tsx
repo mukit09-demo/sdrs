@@ -109,6 +109,43 @@ export function CheckIcon(props: IconProps) {
   );
 }
 
+/* --- Media controls --- */
+
+export function PlayIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M8 5.5v13l11-6.5-11-6.5Z" />
+    </Svg>
+  );
+}
+
+export function PauseIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9.5 5v14M14.5 5v14" />
+    </Svg>
+  );
+}
+
+export function SoundOnIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 9.5h3L12 5v14L7 14.5H4v-5Z" />
+      <path d="M15.5 9.5a4 4 0 0 1 0 5" />
+      <path d="M18 7a7 7 0 0 1 0 10" />
+    </Svg>
+  );
+}
+
+export function SoundOffIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 9.5h3L12 5v14L7 14.5H4v-5Z" />
+      <path d="m16 10 4 4M20 10l-4 4" />
+    </Svg>
+  );
+}
+
 /* --- Social icons: filled, so they read at small sizes --- */
 
 function FilledSvg({ children, ...props }: IconProps) {

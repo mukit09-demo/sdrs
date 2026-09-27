@@ -38,7 +38,6 @@ export default async function MarketsPage() {
         title="Not sure which market your challenge sits in?"
         description="Most of the interesting work crosses several. Describe the problem and we will bring the right mix of people."
         primaryAction={{ label: "Contact us", href: routes.contact }}
-        secondaryAction={{ label: "Browse services", href: routes.services }}
       />
     </>
   );

@@ -25,13 +25,15 @@ const socialIcons: Record<
   youtube: YouTubeIcon,
 };
 
+// Brand red band. Text sits at 85% white or higher: the red is light enough
+// that the 45–55% tints a dark surface allows drop under 4.5:1 contrast on it.
 export function SiteFooter() {
   return (
-    <footer className="bg-ink-950 text-white">
+    <footer className="bg-brand-600 text-white">
       {/* One band: the tagline, legal links and socials share a single row on
           desktop so the footer stays half the height of a stacked layout. */}
       <Container className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between md:gap-8">
-        <p className="min-w-0 text-xs leading-snug text-white/55 md:flex-1">
+        <p className="min-w-0 text-xs leading-snug text-white/85 md:flex-1">
           {siteConfig.tagline}
         </p>
 
@@ -40,7 +42,7 @@ export function SiteFooter() {
             <li key={link.label}>
               <Link
                 href={link.href}
-                className="text-xs text-white/45 underline-offset-4 transition-colors hover:text-white hover:underline"
+                className="text-xs text-white/85 underline-offset-4 transition-colors hover:text-white hover:underline"
               >
                 {link.label}
               </Link>
@@ -58,7 +60,7 @@ export function SiteFooter() {
                   href={social.href}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="grid size-8 place-items-center border border-white/20 text-white/70 transition-colors hover:border-white hover:text-white"
+                  className="grid size-8 place-items-center border border-white/45 text-white/85 transition-colors hover:border-white hover:text-white"
                 >
                   <SocialIcon className="size-3.5" />
                   <span className="sr-only">{social.label}</span>

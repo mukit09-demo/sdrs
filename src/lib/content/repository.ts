@@ -4,9 +4,11 @@ import type {
   CareersContent,
   ContactContent,
   DigitalTool,
+  HomeContent,
   Issue,
   Market,
   Project,
+  ResearchContent,
   Service,
   Slug,
 } from "@/types/content";
@@ -65,8 +67,10 @@ export interface ContentRepository {
 
   listIssues(limit?: number): Promise<Issue[]>;
 
+  getHomeContent(): Promise<HomeContent>;
   getAboutContent(): Promise<AboutContent>;
   getCareersContent(): Promise<CareersContent>;
+  getResearchContent(): Promise<ResearchContent>;
   getContactContent(): Promise<ContactContent>;
 
   submitEnquiry(input: EnquiryInput): Promise<EnquiryResult>;

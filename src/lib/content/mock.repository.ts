@@ -1,9 +1,11 @@
 import { aboutContent } from "@/data/about";
 import { careersContent } from "@/data/careers";
 import { contactContent } from "@/data/contact";
+import { homeContent } from "@/data/home";
 import { markets } from "@/data/markets";
 import { articles, issues } from "@/data/news";
 import { projects } from "@/data/projects";
+import { researchContent } from "@/data/research";
 import { digitalTools, services } from "@/data/services";
 import { sortByDateDesc } from "@/lib/utils/format";
 import type {
@@ -86,12 +88,20 @@ export const mockRepository: ContentRepository = {
     return limit ? issues.slice(0, limit) : [...issues];
   },
 
+  async getHomeContent() {
+    return homeContent;
+  },
+
   async getAboutContent() {
     return aboutContent;
   },
 
   async getCareersContent() {
     return careersContent;
+  },
+
+  async getResearchContent() {
+    return researchContent;
   },
 
   async getContactContent() {

@@ -22,14 +22,20 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // The bar is opaque on purpose: a translucent one picks up the colour of
+  // whatever band scrolls under it — grey over the dark hero, green over the
+  // market cards — which reads as a bug rather than as glass.
   return (
-    <header className="sticky top-0 z-50 border-b border-ink-200 bg-white/90 backdrop-blur-md">
-      <Container className="flex h-20 items-center justify-between gap-4 lg:h-26 xl:gap-8">
+    <header className="sticky top-0 z-50 border-b border-ink-200 bg-white">
+      <Container className="flex h-20 items-center justify-between gap-4 navbar:h-26">
         <Logo />
 
-        {/* Tighter gaps between lg and xl: at 1024px the full row only just
-            fits, and the labels must not wrap. */}
-        <nav aria-label="Main" className="hidden items-center gap-5 lg:flex xl:gap-8">
+        {/* The inline row appears at the `navbar` breakpoint rather than `lg`:
+            the primary sections are set in caps, so seven labels need far more
+            than `lg` has and would otherwise overflow the container. The gaps
+            are uniform for the same reason — widening them at `xl` pushed the
+            row past 1280px. Labels must not wrap. */}
+        <nav aria-label="Main" className="hidden items-center gap-4 navbar:flex">
           {primaryNav.map((link) => (
             <NavItem key={link.href} link={link} pathname={pathname} emphasis />
           ))}
@@ -54,7 +60,7 @@ export function SiteHeader() {
             aria-expanded={isMenuOpen}
             aria-controls="mobile-menu"
             onClick={() => setIsMenuOpen((open) => !open)}
-            className="grid size-10 place-items-center border border-ink-300 text-ink-900 transition-colors hover:border-ink-900 lg:hidden"
+            className="grid size-10 place-items-center border border-ink-300 text-ink-900 transition-colors hover:border-ink-900 navbar:hidden"
           >
             {isMenuOpen ? (
               <CloseIcon className="size-5" />
@@ -69,7 +75,7 @@ export function SiteHeader() {
       <div
         id="mobile-menu"
         hidden={!isMenuOpen}
-        className="border-t border-ink-200 bg-white lg:hidden"
+        className="border-t border-ink-200 bg-white navbar:hidden"
       >
         <Container className="py-6">
           <nav aria-label="Mobile" className="flex flex-col">
@@ -121,8 +127,9 @@ function NavItem({
       aria-current={isActive ? "page" : undefined}
       className={cn(
         "relative py-1 whitespace-nowrap transition-colors",
-        // Primary sections read a step larger than the supporting row.
-        emphasis ? "text-lg font-medium" : "text-base",
+        // Primary sections read a step larger than the supporting row, and are
+        // set in caps so the two rows are told apart by more than size alone.
+        emphasis ? "text-lg font-medium uppercase" : "text-base",
         isActive ? "text-brand-600" : "text-ink-700 hover:text-ink-950",
       )}
     >

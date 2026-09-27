@@ -41,6 +41,12 @@ export function PageHero({
   children,
 }: PageHeroProps) {
   const hasImage = Boolean(image);
+  const hasCrumbs = Boolean(crumbs && crumbs.length > 0);
+  const hasTags = Boolean(tags && tags.length > 0);
+
+  // The heading only needs a top margin when something is rendered above it —
+  // otherwise it sits directly on the band's own padding.
+  const headingMargin = eyebrow ? "mt-4" : hasCrumbs || hasTags ? "mt-6" : "";
 
   return (
     <header
@@ -62,15 +68,20 @@ export function PageHero({
       <Container
         className={cn(
           "relative",
-          // Top padding clears the sticky header (h-20, lg:h-26) as well as
-          // setting the band's own rhythm.
-          size === "full" ? "pt-36 pb-20 md:pt-52 md:pb-28" : "pt-32 pb-14 md:pt-44 md:pb-20",
+          // The sticky header stays in flow, so the band already starts below it
+          // — this padding is the hero's own rhythm, nothing more. Anything
+          // larger reads as an empty strip above the first line.
+          size === "full"
+            ? "pt-12 pb-14 md:pt-14 md:pb-16 lg:pt-16 lg:pb-20"
+            : "pt-8 pb-10 md:pt-10 md:pb-12 lg:pt-12 lg:pb-14",
         )}
       >
-        {crumbs && <Breadcrumbs crumbs={crumbs} tone={hasImage ? "dark" : "light"} />}
+        {crumbs && crumbs.length > 0 && (
+          <Breadcrumbs crumbs={crumbs} tone={hasImage ? "dark" : "light"} />
+        )}
 
         {tags && tags.length > 0 && (
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className={cn("flex flex-wrap gap-2", hasCrumbs && "mt-6")}>
             {tags.map((tag) => (
               <Tag key={tag} tone={hasImage ? "inverse" : "default"}>
                 {tag}
@@ -82,7 +93,8 @@ export function PageHero({
         {eyebrow && (
           <p
             className={cn(
-              "mt-6 text-xs font-medium tracking-widest uppercase",
+              "text-xs font-medium tracking-widest uppercase",
+              (hasCrumbs || hasTags) && "mt-6",
               hasImage ? "text-brand-300" : "text-brand-600",
             )}
           >
@@ -92,7 +104,8 @@ export function PageHero({
 
         <h1
           className={cn(
-            "mt-4 max-w-4xl font-medium tracking-tight",
+            headingMargin,
+            "max-w-4xl font-medium tracking-tight",
             size === "full"
               ? "text-4xl leading-[1.03] md:text-6xl lg:text-7xl"
               : "text-3xl leading-[1.06] md:text-5xl",
@@ -113,7 +126,7 @@ export function PageHero({
         )}
 
         {actions && actions.length > 0 && (
-          <div className="mt-10 flex flex-wrap gap-4">
+          <div className="mt-8 flex flex-wrap gap-4">
             {actions.map((action, index) => (
               <Button
                 key={action.href}

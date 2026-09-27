@@ -4,7 +4,9 @@ import type {
   FilterGroup,
   Market,
   Project,
+  ResearchProgramme,
   Service,
+  TrainingCourse,
 } from "@/types/content";
 
 /**
@@ -43,6 +45,40 @@ export function projectMarketFilterGroup(
     markets.filter((market) => used.has(market.slug)),
     "Market",
   );
+}
+
+export function researchThemeFilterGroup(
+  programmes: ResearchProgramme[],
+): FilterGroup {
+  return {
+    id: "theme",
+    label: "Research theme",
+    options: uniqueSorted(programmes.map((programme) => programme.theme)).map(
+      (theme) => ({ value: theme, label: theme }),
+    ),
+  };
+}
+
+export function trainingFormatFilterGroup(courses: TrainingCourse[]): FilterGroup {
+  return {
+    id: "format",
+    label: "How it is taught",
+    options: uniqueSorted(courses.map((course) => course.format)).map((format) => ({
+      value: format,
+      label: format,
+    })),
+  };
+}
+
+export function trainingLevelFilterGroup(courses: TrainingCourse[]): FilterGroup {
+  return {
+    id: "level",
+    label: "Level",
+    options: uniqueSorted(courses.map((course) => course.level)).map((level) => ({
+      value: level,
+      label: level,
+    })),
+  };
 }
 
 export function articleCategoryFilterGroup(articles: Article[]): FilterGroup {

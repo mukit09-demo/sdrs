@@ -39,6 +39,11 @@ export const primaryNav: readonly NavLink[] = [
     href: "/projects",
     description: "Work delivered with our clients",
   },
+  {
+    label: "Research and training",
+    href: "/research-and-training",
+    description: "Programmes we fund and courses we teach",
+  },
 ] as const;
 
 /** Supporting sections — a lighter row in the header. */

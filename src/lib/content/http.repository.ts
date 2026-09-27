@@ -5,9 +5,11 @@ import type {
   CareersContent,
   ContactContent,
   DigitalTool,
+  HomeContent,
   Issue,
   Market,
   Project,
+  ResearchContent,
   Service,
 } from "@/types/content";
 import type {
@@ -36,8 +38,10 @@ import type {
  *                                     → Article[]
  *   GET  /api/articles/{slug}         → Article
  *   GET  /api/issues?limit=           → Issue[]
+ *   GET  /api/pages/home              → HomeContent
  *   GET  /api/pages/about             → AboutContent
  *   GET  /api/pages/careers           → CareersContent
+ *   GET  /api/pages/research          → ResearchContent
  *   GET  /api/pages/contact           → ContactContent
  *   POST /api/enquiries               → EnquiryResult
  */
@@ -95,12 +99,20 @@ export const httpRepository: ContentRepository = {
     return apiRequest<Issue[]>("/issues", { query: { limit } });
   },
 
+  getHomeContent() {
+    return apiRequest<HomeContent>("/pages/home");
+  },
+
   getAboutContent() {
     return apiRequest<AboutContent>("/pages/about");
   },
 
   getCareersContent() {
     return apiRequest<CareersContent>("/pages/careers");
+  },
+
+  getResearchContent() {
+    return apiRequest<ResearchContent>("/pages/research");
   },
 
   getContactContent() {

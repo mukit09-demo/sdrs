@@ -1,5 +1,6 @@
 import { CardGrid } from "@/components/sections/CardGrid";
 import { CtaBand } from "@/components/sections/CtaBand";
+import { FilmBand } from "@/components/sections/FilmBand";
 import { Section } from "@/components/sections/Section";
 import { SectionHeader } from "@/components/sections/SectionHeader";
 import { PageHero } from "@/components/sections/PageHero";
@@ -18,7 +19,8 @@ import { routes } from "@/lib/config/routes";
  * same whether the data is bundled dummy content or the Spring Boot API.
  */
 export default async function HomePage() {
-  const [markets, projects, articles, issues, about] = await Promise.all([
+  const [home, markets, projects, articles, issues, about] = await Promise.all([
+    content.getHomeContent(),
     content.listMarkets(),
     content.listProjects({ limit: 6 }),
     content.listArticles({ limit: 3 }),
@@ -41,6 +43,8 @@ export default async function HomePage() {
           { label: "What we do", href: routes.services },
         ]}
       />
+
+      <FilmBand video={home.film.video} caption={home.film.caption} />
 
       <Section tone="muted" spacing="sm">
         <StatList stats={about.stats} columns={4} />

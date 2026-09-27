@@ -122,8 +122,7 @@ export default async function AboutPage() {
       <CtaBand
         title="Join a firm that answers to its own people."
         description="Ownership in trust means our members decide what we take on, and what we do with the proceeds."
-        primaryAction={{ label: "See open roles", href: routes.careers }}
-        secondaryAction={{ label: "Contact us", href: routes.contact }}
+        primaryAction={{ label: "Contact us", href: routes.contact }}
       />
     </>
   );

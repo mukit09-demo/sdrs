@@ -18,6 +18,7 @@ export const routes = {
 
   about: "/about-us",
   careers: "/careers",
+  research: "/research-and-training",
 
   news: "/news",
   article: (slug: Slug) => `/news/${slug}`,

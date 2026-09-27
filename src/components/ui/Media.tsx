@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils/cn";
 import { gradientFor, idFor, ratioFor } from "@/lib/utils/placeholder";
 import type { MediaImage } from "@/types/content";
 
-const ratios = {
+/** Frame shapes shared by `Media` and `Video`, so both crop to the same scale. */
+export const mediaRatios = {
   square: "aspect-square",
   landscape: "aspect-4/3",
   wide: "aspect-16/9",
@@ -11,9 +12,11 @@ const ratios = {
   panorama: "aspect-21/9",
 } as const;
 
+export type MediaRatio = keyof typeof mediaRatios;
+
 export interface MediaProps {
   image: MediaImage;
-  ratio?: keyof typeof ratios;
+  ratio?: MediaRatio;
   /** Fills its positioned parent instead of setting an aspect ratio. */
   fill?: boolean;
   /** `sizes` hint for the browser; only matters when a real URL is present. */
@@ -46,7 +49,7 @@ export function Media({
     <div
       className={cn(
         "relative overflow-hidden bg-ink-100",
-        fill ? "absolute inset-0" : ratios[ratio],
+        fill ? "absolute inset-0" : mediaRatios[ratio],
         className,
       )}
     >
