@@ -9,14 +9,24 @@ export interface NavLink {
   description?: string;
 }
 
+/** Full legal name — used where the initials alone would be ambiguous. */
+const legalName = "Shawkat Design and Research Studio";
+
+/**
+ * The strapline from the verb onwards. Held separately because the footer opens
+ * the sentence with the wordmark in place of the name and then carries on in
+ * words — `tagline` puts the name back for everywhere it has to be spelled out.
+ */
+const taglinePredicate =
+  "is an engineering design, research and sustainability practice, working " +
+  "across every stage of the built environment.";
+
 export const siteConfig = {
   name: "SDRS",
-  /** Full legal name — used where the initials alone would be ambiguous. */
-  legalName: "Shawkat Design and Research Studio",
-  /** Used by the footer strapline and as the metadata description fallback. */
-  tagline:
-    "Shawkat Design and Research Studio is an engineering design, research and " +
-    "sustainability practice, working across every stage of the built environment.",
+  legalName,
+  taglinePredicate,
+  /** The whole strapline — the metadata description fallback. */
+  tagline: `${legalName} ${taglinePredicate}`,
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   /** Placeholder, inherited with the sample history in `src/data/about.ts`. */
   foundedYear: 1946,

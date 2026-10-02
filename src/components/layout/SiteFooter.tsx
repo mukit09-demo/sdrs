@@ -1,5 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ComponentType } from "react";
+import { wordmark } from "@/components/layout/Logo";
 import { Container } from "@/components/ui/Container";
 import {
   FacebookIcon,
@@ -33,8 +35,21 @@ export function SiteFooter() {
       {/* One band: the tagline, legal links and socials share a single row on
           desktop so the footer stays half the height of a stacked layout. */}
       <Container className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between md:gap-8">
+        {/* The sentence opens with the wordmark standing in for the practice's
+            name, then carries on in words. `alt` is the full name, so the line
+            still reads as one sentence to a screen reader. */}
         <p className="min-w-0 text-xs leading-snug text-white/85 md:flex-1">
-          {siteConfig.tagline}
+          <Image
+            {...wordmark}
+            alt={siteConfig.legalName}
+            sizes="92px"
+            // The asset is red on transparent, which would disappear into this
+            // band: `brightness-0` flattens the red to black and `invert` lifts
+            // it to white, both preserving the alpha, so the letterforms stay
+            // the ones in the file and no second PNG is needed.
+            className="mr-1.5 inline-block h-4 w-auto align-[-0.2em] brightness-0 invert"
+          />
+          {siteConfig.taglinePredicate}
         </p>
 
         <ul className="flex flex-wrap gap-x-5 gap-y-1">

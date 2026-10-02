@@ -14,7 +14,6 @@
      end carries most of the increase; body copy reads at 17px rather than 16.
      Line heights are left alone: Tailwind states them as unitless ratios, so
      they scale with these sizes. */
-  --text-2xs: 0.6875rem; /* 11px — fine print: the strapline in the logo lockup */
   --text-xs: 0.8125rem; /* 13px */
   --text-sm: 0.9375rem; /* 15px */
   --text-base: 1.0625rem; /* 17px */
@@ -53,12 +52,14 @@
   --color-brand-900: #711515;
 
   /* The width at which the whole navigation row fits on one line beside the
-     logo lockup and the contact button. It sits well above `lg` because the
-     type scale here is a notch larger than Tailwind's default and the primary
-     sections are set in caps: the row needs 1200px, so this leaves a little
-     headroom. Below it, `<SiteHeader>` uses the drawer. Re-measure and widen
-     this if a section is renamed or added — the row must never wrap. */
-  --breakpoint-navbar: 1240px;
+     wordmark. It sits well above `lg` because the type scale here is a notch
+     larger than Tailwind's default, the sections are set in caps, and the row
+     carries all eight labels: measured, the sections and the supporting pages
+     collide at about 1200px and only read as two groups from about 1260px, so
+     this leaves a little headroom. Below it, `<SiteHeader>` uses the drawer.
+     Re-measure and widen this if a section is renamed or added — the row must
+     never wrap, and the gap between the two groups is what separates them. */
+  --breakpoint-navbar: 1280px;
 
   --radius-card: 0.125rem;
 

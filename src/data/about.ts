@@ -2,8 +2,10 @@ import type { AboutContent } from "@/types/content";
 
 /** Dummy content. Replace with the Spring Boot `/api/about` response. */
 export const aboutContent: AboutContent = {
+  // Opens with the practice's full name: this is the one page that spells out
+  // what SDRS stands for, since the header and footer both set it as the mark.
   intro:
-    "We are a global collective of designers, engineers, planners and consultants, owned in trust for the benefit of the people who work here. That ownership structure is not a footnote — it is why we can take a long view on the work we accept and the advice we give.",
+    "Shawkat Design and Research Studio is a global collective of designers, engineers, planners and consultants, owned in trust for the benefit of the people who work here. That ownership structure is not a footnote — it is why we can take a long view on the work we accept and the advice we give.",
 
   stats: [
     { value: "18,000", unit: "+", label: "Members across the collective" },
