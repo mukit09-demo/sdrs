@@ -1,0 +1,10 @@
+{
+  "name": "@sdrs/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Domain model and content layer shared by core-web and manage-web. Source only — Turbopack compiles workspace packages, so there is no build step.",
+  "exports": {
+    "./content": "./content/index.ts",
+    "./*": "./*.ts"
+  }
+}

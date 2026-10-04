@@ -14,14 +14,15 @@
 /coverage
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
 # production
 /build
 
 # misc
 .DS_Store
+__pycache__/
 *.pem
 
 # debug
@@ -36,8 +37,16 @@ yarn-error.log*
 # vercel
 .vercel
 
+# IDE — per-developer state, not project configuration
+.idea/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
 !.env.example
+
+# Local data stores: content edited in the CMS (repo root, shared by both apps)
+# and CMS accounts including password hashes (manage-web/.data/users.json).
+# Any depth — never commit either.
+.data/

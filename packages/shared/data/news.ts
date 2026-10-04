@@ -1,0 +1,211 @@
+import type { Article, Issue } from "../types/content";
+
+/** Dummy content. Replace with the Spring Boot `/api/articles` response. */
+export const articles: Article[] = [
+  {
+    slug: "kai-tak-sports-park-opens",
+    title: "Kai Tak Sports Park opens to the public in Hong Kong",
+    excerpt:
+      "The 50,000-seat stadium at the heart of the Kai Tak development has hosted its first full-capacity event, completing a decade of design and delivery work.",
+    body: [
+      "Kai Tak Sports Park has opened on the site of Hong Kong's former international airport, completing the anchor phase of a district that will eventually house 130,000 residents. The main stadium seats 50,000 under a retractable roof, alongside an indoor arena and public sports ground.",
+      "Our teams worked across structural engineering, building services, acoustics and crowd movement for more than a decade. The retractable roof was the defining challenge: it had to clear a long span, close quickly enough to be useful in sub-tropical rainfall, and not compromise the pitch's grass growth when open.",
+      "The district cooling network serving the park also supplies the surrounding commercial plots, which is why it stacks up financially. A cooling plant sized for a stadium alone would sit idle most of the year.",
+      "Attention now turns to the remaining residential plots, where the phasing strategy allows occupation to begin while later stages are still on site.",
+    ],
+    category: "Press release",
+    publishedAt: "2026-08-28",
+    readingMinutes: 4,
+    author: { name: "Priya Raghunathan", role: "Regional Communications Lead, East Asia" },
+    image: { alt: "A stadium with a retractable roof at dusk", seed: "news-kai-tak-park" },
+    tags: ["sport", "cities", "property"],
+  },
+  {
+    slug: "data-centre-water-use-report",
+    title: "New report: data centre water use is the constraint nobody budgeted for",
+    excerpt:
+      "Our analysis of 40 hyperscale campuses finds that water availability, not grid capacity, will govern siting decisions in six of the ten fastest-growing markets.",
+    body: [
+      "The conversation about data centre growth has focused almost entirely on electricity. Our review of 40 hyperscale campuses across three continents suggests that in six of the ten fastest-growing markets, water will bind first.",
+      "Evaporative cooling is cheap in energy terms and expensive in water terms. As rack densities rise with AI workloads, operators are choosing between higher power draw and higher water draw — and in water-stressed catchments, the second option is increasingly not available at any price.",
+      "The report sets out three practical responses: closed-loop liquid cooling where the heat rejection temperature allows it, heat reuse agreements with district networks, and honest catchment-level water accounting at the site selection stage rather than at permitting.",
+      "None of this is technically difficult. The obstacle is that water is usually assessed after a site has been acquired, by which point the decision that mattered has already been made.",
+    ],
+    category: "Report",
+    publishedAt: "2026-08-14",
+    readingMinutes: 7,
+    author: { name: "Daniel Okonkwo", role: "Global Data Centres Leader" },
+    image: { alt: "Cooling towers beside a data centre building", seed: "news-dc-water" },
+    tags: ["data-centres", "water", "energy"],
+  },
+  {
+    slug: "nusantara-spatial-framework",
+    title: "Spatial framework published for Indonesia's new capital",
+    excerpt:
+      "Development intensity in Nusantara will be capped by catchment water balance rather than land availability, under a framework developed with the capital authority.",
+    body: [
+      "The Nusantara Capital Authority has published the spatial framework for Indonesia's new capital, developed with our planning, water and transport teams.",
+      "The framework's central move is to cap development intensity by what the catchment can absorb hydrologically, not by how much land is technically available. That inverts the usual sequence, where plots are allocated first and drainage is engineered afterwards.",
+      "Forest corridors are retained through the urban structure as continuous systems rather than residual green space, and the transport network is fixed before plot allocation so that density follows capacity.",
+      "Eighty per cent of journeys are targeted for public or active transport by 2045 — achievable only because the network is being built ahead of occupation rather than retrofitted after.",
+    ],
+    category: "Insight",
+    publishedAt: "2026-07-30",
+    readingMinutes: 5,
+    author: { name: "Sari Wijaya", role: "Associate Director, Cities Planning" },
+    image: { alt: "Aerial view of forest and a planned settlement", seed: "news-nusantara" },
+    tags: ["cities", "water", "international-development"],
+  },
+  {
+    slug: "porthcawl-scheme-wins-award",
+    title: "Porthcawl coastal scheme wins national engineering award",
+    excerpt:
+      "The Sandy Bay defences have been recognised for combining flood protection with habitat creation inside a single scheme footprint.",
+    body: [
+      "The Porthcawl Sandy Bay coastal scheme has received a national award for civil engineering excellence, recognising the integration of flood defence renewal with intertidal habitat creation.",
+      "Rebuilding 1.2km of sea wall protects 580 properties against sea level rise projected through to 2120. What the judges highlighted was that the habitat gain was delivered inside the defence footprint, rather than as offsetting elsewhere.",
+      "The promenade stayed open to the public through most of the construction period, which constrained the sequencing considerably but preserved the reason people value the seafront in the first place.",
+    ],
+    category: "Award",
+    publishedAt: "2026-07-11",
+    readingMinutes: 3,
+    author: { name: "Rhian Morgan", role: "Project Director, Water" },
+    image: { alt: "A coastal promenade beside a sandy beach", seed: "news-porthcawl-award" },
+    tags: ["water", "cities"],
+  },
+  {
+    slug: "retrofit-first-policy-briefing",
+    title: "Why 'retrofit first' needs a carbon test, not a presumption",
+    excerpt:
+      "Reuse beats new build on embodied carbon most of the time — but not always. We set out the assessment that tells you which case you are in.",
+    body: [
+      "Retrofit-first policies are spreading, and broadly they are right: keeping a structure usually avoids far more carbon than a new efficient building saves in operation. On our recent commercial projects, retention has delivered embodied carbon savings of 40 to 60 per cent.",
+      "But 'usually' is doing real work in that sentence. A poorly-performing building in a cold climate, retained with a façade that cannot be economically upgraded, can lose the embodied saving within twenty years of operational energy.",
+      "The test is a whole-life comparison over a defined study period, with honest allowance for the operational performance actually achievable in the retained fabric. We have seen assessments that assume a retrofit reaches new-build performance; very few do.",
+      "Our recommendation to policymakers is to mandate the assessment rather than the outcome. A presumption in favour of reuse, defeasible by evidence, gets better decisions than a rule in either direction.",
+    ],
+    category: "Insight",
+    publishedAt: "2026-06-24",
+    readingMinutes: 6,
+    author: { name: "Tom Ashworth", role: "Sustainability Consulting Lead" },
+    image: { alt: "Scaffolding around a building under refurbishment", seed: "news-retrofit" },
+    tags: ["property", "sustainability"],
+  },
+  {
+    slug: "uheat-expands-to-fifty-cities",
+    title: "UHeat expands to fifty cities as heat risk moves up the agenda",
+    excerpt:
+      "Our satellite-based urban heat tool now covers fifty cities, identifying the specific surfaces driving local temperature rise.",
+    body: [
+      "UHeat now covers fifty cities, up from twelve at launch. The tool combines satellite thermal imagery with machine learning to identify which buildings, roofs and paved surfaces contribute most to local temperature rise.",
+      "Most heat strategies start with a city-wide average, which is not actionable. UHeat produces a ranked list of surfaces, which is — a municipality can see that a specific set of dark flat roofs in one district is generating a measurable share of the local heat island.",
+      "Several cities have used the output to target roof-whitening and tree-planting programmes at the streets where they remove the most degrees, rather than distributing intervention evenly.",
+    ],
+    category: "Press release",
+    publishedAt: "2026-06-05",
+    readingMinutes: 3,
+    author: { name: "Lena Fischer", role: "Digital Products Lead" },
+    image: { alt: "Thermal imagery overlaid on a city map", seed: "news-uheat" },
+    tags: ["cities", "digital", "climate"],
+  },
+  {
+    slug: "grid-connection-queue-analysis",
+    title: "The grid connection queue is now the binding constraint on renewables",
+    excerpt:
+      "Analysis across four markets finds consented generation waiting an average of six years for a connection date — longer than it takes to build.",
+    body: [
+      "Across the four markets we analysed, consented renewable generation is waiting an average of six years for a grid connection date. Construction takes two to three. The queue, not the turbine, is the schedule.",
+      "This is a queue management problem more than a copper problem. A significant share of the capacity in the queue will never be built, but it holds a position that blocks projects that would be.",
+      "Reforms that prioritise by readiness rather than application date, and that impose milestones with real consequences, release capacity faster than any realistic transmission build programme.",
+      "We are supporting three transmission operators on queue reform and connection strategy. The technical work is straightforward; the difficulty is that reform reallocates positions that developers consider theirs.",
+    ],
+    category: "Insight",
+    publishedAt: "2026-05-19",
+    readingMinutes: 6,
+    author: { name: "Aisha Rahman", role: "Energy Advisory Director" },
+    image: { alt: "Electricity transmission pylons at sunset", seed: "news-grid-queue" },
+    tags: ["energy", "advisory"],
+  },
+  {
+    slug: "sdrs-journal-2026-issue-one",
+    title: "The SDRS Journal 2026, Issue 1 is out now",
+    excerpt:
+      "Sixty years of technical publishing continues with a bascule bridge in the UK, new wharves in Sydney and Kai Tak Sports Park in Hong Kong.",
+    body: [
+      "The SDRS Journal has been publishing detailed technical accounts of our work for sixty years. Issue 1 of 2026 covers three projects in depth.",
+      "A bascule bridge in the UK, where the counterweight arrangement had to fit within an existing abutment. New wharves in an environmentally sensitive part of Sydney Harbour, built with minimal seabed disturbance. And Kai Tak Sports Park, covering the retractable roof and district cooling integration.",
+      "The Journal exists to publish the parts that do not make it into project summaries: what was tried and abandoned, and why the final solution looks the way it does.",
+      "The full archive going back to 1966 remains freely available.",
+    ],
+    category: "Press release",
+    publishedAt: "2026-04-30",
+    readingMinutes: 2,
+    author: { name: "Editorial team", role: "The SDRS Journal" },
+    image: { alt: "A printed technical journal on a desk", seed: "news-journal" },
+    tags: ["publication"],
+  },
+  {
+    slug: "early-careers-intake-2027",
+    title: "Applications open for our 2027 early careers intake",
+    excerpt:
+      "Graduate and apprentice roles across engineering, digital and advisory disciplines are now open in twenty countries.",
+    body: [
+      "Applications are open for our 2027 early careers programmes, covering graduate engineering roles, digital apprenticeships and advisory analyst positions across twenty countries.",
+      "The programme pairs structured technical development with project work from the first month. We are explicit that graduates join delivery teams rather than a training scheme that runs alongside the real work.",
+      "Mobility between disciplines is normal rather than exceptional. Several of our resilience and digital leaders started in façades or building services and moved once they found the problem they wanted to work on.",
+      "Applications close in November, and we assess on a rolling basis, so earlier submissions are considered sooner.",
+    ],
+    category: "Event",
+    publishedAt: "2026-04-08",
+    readingMinutes: 3,
+    author: { name: "Marcus Bell", role: "Global Early Careers Lead" },
+    image: { alt: "Young professionals collaborating around a model", seed: "news-early-careers" },
+    tags: ["careers"],
+  },
+];
+
+/** Dummy content. Replace with the Spring Boot `/api/issues` response. */
+export const issues: Issue[] = [
+  {
+    slug: "protect-cities-rising-temperatures",
+    question: "How do we protect our cities from rising temperatures?",
+    summary:
+      "Urban heat is the climate impact people feel first. Targeting the specific surfaces that drive it beats spreading intervention evenly across a city.",
+    image: { alt: "A tree-lined city street providing shade", seed: "issue-heat" },
+  },
+  {
+    slug: "electricity-grid-fit-for-future",
+    question: "How do we build an electricity grid fit for the future?",
+    summary:
+      "Consented generation now waits longer for a connection than it takes to build. Queue reform releases capacity faster than new transmission.",
+    image: { alt: "Transmission lines crossing open countryside", seed: "issue-grid" },
+  },
+  {
+    slug: "how-does-a-city-become-net-zero",
+    question: "How does a city become net zero?",
+    summary:
+      "Not by adding targets. By sequencing the handful of interventions — buildings, transport, heat — that account for most of the curve.",
+    image: { alt: "A city skyline with wind turbines beyond", seed: "issue-net-zero" },
+  },
+  {
+    slug: "data-centre-sustainability",
+    question: "Can data centre growth be sustainable?",
+    summary:
+      "Power gets the attention, but water will bind first in six of the ten fastest-growing markets. Site selection is where this is decided.",
+    image: { alt: "A data centre building surrounded by greenery", seed: "issue-data-centres" },
+  },
+  {
+    slug: "high-speed-rail-value",
+    question: "Is high-speed rail worth it for a country?",
+    summary:
+      "It depends almost entirely on what is built around the stations. The line itself rarely generates the benefits used to justify it.",
+    image: { alt: "A high-speed train at a station platform", seed: "issue-hsr" },
+  },
+  {
+    slug: "making-cities-more-productive",
+    question: "What makes a city more productive?",
+    summary:
+      "Density helps only when people can move through it. Productivity gains track accessibility far more closely than they track built form.",
+    image: { alt: "A busy pedestrianised city square", seed: "issue-productivity" },
+  },
+];
