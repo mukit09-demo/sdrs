@@ -145,11 +145,11 @@ export const aboutContent: AboutContent = {
       href: "/contact-us",
     },
     {
-      title: "SDRS University",
+      title: "Research and training",
       description:
         "Our internal research and learning function, which also works openly with clients and academic partners to raise standards across the industry.",
-      ctaLabel: "Discover SDRS University",
-      href: "/careers",
+      ctaLabel: "See the programmes",
+      href: "/research-and-training",
     },
     {
       title: "Foresight",

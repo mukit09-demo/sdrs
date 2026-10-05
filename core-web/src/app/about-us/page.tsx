@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BrandText } from "@/components/layout/Logo";
 import { CtaBand } from "@/components/sections/CtaBand";
 import { PageHero } from "@/components/sections/PageHero";
 import { PersonGrid } from "@/components/sections/PersonGrid";
@@ -99,10 +100,10 @@ export default async function AboutPage() {
               <Reveal delay={Math.min(index, 3) * 80} className="flex w-full">
                 <article className="flex w-full flex-col border-t-2 border-brand-500 bg-white p-6">
                   <h3 className="text-lg font-medium text-ink-900">
-                    {initiative.title}
+                    <BrandText>{initiative.title}</BrandText>
                   </h3>
                   <p className="mt-3 flex-1 leading-relaxed text-ink-600">
-                    {initiative.description}
+                    <BrandText>{initiative.description}</BrandText>
                   </p>
                   <Button
                     href={initiative.href}
@@ -110,7 +111,7 @@ export default async function AboutPage() {
                     icon="arrow"
                     className="mt-6 self-start"
                   >
-                    {initiative.ctaLabel}
+                    <BrandText>{initiative.ctaLabel}</BrandText>
                   </Button>
                 </article>
               </Reveal>

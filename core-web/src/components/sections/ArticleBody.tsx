@@ -1,3 +1,4 @@
+import { BrandText } from "@/components/layout/Logo";
 import { cn } from "@/lib/utils/cn";
 
 export interface ArticleBodyProps {
@@ -22,7 +23,7 @@ export function ArticleBody({ paragraphs, className }: ArticleBodyProps) {
             index === 0 && "text-lg text-ink-800 md:text-xl",
           )}
         >
-          {paragraph}
+          <BrandText>{paragraph}</BrandText>
         </p>
       ))}
     </div>

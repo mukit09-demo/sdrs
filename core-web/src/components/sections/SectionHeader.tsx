@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { BrandText } from "@/components/layout/Logo";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils/cn";
 
@@ -67,13 +68,19 @@ export function SectionHeader({
         {eyebrow && <p className={eyebrowClass}>{eyebrow}</p>}
 
         <div className={cn("mt-3", row)}>
-          <Heading className={cn(headingClass, "max-w-3xl")}>{title}</Heading>
+          <Heading className={cn(headingClass, "max-w-3xl")}>
+            <BrandText tone={isDark ? "inverse" : "brand"}>{title}</BrandText>
+          </Heading>
           {actionButton}
         </div>
 
         <div className={cn("mt-5", row)}>
           {description && (
-            <p className={cn(descriptionClass, "max-w-3xl")}>{description}</p>
+            <p className={cn(descriptionClass, "max-w-3xl")}>
+              <BrandText tone={isDark ? "inverse" : "brand"}>
+                {description}
+              </BrandText>
+            </p>
           )}
           <div className="shrink-0 self-start md:self-auto">{aside}</div>
         </div>
@@ -90,9 +97,15 @@ export function SectionHeader({
     >
       <div className="max-w-3xl">
         {eyebrow && <p className={eyebrowClass}>{eyebrow}</p>}
-        <Heading className={cn("mt-3", headingClass)}>{title}</Heading>
+        <Heading className={cn("mt-3", headingClass)}>
+          <BrandText tone={isDark ? "inverse" : "brand"}>{title}</BrandText>
+        </Heading>
         {description && (
-          <p className={cn("mt-5", descriptionClass)}>{description}</p>
+          <p className={cn("mt-5", descriptionClass)}>
+            <BrandText tone={isDark ? "inverse" : "brand"}>
+              {description}
+            </BrandText>
+          </p>
         )}
       </div>
 

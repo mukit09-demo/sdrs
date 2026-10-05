@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandText } from "@/components/layout/Logo";
 import { cn } from "@/lib/utils/cn";
 
 export interface Crumb {
@@ -38,14 +39,18 @@ export function Breadcrumbs({ crumbs, tone = "light", className }: BreadcrumbsPr
                     isDark ? "hover:text-white" : "hover:text-ink-900",
                   )}
                 >
-                  {crumb.label}
+                  <BrandText tone={isDark ? "inverse" : "brand"}>
+                    {crumb.label}
+                  </BrandText>
                 </Link>
               ) : (
                 <span
                   aria-current={isLast ? "page" : undefined}
                   className={isDark ? "text-white" : "text-ink-900"}
                 >
-                  {crumb.label}
+                  <BrandText tone={isDark ? "inverse" : "brand"}>
+                    {crumb.label}
+                  </BrandText>
                 </span>
               )}
               {!isLast && <span aria-hidden="true">/</span>}

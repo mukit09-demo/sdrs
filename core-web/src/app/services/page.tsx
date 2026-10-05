@@ -1,33 +1,36 @@
 import type { Metadata } from "next";
-import { CardGrid } from "@/components/sections/CardGrid";
 import { CtaBand } from "@/components/sections/CtaBand";
 import { FilterableGrid } from "@/components/sections/FilterableGrid";
 import { PageHero } from "@/components/sections/PageHero";
 import { Section } from "@/components/sections/Section";
-import { SectionHeader } from "@/components/sections/SectionHeader";
 import { routes } from "@/lib/config/routes";
 import { content } from "@/lib/content";
 import { serviceCategoryFilterGroup } from "@/lib/content/filters";
-import { digitalToolToCard, serviceToCard } from "@/lib/content/mappers";
+import { serviceToCard } from "@/lib/content/mappers";
 
 export const metadata: Metadata = {
   title: "Services",
   description:
-    "Design and engineering, advisory, planning and digital services from SDRS.",
+    "Advisory, design and engineering, digital, planning and sustainability, and research and innovation services from SDRS.",
 };
 
 export default async function ServicesPage() {
-  const [services, digitalTools] = await Promise.all([
-    content.listServices(),
-    content.listDigitalTools(),
-  ]);
+  // The in-house software (`content.listDigitalTools()`) used to run as a band
+  // below the grid. It is still in the content layer, but it is not a service,
+  // and on this page it read as four more of them.
+  const services = await content.listServices();
 
   return (
     <>
       <PageHero
-        title="Services"
+        layout="wide"
+        title={"Integrated expertise.\nOne purpose: better solutions."}
         eyebrow="What we do"
-        intro="More than 90 disciplines under one roof. Most of our work draws on several at once, which is why our advice tends to change the brief as well as answer it."
+        intro={`SDRS brings together engineering, design, technology, research and specialist consultancy to solve complex challenges across the built environment.
+
+From early ideas and feasibility through detailed design, construction and the life of an asset, we combine technical knowledge across disciplines to deliver solutions that are safe, efficient, resilient and sustainable.
+
+We design for today — and engineer with tomorrow in mind.`}
         crumbs={[{ label: "Home", href: routes.home }, { label: "Services" }]}
       />
 
@@ -39,17 +42,6 @@ export default async function ServicesPage() {
           itemNoun={{ singular: "service", plural: "services" }}
           columns={3}
         />
-      </Section>
-
-      <Section tone="muted">
-        <SectionHeader
-          eyebrow="Digital"
-          title="Tools built by our own teams"
-          description="Software we developed to answer questions our projects kept asking — now used by clients directly."
-        />
-        <div className="mt-14">
-          <CardGrid items={digitalTools.map(digitalToolToCard)} columns={4} />
-        </div>
       </Section>
 
       <CtaBand

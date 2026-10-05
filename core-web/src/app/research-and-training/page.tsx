@@ -33,13 +33,14 @@ export default async function ResearchAndTrainingPage() {
   return (
     <>
       <PageHero
-        title="Questions worth being paid to answer"
+        layout="wide"
+        title={"Empowering Minds\nEngineering Tomorrow"}
         eyebrow="Research and training"
         intro={research.intro}
         image={{ alt: "Researchers testing a material sample", seed: "research-hero" }}
         actions={[
-          { label: "See our programmes", href: "#programmes" },
-          { label: "Browse courses", href: "#training" },
+          { label: "Explore our research", href: "#programmes" },
+          { label: "Training & Courses", href: "#training" },
         ]}
         crumbs={[
           { label: "Home", href: routes.home },

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BrandText } from "@/components/layout/Logo";
 import { CtaBand } from "@/components/sections/CtaBand";
 import { JobList } from "@/components/sections/JobList";
 import { PageHero } from "@/components/sections/PageHero";
@@ -49,10 +50,10 @@ export default async function CareersPage() {
             <li key={benefit.title}>
               <Reveal delay={Math.min(index, 3) * 80}>
                 <h3 className="border-t-2 border-ink-900 pt-5 text-lg font-medium text-ink-900">
-                  {benefit.title}
+                  <BrandText>{benefit.title}</BrandText>
                 </h3>
                 <p className="mt-4 leading-relaxed text-ink-600">
-                  {benefit.description}
+                  <BrandText>{benefit.description}</BrandText>
                 </p>
               </Reveal>
             </li>

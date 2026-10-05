@@ -7,7 +7,7 @@ ingredients as its still placeholder: the gradient its seed hashes to (see
 `gradientFor` in `src/lib/utils/placeholder.ts`, reimplemented here so film and
 poster agree), with drafting linework about that market's subject panning over
 it. Replace a film by dropping a real cut in `public/video/markets/` under the
-same name; nothing in `src/data/markets.ts` has to change.
+same name; nothing in `packages/shared/data/markets.ts` has to change.
 
 Requires Pillow and GStreamer (`vp9enc`, `webmmux`, `rawvideoparse`). Frames are
 piped raw into the encoder, so no intermediate PNGs are written.
@@ -161,7 +161,7 @@ def make_grid(W, H, rnd, accent):
 # --------------------------------------------------------------------------- #
 
 
-def make_transport(W, H, rnd, accent):
+def make_transport_and_mobility(W, H, rnd, accent):
     """A corridor in plan: carriageways, a rail line and a platform.
 
     Plan rather than perspective, like the other motifs here — and it keeps the
@@ -273,7 +273,7 @@ def make_energy(W, H, rnd, accent):
     return render
 
 
-def make_water(W, H, rnd, accent):
+def make_water_and_environment(W, H, rnd, accent):
     """Ripple rings expanding from two points, over moving contour lines."""
     sources = [(W * 0.30, H * 0.42), (W * 0.72, H * 0.58)]
 
@@ -309,7 +309,7 @@ def make_water(W, H, rnd, accent):
     return render
 
 
-def make_property(W, H, rnd, accent):
+def make_buildings(W, H, rnd, accent):
     """Floor plates stacking up and settling back, behind a façade grid."""
     towers = [
         (0.06 + i * 0.135, rnd.uniform(0.09, 0.115), rnd.randint(7, 13), rnd.random())
@@ -337,7 +337,7 @@ def make_property(W, H, rnd, accent):
     return render
 
 
-def make_data_centres(W, H, rnd, accent):
+def make_data_centers_and_digital_infrastructure(W, H, rnd, accent):
     """Cold-aisle racks with their status rows, and packets crossing the bus."""
     racks = [(0.05 + i * 0.075, rnd.random()) for i in range(12)]
 
@@ -375,7 +375,7 @@ def make_data_centres(W, H, rnd, accent):
     return render
 
 
-def make_cities(W, H, rnd, accent):
+def make_cities_and_communities(W, H, rnd, accent):
     """Two skylines panning at different speeds, over a street grid."""
     layers = [
         (0.58, 1, 46, [rnd.uniform(0.10, 0.30) for _ in range(16)]),
@@ -409,58 +409,44 @@ def make_cities(W, H, rnd, accent):
     return render
 
 
-def make_science(W, H, rnd, accent):
-    """Orbits with travelling nodes, over a bench plan."""
-    orbits = [
-        (W * 0.32, H * 0.44, W * 0.17, H * 0.20, 1, 0.0),
-        (W * 0.32, H * 0.44, W * 0.09, H * 0.28, 2, 0.5),
-        (W * 0.70, H * 0.50, W * 0.13, H * 0.15, 2, 0.25),
-    ]
+def make_healthcare_and_science(W, H, rnd, accent):
+    """Ward bays and lab modules off one spine, under a trace and two orbits.
+
+    The merged market has to read as both halves, so the plan carries the
+    hospital's bays and the laboratory's orbits. Drawn as one motif rather than
+    the two older ones stacked: overlaying both plans put rectangles at two
+    pitches over each other and read as neither.
+    """
+    modules, pitch, width = 5, 0.118, 0.088
+    cx, cy = W * 0.80, H * 0.32  # the orbits, clear of the last module
 
     def render(d, p):
-        # Lab modules off a central spine: the plan every research building has.
+        # The serviced spine every ward wing and lab module hangs off.
         d.line([(W * 0.04, H * 0.50), (W * 0.96, H * 0.50)],
                fill=(255, 255, 255, 80), width=2)
-        for module in range(8):
-            x = W * (0.06 + module * 0.115)
+        for module in range(modules):
+            x = W * (0.055 + module * pitch)
             for top, bottom in ((H * 0.20, H * 0.50), (H * 0.50, H * 0.80)):
                 d.rectangle(
-                    (x, top, x + W * 0.085, bottom),
-                    outline=(255, 255, 255, 46),
-                    fill=(255, 255, 255, 9),
+                    (x, top, x + W * width, bottom),
+                    outline=(255, 255, 255, 58),
+                    fill=(255, 255, 255, 10),
                     width=1,
                 )
-        for cx, cy, rx, ry, laps, offset in orbits:
-            d.ellipse(
-                (cx - rx, cy - ry, cx + rx, cy + ry),
-                outline=accent + (120,),
-                width=2,
-            )
+                # Bays within each module: the ward half of the plan.
+                for bay in range(3):
+                    y = top + (bottom - top) * (bay + 1) / 4
+                    d.line([(x, y), (x + W * width, y)],
+                           fill=(255, 255, 255, 36), width=1)
+
+        for rx, ry, laps, offset in ((W * 0.12, H * 0.20, 1, 0.0),
+                                     (W * 0.065, H * 0.26, 2, 0.5)):
+            d.ellipse((cx - rx, cy - ry, cx + rx, cy + ry),
+                      outline=accent + (115,), width=2)
             a = (p * laps + offset) * 2 * math.pi
             x, y = cx + math.cos(a) * rx, cy + math.sin(a) * ry
             d.ellipse((x - 6, y - 6, x + 6, y + 6), fill=(255, 255, 255, 190))
-        for cx, cy in ((W * 0.32, H * 0.44), (W * 0.70, H * 0.50)):
-            d.ellipse((cx - 8, cy - 8, cx + 8, cy + 8), fill=accent + (200,))
-
-    return render
-
-
-def make_healthcare(W, H, rnd, accent):
-    """A trace crossing the plan of a ward wing."""
-    def render(d, p):
-        for wing in range(3):
-            x = W * (0.08 + wing * 0.31)
-            d.rectangle(
-                (x, H * 0.16, x + W * 0.20, H * 0.84),
-                outline=(255, 255, 255, 66),
-                fill=(255, 255, 255, 10),
-                width=1,
-            )
-            for bay in range(5):
-                y = H * 0.16 + bay * H * 0.136
-                d.line(
-                    [(x, y), (x + W * 0.20, y)], fill=(255, 255, 255, 42), width=1
-                )
+        d.ellipse((cx - 8, cy - 8, cx + 8, cy + 8), fill=accent + (200,))
 
         # One pulse period per two loops would break the seam, so use two.
         mid = H * 0.52
@@ -480,7 +466,7 @@ def make_healthcare(W, H, rnd, accent):
     return render
 
 
-def make_industry_and_manufacturing(W, H, rnd, accent):
+def make_industrial_and_manufacturing(W, H, rnd, accent):
     """A line running left to right, with the gears that drive it."""
     def render(d, p):
         belt = H * 0.66
@@ -532,238 +518,145 @@ def make_industry_and_manufacturing(W, H, rnd, accent):
     return render
 
 
-def make_resources(W, H, rnd, accent):
-    """A section through a pit: stepped benches down to the floor, and haulage."""
-    benches = 5
-    ground, floor = 0.30, 0.86
-    # The stepped profile, left rim down to the floor and back up to the right.
-    profile: list[tuple[float, float]] = [(0.0, ground)]
-    for step in range(benches):
-        t = (step + 1) / benches
-        x = 0.06 + t * 0.30
-        y = ground + t * (floor - ground)
-        profile += [(x - 0.035, y), (x, y)]  # tread, then the face down to it
-    profile.append((0.64, floor))
-    for step in range(benches):
-        t = 1 - (step + 1) / benches
-        x = 0.64 + (1 - t) * 0.30
-        y = ground + t * (floor - ground)
-        profile += [(x, y), (x + 0.035, y)]
-    profile.append((1.0, ground))
-    points = [(x * W, y * H) for x, y in profile]
+def make_climate_and_sustainability(W, H, rnd, accent):
+    """Annual emissions stepping down to a net zero datum, and a material loop.
+
+    The bars fall left to right and breathe once per loop; the pathway curve over
+    them lands on the datum, which is the only line in the frame that never
+    moves.
+    """
+    bars = 18
+    datum = 0.74
+    heights = [0.46 * (1 - i / (bars - 1)) ** 1.35 for i in range(bars)]
+    cx, cy = W * 0.82, H * 0.24  # the circularity loop, clear of the curve
+    rx, ry = W * 0.072, H * 0.16
 
     def render(d, p):
-        # Strata under the pit, so the section has ground rather than void.
-        for stratum in range(4):
-            y = H * (ground + 0.06 + stratum * 0.055)
-            d.line([(0, y), (W, y)], fill=(255, 255, 255, 20), width=1)
-
-        d.line([(0, H * ground), (W, H * ground)], fill=(255, 255, 255, 70), width=1)
-        d.line(points, fill=(255, 255, 255, 150), width=2)
-
-        # Trucks working the profile, one down and one up, out of step.
-        total = len(points) - 1
-        for truck, direction in ((0.0, 1), (0.5, -1)):
-            u = ((p * direction + truck) % 1.0) * total
-            i = min(int(u), total - 1)
-            f = u - i
-            x = points[i][0] + (points[i + 1][0] - points[i][0]) * f
-            y = points[i][1] + (points[i + 1][1] - points[i][1]) * f
+        step = W * 0.052
+        for i, h in enumerate(heights):
+            # Each year's bar settles at its own phase, so the fall reads as
+            # measurement rather than as one animated shape.
+            breathe = 1 + 0.07 * math.sin((p + i / bars) * 2 * math.pi)
+            x = W * 0.03 + i * step
             d.rectangle(
-                (x - W * 0.011, y - H * 0.030, x + W * 0.011, y),
-                fill=accent + (175,),
+                (x, H * datum - H * h * breathe, x + step * 0.62, H * datum),
+                outline=(255, 255, 255, 58),
+                fill=(255, 255, 255, 12),
+                width=1,
             )
 
-        # Material leaving the pit on a conveyor.
-        d.line(
-            [(W * 0.64, H * floor), (W * 0.98, H * (ground - 0.06))],
-            fill=accent + (90,),
+        # The datum: net zero, held flat across the frame.
+        d.line([(0, H * datum), (W, H * datum)], fill=(255, 255, 255, 110), width=2)
+        for i in range(34):
+            x = i * W / 34
+            d.line(
+                [(x, H * (datum + 0.035)), (x + W * 0.018, H * (datum + 0.035))],
+                fill=(255, 255, 255, 34),
+                width=1,
+            )
+
+        # The pathway curve, and the year being reported on it this frame.
+        curve = [
+            (W * 0.03 + (i / 60) * W * 0.94, H * datum - H * 0.46 * (1 - i / 60) ** 1.6)
+            for i in range(61)
+        ]
+        d.line(curve, fill=accent + (170,), width=3)
+        mx, my = curve[int((p % 1.0) * (len(curve) - 1))]
+        d.ellipse((mx - 6, my - 6, mx + 6, my + 6), fill=(255, 255, 255, 210))
+
+        # Material kept in use: one lap per loop, with the gap an arrow needs.
+        d.arc(
+            (cx - rx, cy - ry, cx + rx, cy + ry),
+            start=35,
+            end=330,
+            fill=(255, 255, 255, 95),
             width=2,
         )
-        for load in range(7):
-            u = ((load / 7) + p) % 1.0
-            x = W * (0.64 + u * 0.34)
-            y = H * (floor + u * ((ground - 0.06) - floor))
-            d.ellipse((x - 4, y - 4, x + 4, y + 4), fill=(255, 255, 255, 140))
-
-    return render
-
-
-def make_sport(W, H, rnd, accent):
-    """A bowl in plan, its roof cables, and a floodlight sweeping the pitch."""
-    cx, cy = W * 0.5, H * 0.54
-
-    def render(d, p):
-        for ring, scale in enumerate((1.0, 0.82, 0.64, 0.46)):
-            rx, ry = W * 0.32 * scale, H * 0.40 * scale
+        for trail in range(5):
+            a = p * 2 * math.pi - trail * 0.12
+            x, y = cx + math.cos(a) * rx, cy + math.sin(a) * ry
+            r = 5 - trail * 0.7
             d.ellipse(
-                (cx - rx, cy - ry, cx + rx, cy + ry),
-                outline=(255, 255, 255, 46 + ring * 16),
-                width=1 if ring else 2,
+                (x - r, y - r, x + r, y + r),
+                fill=accent + (max(0, 190 - trail * 38),),
             )
-        for spoke in range(24):
-            a = spoke * 2 * math.pi / 24
+
+    return render
+
+
+def make_research_and_emerging_technologies(W, H, rnd, accent):
+    """A graph being explored, over the sweep that narrows it to an answer."""
+    nodes = [
+        (0.10, 0.24), (0.24, 0.13), (0.26, 0.37), (0.41, 0.26), (0.44, 0.47),
+        (0.58, 0.16), (0.61, 0.38), (0.74, 0.27), (0.78, 0.47), (0.90, 0.33),
+    ]
+    edges = [(0, 1), (0, 2), (1, 3), (2, 3), (2, 4), (3, 5), (3, 6), (4, 6),
+             (5, 7), (6, 7), (6, 8), (7, 9), (8, 9)]
+    top, bottom = 0.62, 0.94
+
+    def render(d, p):
+        for a, b in edges:
             d.line(
-                [
-                    (cx + math.cos(a) * W * 0.148, cy + math.sin(a) * H * 0.184),
-                    (cx + math.cos(a) * W * 0.32, cy + math.sin(a) * H * 0.40),
-                ],
-                fill=accent + (44,),
+                [(nodes[a][0] * W, nodes[a][1] * H), (nodes[b][0] * W, nodes[b][1] * H)],
+                fill=(255, 255, 255, 48),
                 width=1,
             )
-        # The sweep: one lap per loop.
-        a = p * 2 * math.pi
-        for trail in range(6):
-            at = a - trail * 0.08
-            d.line(
-                [
-                    (cx, cy),
-                    (cx + math.cos(at) * W * 0.30, cy + math.sin(at) * H * 0.37),
-                ],
-                fill=(255, 255, 255, max(0, 90 - trail * 15)),
-                width=2,
-            )
-
-    return render
-
-
-def make_education(W, H, rnd, accent):
-    """Quads in plan, with people moving along the desire lines between them."""
-    quads = [(0.08, 0.20), (0.40, 0.16), (0.68, 0.24)]
-    path = [(0.03, 0.88), (0.24, 0.62), (0.52, 0.72), (0.74, 0.46), (0.98, 0.34)]
-
-    def render(d, p):
-        for x0, y0 in quads:
-            d.rectangle(
-                (x0 * W, y0 * H, (x0 + 0.20) * W, (y0 + 0.36) * H),
-                outline=(255, 255, 255, 105),
-                fill=(255, 255, 255, 14),
-                width=2,
-            )
-            # The cloister: a range of rooms around an open court.
-            d.rectangle(
-                ((x0 + 0.05) * W, (y0 + 0.09) * H, (x0 + 0.15) * W, (y0 + 0.27) * H),
-                outline=(255, 255, 255, 60),
+        # A pulse per edge, each at its own rate and offset, so the graph is
+        # never uniformly lit — and every rate is whole, so the loop closes.
+        for index, (a, b) in enumerate(edges):
+            u = ((p * (1 + index % 3)) + index / len(edges)) % 1.0
+            x = (nodes[a][0] + (nodes[b][0] - nodes[a][0]) * u) * W
+            y = (nodes[a][1] + (nodes[b][1] - nodes[a][1]) * u) * H
+            d.ellipse((x - 3, y - 3, x + 3, y + 3), fill=accent + (165,))
+        for index, (nx, ny) in enumerate(nodes):
+            lit = (math.sin((p * (1 + index % 2) + index / len(nodes)) * 2 * math.pi) + 1) / 2
+            r = 4 + lit * 3
+            d.ellipse(
+                (nx * W - r, ny * H - r, nx * W + r, ny * H + r),
+                outline=(255, 255, 255, 150),
+                fill=(255, 255, 255, int(40 + 90 * lit)),
                 width=1,
             )
-            for court in range(4):
-                x = (x0 + 0.04 + court * 0.04) * W
-                d.line([(x, y0 * H), (x, (y0 + 0.09) * H)],
-                       fill=(255, 255, 255, 44), width=1)
-        pts = [(x * W, y * H) for x, y in path]
-        d.line(pts, fill=accent + (110,), width=2)
-        for walker in range(5):
-            u = ((walker / 5) + p) % 1.0
-            seg = u * (len(pts) - 1)
-            i = min(int(seg), len(pts) - 2)
-            f = seg - i
-            x = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f
-            y = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f
-            d.ellipse((x - 4, y - 4, x + 4, y + 4), fill=(255, 255, 255, 165))
 
-    return render
-
-
-def make_arts_and_culture(W, H, rnd, accent):
-    """Seating arcs, and the wavefronts leaving the stage."""
-    cx, cy = W * 0.5, H * 0.14
-
-    def render(d, p):
-        for row in range(9):
-            r = H * (0.26 + row * 0.085)
-            d.arc(
-                (cx - r * 1.9, cy - r, cx + r * 1.9, cy + r),
-                start=18,
-                end=162,
-                fill=(255, 255, 255, 40),
-                width=1,
-            )
-        for front in range(4):
-            u = ((front / 4) + p) % 1.0
-            r = H * (0.10 + u * 0.92)
-            alpha = int(120 * (1 - u))
-            if alpha <= 0:
-                continue
-            d.arc(
-                (cx - r * 1.9, cy - r, cx + r * 1.9, cy + r),
-                start=12,
-                end=168,
-                fill=accent + (alpha,),
-                width=2,
-            )
-        d.line(
-            [(W * 0.34, H * 0.12), (W * 0.66, H * 0.12)],
-            fill=(255, 255, 255, 110),
-            width=3,
-        )
-
-    return render
-
-
-def make_international_development(W, H, rnd, accent):
-    """A truss span over a river that keeps running."""
-    def render(d, p):
-        # The river the span crosses, running under it.
-        for line in range(7):
-            y0 = H * (0.74 + line * 0.040)
-            points = [
-                (
-                    x,
-                    y0
-                    + math.sin(x / W * 3 * math.pi + p * 2 * math.pi + line)
-                    * H
-                    * 0.016,
-                )
-                for x in range(0, W + 20, 20)
-            ]
-            d.line(points, fill=accent + (78,), width=1)
-        d.line([(0, H * 0.72), (W, H * 0.72)], fill=(255, 255, 255, 60), width=1)
-
-        deck = H * 0.46
-        left, right = W * 0.08, W * 0.92
-        # The span breathes under load, once per loop.
-        sag = H * 0.014 * (1 + math.sin(p * 2 * math.pi))
-        d.line([(left, deck + sag), (right, deck + sag)],
-               fill=(255, 255, 255, 165), width=3)
-        panels = 10
-        for i in range(panels + 1):
-            x = left + (right - left) * i / panels
-            top = deck + sag - H * 0.20 * math.sin(math.pi * i / panels)
-            d.line([(x, deck + sag), (x, top)], fill=(255, 255, 255, 100), width=1)
-            if i < panels:
-                nx = left + (right - left) * (i + 1) / panels
-                ntop = deck + sag - H * 0.20 * math.sin(math.pi * (i + 1) / panels)
-                d.line([(x, top), (nx, ntop)], fill=accent + (140,), width=2)
-                d.line([(x, deck + sag), (nx, ntop)], fill=(255, 255, 255, 60), width=1)
-        for pier in (left, right):
-            d.line([(pier, deck + sag), (pier, H * 0.80)],
-                   fill=(255, 255, 255, 120), width=4)
-        # Someone crossing it, once per loop.
-        walker = left + (right - left) * (p % 1.0)
-        d.ellipse(
-            (walker - 5, deck + sag - 11, walker + 5, deck + sag - 1),
-            fill=(255, 255, 255, 190),
-        )
+        # The sweep below it: axes, the response being measured, and the scan.
+        d.line([(W * 0.06, H * bottom), (W * 0.94, H * bottom)],
+               fill=(255, 255, 255, 90), width=2)
+        d.line([(W * 0.06, H * top), (W * 0.06, H * bottom)],
+               fill=(255, 255, 255, 90), width=2)
+        trace = []
+        for i in range(89):
+            t = i / 88
+            # Noise that decays left to right: the answer being narrowed down.
+            wobble = math.sin(t * 9 * math.pi + p * 2 * math.pi) * (1 - t) ** 1.8
+            y = H * bottom - H * (bottom - top) * (0.25 + 0.6 * t + 0.22 * wobble)
+            trace.append((W * (0.06 + t * 0.88), y))
+        d.line(trace, fill=accent + (150,), width=2)
+        sx, sy = trace[int((p % 1.0) * (len(trace) - 1))]
+        d.line([(sx, H * top), (sx, H * bottom)], fill=(255, 255, 255, 70), width=1)
+        d.ellipse((sx - 5, sy - 5, sx + 5, sy + 5), fill=(255, 255, 255, 215))
 
     return render
 
 
 # slug -> (poster seed, motif factory)
+# In the same order as `markets` in `packages/shared/data/markets.ts`, and each
+# seed matches that market's `image.seed` — poster, still and film are one
+# picture, so changing a seed there means regenerating the film here.
+# In the same order as `markets` in `packages/shared/data/markets.ts`, and each
+# seed matches that market's `image.seed`. The seeds are deliberately one short
+# word each and no two hash to the same gradient, so the ten films — and the ten
+# stills on /markets — are ten different colours rather than five teal ones.
 MARKETS = {
-    "transport": ("market-transport", make_transport),
+    "buildings": ("market-estate", make_buildings),
+    "cities-and-communities": ("market-urban", make_cities_and_communities),
+    "transport-and-mobility": ("market-transport", make_transport_and_mobility),
+    "water-and-environment": ("market-environment", make_water_and_environment),
     "energy": ("market-energy", make_energy),
-    "water": ("market-water", make_water),
-    "property": ("market-property", make_property),
-    "data-centres": ("market-data-centres", make_data_centres),
-    "cities": ("market-cities", make_cities),
-    "science": ("market-science", make_science),
-    "healthcare": ("market-healthcare", make_healthcare),
-    "industry-and-manufacturing": ("market-industry", make_industry_and_manufacturing),
-    "resources": ("market-resources", make_resources),
-    "sport": ("market-sport", make_sport),
-    "education": ("market-education", make_education),
-    "arts-and-culture": ("market-arts", make_arts_and_culture),
-    "international-development": ("market-development", make_international_development),
+    "industrial-and-manufacturing": ("market-industry", make_industrial_and_manufacturing),
+    "healthcare-and-science": ("market-health-science", make_healthcare_and_science),
+    "data-centers-and-digital-infrastructure": ("market-digital", make_data_centers_and_digital_infrastructure),
+    "climate-and-sustainability": ("market-sustainability", make_climate_and_sustainability),
+    "research-and-emerging-technologies": ("market-research", make_research_and_emerging_technologies),
 }
 
 

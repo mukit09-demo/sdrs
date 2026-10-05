@@ -23,9 +23,14 @@ export default async function MarketsPage() {
   return (
     <>
       <PageHero
-        title="Markets"
+        layout="wide"
+        title={"Engineering across sectors.\nThinking beyond disciplines."}
         eyebrow="Where we work"
-        intro="Our teams work across the sectors that keep places running. Each market brings its own constraints, regulation and pace of change — and its own combination of our specialists."
+        intro={`SDRS brings together engineering, design, research and technology to address the complex challenges shaping our built and natural environments.
+
+From buildings and infrastructure to mobility, energy, water, healthcare and sustainable communities, we work across disciplines to develop solutions that are safe, resilient, efficient and environmentally responsible.
+
+Our ambition is simple: combine technical excellence with research and innovation to create lasting value for people, communities and the planet.`}
         crumbs={[{ label: "Home", href: routes.home }, { label: "Markets" }]}
       />
 

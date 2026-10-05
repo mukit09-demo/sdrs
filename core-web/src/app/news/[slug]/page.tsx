@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BrandText } from "@/components/layout/Logo";
 import { ArticleBody } from "@/components/sections/ArticleBody";
 import { CardGrid } from "@/components/sections/CardGrid";
 import { CtaBand } from "@/components/sections/CtaBand";
@@ -72,8 +73,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             <time dateTime={article.publishedAt}>{formatDate(article.publishedAt)}</time>
             <span>{article.readingMinutes} min read</span>
             <span>
-              {article.author.name}
-              <span className="text-ink-400"> — {article.author.role}</span>
+              <BrandText>{article.author.name}</BrandText>
+              <span className="text-ink-400">
+                {" — "}
+                <BrandText>{article.author.role}</BrandText>
+              </span>
             </span>
           </div>
 

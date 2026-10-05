@@ -161,10 +161,11 @@ function linesField(
 // in step: each list is declared as the union's members, so adding a case to the
 // type without adding it here fails to compile.
 const SERVICE_CATEGORIES: readonly ServiceCategory[] = [
-  "Design and engineering",
   "Advisory",
+  "Design & Engineering",
   "Digital",
-  "Planning",
+  "Planning & Sustainability",
+  "Research & Innovation",
 ];
 
 const ARTICLE_CATEGORIES: readonly ArticleCategory[] = [
@@ -366,9 +367,9 @@ const services: AdminCollection = {
     },
     imageField(),
     linesField(
-      "deliverables",
-      "Deliverables",
-      "Concrete outputs a client receives — one per line.",
+      "capabilities",
+      "Capabilities",
+      "The specialisms this service covers — one per line.",
       true,
     ),
     linesField(
@@ -383,7 +384,7 @@ const services: AdminCollection = {
     return entities.map((service) => ({
       id: service.slug,
       title: service.name,
-      meta: [service.category, `${service.deliverables.length} deliverables`],
+      meta: [service.category, `${service.capabilities.length} capabilities`],
     }));
   },
 
@@ -398,7 +399,7 @@ const services: AdminCollection = {
       tagline: service.tagline,
       description: service.description,
       image: imageToValues(service.image),
-      deliverables: service.deliverables,
+      capabilities: service.capabilities,
       relatedMarketSlugs: service.relatedMarketSlugs,
     };
   },
@@ -411,7 +412,7 @@ const services: AdminCollection = {
       tagline: str(values, "tagline"),
       description: str(values, "description"),
       image: image(values, "image"),
-      deliverables: list(values, "deliverables"),
+      capabilities: list(values, "capabilities"),
       relatedMarketSlugs: list(values, "relatedMarketSlugs"),
     };
 

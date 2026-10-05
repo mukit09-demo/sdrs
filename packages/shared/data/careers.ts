@@ -152,7 +152,7 @@ export const careersContent: CareersContent = {
     {
       title: "Time for research",
       description:
-        "SDRS University funds internal research. If you have a question worth answering, there is a route to being paid to answer it.",
+        "A fixed share of profit funds internal research. If you have a question worth answering, there is a route to being paid to answer it.",
     },
   ],
 

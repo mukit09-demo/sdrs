@@ -21,6 +21,59 @@ const nextConfig: NextConfig = {
     remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
 
+  /**
+   * The market and service sets were both reshaped — fourteen sectors to ten,
+   * and thirteen services to ten — with most of the survivors renamed. These are
+   * the paths that used to be prerendered, pointed at whatever now covers them:
+   * permanent, because the old URLs are in search results and in client decks.
+   * Retire an entry only once nothing links to it.
+   */
+  async redirects() {
+    const markets: Record<string, string> = {
+      property: "buildings",
+      sport: "buildings",
+      education: "buildings",
+      "arts-and-culture": "buildings",
+      cities: "cities-and-communities",
+      "international-development": "cities-and-communities",
+      transport: "transport-and-mobility",
+      water: "water-and-environment",
+      "industry-and-manufacturing": "industrial-and-manufacturing",
+      resources: "industrial-and-manufacturing",
+      healthcare: "healthcare-and-science",
+      science: "healthcare-and-science",
+      "data-centres": "data-centers-and-digital-infrastructure",
+    };
+
+    const services: Record<string, string> = {
+      "building-services-engineering": "building-services-mep",
+      "fire-engineering": "building-services-mep",
+      acoustics: "architecture-and-integrated-building-design",
+      geotechnics: "geotechnical-and-foundation-engineering",
+      masterplanning: "civil-and-infrastructure-engineering",
+      "transport-planning": "civil-and-infrastructure-engineering",
+      "sustainability-consulting": "sustainability-and-resilience",
+      "climate-resilience": "sustainability-and-resilience",
+      "digital-consulting": "digital-engineering-and-bim",
+      "programme-management": "project-and-construction-advisory",
+      "advisory-economics": "project-and-construction-advisory",
+      "research-and-innovation": "research-innovation-and-training",
+    };
+
+    return [
+      ...Object.entries(markets).map(([from, to]) => ({
+        source: `/markets/${from}`,
+        destination: `/markets/${to}`,
+        permanent: true,
+      })),
+      ...Object.entries(services).map(([from, to]) => ({
+        source: `/services/${from}`,
+        destination: `/services/${to}`,
+        permanent: true,
+      })),
+    ];
+  },
+
   async rewrites() {
     const apiOrigin = process.env.BACKEND_ORIGIN;
     if (!apiOrigin) return [];

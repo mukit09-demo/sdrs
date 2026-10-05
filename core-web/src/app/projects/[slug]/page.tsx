@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BrandText } from "@/components/layout/Logo";
 import { CardGrid } from "@/components/sections/CardGrid";
 import { CtaBand } from "@/components/sections/CtaBand";
 import { DetailList } from "@/components/sections/DetailList";
@@ -76,7 +77,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
               The project
             </h2>
             <p className="mt-6 text-lg leading-relaxed text-ink-600">
-              {project.description}
+              <BrandText>{project.description}</BrandText>
             </p>
 
             {project.highlights.length > 0 && (

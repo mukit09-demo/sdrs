@@ -70,9 +70,9 @@ export default async function ServicePage({ params }: ServicePageProps) {
           </div>
           <div>
             <h3 className="text-xs font-medium tracking-widest text-ink-500 uppercase">
-              What you receive
+              Capabilities
             </h3>
-            <DetailList items={service.deliverables} className="mt-6" />
+            <DetailList items={service.capabilities} className="mt-6" />
           </div>
         </div>
       </Section>

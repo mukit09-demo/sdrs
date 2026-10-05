@@ -1,3 +1,4 @@
+import { BrandText } from "@/components/layout/Logo";
 import { cn } from "@/lib/utils/cn";
 
 export interface QuoteBlockProps {
@@ -36,13 +37,19 @@ export function QuoteBlock({
           isDark ? "text-white" : "text-ink-900",
         )}
       >
-        {quote}
+        <BrandText tone={isDark ? "inverse" : "brand"}>{quote}</BrandText>
       </blockquote>
       <figcaption
         className={cn("mt-6 text-sm", isDark ? "text-white/60" : "text-ink-500")}
       >
-        <span className={isDark ? "text-white" : "text-ink-900"}>{attribution}</span>
-        {detail && <span className="block">{detail}</span>}
+        <span className={isDark ? "text-white" : "text-ink-900"}>
+          <BrandText tone={isDark ? "inverse" : "brand"}>{attribution}</BrandText>
+        </span>
+        {detail && (
+          <span className="block">
+            <BrandText tone={isDark ? "inverse" : "brand"}>{detail}</BrandText>
+          </span>
+        )}
       </figcaption>
     </figure>
   );

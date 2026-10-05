@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { BrandText } from "@/components/layout/Logo";
 import { Breadcrumbs, type Crumb } from "@/components/sections/Breadcrumbs";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -8,6 +9,7 @@ import { cn } from "@/lib/utils/cn";
 import type { MediaImage } from "@sdrs/shared/types/content";
 
 export interface PageHeroProps {
+  /** A `\n` sets a hard break — for headings written as two deliberate lines. */
   title: string;
   eyebrow?: string;
   /** Lead paragraph under the heading. */
@@ -20,6 +22,12 @@ export interface PageHeroProps {
   actions?: { label: string; href: string }[];
   /** `full` for landing pages, `compact` for detail pages. */
   size?: "full" | "compact";
+  /**
+   * `stacked` holds the heading and intro to a reading measure down the left
+   * edge. `wide` lets both run the full width of the container — for the
+   * landing hero, where the right half of the band would otherwise sit empty.
+   */
+  layout?: "stacked" | "wide";
   /** Extra content below the intro — stats, meta lists. */
   children?: ReactNode;
 }
@@ -38,6 +46,7 @@ export function PageHero({
   tags,
   actions,
   size = "full",
+  layout = "stacked",
   children,
 }: PageHeroProps) {
   const hasImage = Boolean(image);
@@ -47,6 +56,13 @@ export function PageHero({
   // The heading only needs a top margin when something is rendered above it —
   // otherwise it sits directly on the band's own padding.
   const headingMargin = eyebrow ? "mt-4" : hasCrumbs || hasTags ? "mt-6" : "";
+
+  // A blank line in the intro is a paragraph break: one `<p>` would collapse it
+  // to a space, which is never what the copy meant.
+  const introParagraphs = (intro ?? "")
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 
   return (
     <header
@@ -105,25 +121,36 @@ export function PageHero({
         <h1
           className={cn(
             headingMargin,
-            "max-w-4xl font-medium tracking-tight",
+            "font-medium tracking-tight",
+            // `wide` lets the line run to the gutter so a long title still sets
+            // on one line on a large screen.
+            layout === "wide" ? "max-w-none" : "max-w-4xl",
+            // A newline in the title is a deliberate break in a two-line
+            // heading; longer lines still wrap on their own.
+            title.includes("\n") && "whitespace-pre-line",
             size === "full"
               ? "text-4xl leading-[1.03] md:text-6xl lg:text-7xl"
               : "text-3xl leading-[1.06] md:text-5xl",
           )}
         >
-          {title}
+          <BrandText tone={hasImage ? "inverse" : "brand"}>{title}</BrandText>
         </h1>
 
-        {intro && (
+        {introParagraphs.map((paragraph, index) => (
           <p
+            key={paragraph}
             className={cn(
-              "mt-6 max-w-2xl text-lg leading-relaxed md:text-xl",
+              "text-lg leading-relaxed md:text-xl",
+              index === 0 ? "mt-6" : "mt-4",
+              layout === "wide" ? "max-w-none" : "max-w-2xl",
               hasImage ? "text-white/80" : "text-ink-600",
             )}
           >
-            {intro}
+            <BrandText tone={hasImage ? "inverse" : "brand"}>
+              {paragraph}
+            </BrandText>
           </p>
-        )}
+        ))}
 
         {actions && actions.length > 0 && (
           <div className="mt-8 flex flex-wrap gap-4">

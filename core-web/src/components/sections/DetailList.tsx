@@ -1,3 +1,4 @@
+import { BrandText } from "@/components/layout/Logo";
 import { CheckIcon } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils/cn";
 
@@ -56,7 +57,9 @@ export function DetailList({
               {String(index + 1).padStart(2, "0")}
             </span>
           )}
-          <span>{item}</span>
+          <span>
+            <BrandText tone={isDark ? "inverse" : "brand"}>{item}</BrandText>
+          </span>
         </li>
       ))}
     </ul>

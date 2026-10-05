@@ -73,10 +73,11 @@ export interface Market {
 }
 
 export type ServiceCategory =
-  | "Design and engineering"
   | "Advisory"
+  | "Design & Engineering"
   | "Digital"
-  | "Planning";
+  | "Planning & Sustainability"
+  | "Research & Innovation";
 
 export interface Service {
   slug: Slug;
@@ -85,8 +86,8 @@ export interface Service {
   tagline: string;
   description: string;
   image: MediaImage;
-  /** Concrete outputs a client receives. */
-  deliverables: string[];
+  /** What the service actually covers — the specialisms inside it. */
+  capabilities: string[];
   relatedMarketSlugs: Slug[];
 }
 

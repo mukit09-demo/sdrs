@@ -2,8 +2,15 @@ import type { ResearchContent } from "../types/content";
 
 /** Dummy content. Replace with the Spring Boot `/api/pages/research` response. */
 export const researchContent: ResearchContent = {
-  intro:
-    "Research is in our name, and a fixed share of profit pays for it. SDRS University funds the questions our projects keep running into, publishes what it finds, and teaches it back to our own teams and to our clients.",
+  // Blank lines are paragraph breaks: the hero sets each one as its own block
+  // of copy rather than running all four together.
+  intro: `At SDRS, research and learning are part of how we build the future.
+
+We empower young engineers, researchers and emerging professionals through practical training, mentorship and opportunities to investigate real-world challenges. We believe their curiosity, energy and fresh thinking can become a powerful force for innovation.
+
+Our research extends across engineering, science and mathematics, while exploring interdisciplinary areas such as sustainable materials, healthier food and products, environmental responsibility and emerging technologies.
+
+We aim to turn knowledge into solutions and learning into impact — contributing to a safer, healthier and more sustainable world for us and for generations to come.`,
 
   stats: [
     { value: "3.5", unit: "%", label: "Of profit committed to research each year" },
@@ -374,6 +381,6 @@ export const researchContent: ResearchContent = {
     quote:
       "A research programme that only ever confirms what we already sell is not research. The ones worth funding are the ones that could embarrass us, and a few of them have.",
     attribution: "Dr Meera Raghunathan",
-    detail: "Director, SDRS University",
+    detail: "Director of Research and Training",
   },
 };

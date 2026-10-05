@@ -18,7 +18,7 @@ export const articles: Article[] = [
     readingMinutes: 4,
     author: { name: "Priya Raghunathan", role: "Regional Communications Lead, East Asia" },
     image: { alt: "A stadium with a retractable roof at dusk", seed: "news-kai-tak-park" },
-    tags: ["sport", "cities", "property"],
+    tags: ["buildings", "cities-and-communities"],
   },
   {
     slug: "data-centre-water-use-report",
@@ -36,7 +36,7 @@ export const articles: Article[] = [
     readingMinutes: 7,
     author: { name: "Daniel Okonkwo", role: "Global Data Centres Leader" },
     image: { alt: "Cooling towers beside a data centre building", seed: "news-dc-water" },
-    tags: ["data-centres", "water", "energy"],
+    tags: ["data-centers-and-digital-infrastructure", "water-and-environment", "energy"],
   },
   {
     slug: "nusantara-spatial-framework",
@@ -54,7 +54,7 @@ export const articles: Article[] = [
     readingMinutes: 5,
     author: { name: "Sari Wijaya", role: "Associate Director, Cities Planning" },
     image: { alt: "Aerial view of forest and a planned settlement", seed: "news-nusantara" },
-    tags: ["cities", "water", "international-development"],
+    tags: ["cities-and-communities", "water-and-environment"],
   },
   {
     slug: "porthcawl-scheme-wins-award",
@@ -71,7 +71,7 @@ export const articles: Article[] = [
     readingMinutes: 3,
     author: { name: "Rhian Morgan", role: "Project Director, Water" },
     image: { alt: "A coastal promenade beside a sandy beach", seed: "news-porthcawl-award" },
-    tags: ["water", "cities"],
+    tags: ["water-and-environment", "cities-and-communities"],
   },
   {
     slug: "retrofit-first-policy-briefing",
@@ -89,7 +89,7 @@ export const articles: Article[] = [
     readingMinutes: 6,
     author: { name: "Tom Ashworth", role: "Sustainability Consulting Lead" },
     image: { alt: "Scaffolding around a building under refurbishment", seed: "news-retrofit" },
-    tags: ["property", "sustainability"],
+    tags: ["buildings", "sustainability"],
   },
   {
     slug: "uheat-expands-to-fifty-cities",
@@ -106,7 +106,7 @@ export const articles: Article[] = [
     readingMinutes: 3,
     author: { name: "Lena Fischer", role: "Digital Products Lead" },
     image: { alt: "Thermal imagery overlaid on a city map", seed: "news-uheat" },
-    tags: ["cities", "digital", "climate"],
+    tags: ["cities-and-communities", "digital", "climate"],
   },
   {
     slug: "grid-connection-queue-analysis",

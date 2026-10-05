@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandText } from "@/components/layout/Logo";
 import { ArrowRightIcon } from "@/components/ui/Icon";
 import { LoopingVideo } from "@/components/ui/LoopingVideo";
 import { Media } from "@/components/ui/Media";
@@ -63,10 +64,12 @@ export function ContentCard({
               featured ? "text-2xl md:text-3xl" : "text-lg md:text-xl",
             )}
           >
-            {item.title}
+            <BrandText>{item.title}</BrandText>
           </h3>
           {item.summary && (
-            <p className="mt-2 max-w-2xl text-sm text-ink-600">{item.summary}</p>
+            <p className="mt-2 max-w-2xl text-sm text-ink-600">
+              <BrandText>{item.summary}</BrandText>
+            </p>
           )}
           <CardMeta meta={item.meta} />
         </div>
@@ -100,11 +103,11 @@ export function ContentCard({
               featured ? "text-3xl md:text-4xl" : "text-xl md:text-2xl",
             )}
           >
-            {item.title}
+            <BrandText tone="inverse">{item.title}</BrandText>
           </h3>
           {item.summary && (
             <p className="mt-3 max-w-xl text-sm text-white/85 md:text-base">
-              {item.summary}
+              <BrandText tone="inverse">{item.summary}</BrandText>
             </p>
           )}
           <span className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-white">
@@ -136,10 +139,12 @@ export function ContentCard({
             featured ? "text-2xl md:text-3xl" : "text-lg md:text-xl",
           )}
         >
-          {item.title}
+          <BrandText>{item.title}</BrandText>
         </h3>
         {item.summary && (
-          <p className="mt-3 text-sm leading-relaxed text-ink-600">{item.summary}</p>
+          <p className="mt-3 text-sm leading-relaxed text-ink-600">
+            <BrandText>{item.summary}</BrandText>
+          </p>
         )}
         <CardMeta meta={item.meta} />
         <span className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-ink-900">

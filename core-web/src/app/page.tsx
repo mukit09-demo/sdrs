@@ -27,9 +27,11 @@ export default async function HomePage() {
   return (
     <>
       <PageHero
-        title="We shape a better world"
-        eyebrow="Designers, engineers and consultants"
-        intro="SDRS is an independent studio of designers, engineers, architects, planners, consultants and technical specialists, working across every aspect of today's built environment."
+        layout="wide"
+        title="Engineering a Sustainable Tomorrow"
+        intro="SDRS is a multidisciplinary design and research studio bringing together engineering, innovation and knowledge to shape a more sustainable future.
+
+We design, research and share knowledge to create places and infrastructure that are safer, healthier, more resilient and more livable — for people, communities and the planet."
         image={{
           alt: "Long-span bridge deck at dusk",
           seed: "home-hero",
