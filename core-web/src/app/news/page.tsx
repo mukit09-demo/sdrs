@@ -4,11 +4,10 @@ import { CtaBand } from "@/components/sections/CtaBand";
 import { FilterableGrid } from "@/components/sections/FilterableGrid";
 import { PageHero } from "@/components/sections/PageHero";
 import { Section } from "@/components/sections/Section";
-import { SectionHeader } from "@/components/sections/SectionHeader";
 import { routes } from "@/lib/config/routes";
 import { content } from "@/lib/content";
 import { articleCategoryFilterGroup } from "@/lib/content/filters";
-import { articleToCard, issueToCard } from "@/lib/content/mappers";
+import { articleToCard } from "@/lib/content/mappers";
 
 export const metadata: Metadata = {
   title: "News",
@@ -17,10 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function NewsPage() {
-  const [articles, issues] = await Promise.all([
-    content.listArticles(),
-    content.listIssues(),
-  ]);
+  const articles = await content.listArticles();
 
   const [lead, ...rest] = articles;
 
@@ -52,17 +48,6 @@ export default async function NewsPage() {
           itemNoun={{ singular: "story", plural: "stories" }}
           columns={3}
         />
-      </Section>
-
-      <Section tone="muted">
-        <SectionHeader
-          eyebrow="Issues"
-          title="Questions we keep returning to"
-          description="Longer-running themes behind much of our research and advisory work."
-        />
-        <div className="mt-14">
-          <CardGrid items={issues.map(issueToCard)} columns={3} variant="overlay" />
-        </div>
       </Section>
 
       <CtaBand

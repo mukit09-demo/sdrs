@@ -1,4 +1,4 @@
-import type { Article, Issue } from "../types/content";
+import type { Article } from "../types/content";
 
 /** Dummy content. Replace with the Spring Boot `/api/articles` response. */
 export const articles: Article[] = [
@@ -161,51 +161,5 @@ export const articles: Article[] = [
     author: { name: "Marcus Bell", role: "Global Early Careers Lead" },
     image: { alt: "Young professionals collaborating around a model", seed: "news-early-careers" },
     tags: ["careers"],
-  },
-];
-
-/** Dummy content. Replace with the Spring Boot `/api/issues` response. */
-export const issues: Issue[] = [
-  {
-    slug: "protect-cities-rising-temperatures",
-    question: "How do we protect our cities from rising temperatures?",
-    summary:
-      "Urban heat is the climate impact people feel first. Targeting the specific surfaces that drive it beats spreading intervention evenly across a city.",
-    image: { alt: "A tree-lined city street providing shade", seed: "issue-heat" },
-  },
-  {
-    slug: "electricity-grid-fit-for-future",
-    question: "How do we build an electricity grid fit for the future?",
-    summary:
-      "Consented generation now waits longer for a connection than it takes to build. Queue reform releases capacity faster than new transmission.",
-    image: { alt: "Transmission lines crossing open countryside", seed: "issue-grid" },
-  },
-  {
-    slug: "how-does-a-city-become-net-zero",
-    question: "How does a city become net zero?",
-    summary:
-      "Not by adding targets. By sequencing the handful of interventions — buildings, transport, heat — that account for most of the curve.",
-    image: { alt: "A city skyline with wind turbines beyond", seed: "issue-net-zero" },
-  },
-  {
-    slug: "data-centre-sustainability",
-    question: "Can data centre growth be sustainable?",
-    summary:
-      "Power gets the attention, but water will bind first in six of the ten fastest-growing markets. Site selection is where this is decided.",
-    image: { alt: "A data centre building surrounded by greenery", seed: "issue-data-centres" },
-  },
-  {
-    slug: "high-speed-rail-value",
-    question: "Is high-speed rail worth it for a country?",
-    summary:
-      "It depends almost entirely on what is built around the stations. The line itself rarely generates the benefits used to justify it.",
-    image: { alt: "A high-speed train at a station platform", seed: "issue-hsr" },
-  },
-  {
-    slug: "making-cities-more-productive",
-    question: "What makes a city more productive?",
-    summary:
-      "Density helps only when people can move through it. Productivity gains track accessibility far more closely than they track built form.",
-    image: { alt: "A busy pedestrianised city square", seed: "issue-productivity" },
   },
 ];

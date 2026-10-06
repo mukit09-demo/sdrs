@@ -146,14 +146,6 @@ export interface Article {
   tags: string[];
 }
 
-/** A "big question" teaser — SDRS calls these Issues. */
-export interface Issue {
-  slug: Slug;
-  question: string;
-  summary: string;
-  image: MediaImage;
-}
-
 export interface Person {
   id: string;
   name: string;
@@ -202,6 +194,21 @@ export interface AboutContent {
 export type EmploymentType = "Full time" | "Part time" | "Contract";
 export type CareerLevel = "Graduate" | "Experienced" | "Senior" | "Leadership";
 
+/**
+ * Where a job is in its lifecycle. Only `"Open"` is ever advertised — and even
+ * then only until its `deadline` passes.
+ */
+export type JobStatus = "Draft" | "Open" | "Closed";
+
+/**
+ * A job.
+ *
+ * Named for the opening rather than the record because that is what the site
+ * renders, but the collection holds every job: `status` and `deadline` decide
+ * which of them is an opening today. `CareersContent.openings` is already
+ * filtered to those; `ContentAdminRepository.listJobOpenings` is not, because
+ * an editor has to see a draft in order to publish it.
+ */
 export interface JobOpening {
   id: string;
   title: string;
@@ -209,8 +216,17 @@ export interface JobOpening {
   location: string;
   employmentType: EmploymentType;
   level: CareerLevel;
+  status: JobStatus;
   /** ISO-8601 date (`YYYY-MM-DD`). */
   postedAt: string;
+  /**
+   * Last day applications are accepted, inclusive. ISO-8601 (`YYYY-MM-DD`).
+   *
+   * Omit for "open until filled" — that is a real case, not missing data, so an
+   * absent deadline never closes a role. A job past its deadline stops being an
+   * opening without anything having to edit it.
+   */
+  deadline?: string;
 }
 
 export interface ProcessStep {

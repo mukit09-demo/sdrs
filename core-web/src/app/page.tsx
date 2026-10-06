@@ -7,7 +7,7 @@ import { SectionHeader } from "@/components/sections/SectionHeader";
 import { PageHero } from "@/components/sections/PageHero";
 import { StatList } from "@/components/ui/StatList";
 import { content } from "@/lib/content";
-import { articleToCard, issueToCard, projectToCard } from "@/lib/content/mappers";
+import { articleToCard, projectToCard } from "@/lib/content/mappers";
 import { routes } from "@/lib/config/routes";
 
 /**
@@ -15,12 +15,11 @@ import { routes } from "@/lib/config/routes";
  * same whether the data is bundled dummy content or the Spring Boot API.
  */
 export default async function HomePage() {
-  const [home, markets, projects, articles, issues, about] = await Promise.all([
+  const [home, markets, projects, articles, about] = await Promise.all([
     content.getHomeContent(),
     content.listMarkets(),
     content.listProjects({ limit: 6 }),
     content.listArticles({ limit: 3 }),
-    content.listIssues(3),
     content.getAboutContent(),
   ]);
 
@@ -76,17 +75,6 @@ We design, research and share knowledge to create places and infrastructure that
             variant="overlay"
             leadFeature
           />
-        </div>
-      </Section>
-
-      <Section>
-        <SectionHeader
-          eyebrow="Big questions"
-          title="The issues shaping our work"
-          description="Open problems we are investigating with clients, universities and city authorities."
-        />
-        <div className="mt-14">
-          <CardGrid items={issues.map(issueToCard)} columns={3} />
         </div>
       </Section>
 

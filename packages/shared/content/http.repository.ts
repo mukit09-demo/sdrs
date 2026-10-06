@@ -1,16 +1,16 @@
 import { apiRequest, apiRequestOrNull } from "../api/http";
+import { aboutContent } from "../data/about";
+import { careersContent } from "../data/careers";
+import { contactContent } from "../data/contact";
+import { homeContent } from "../data/home";
+import { researchContent } from "../data/research";
+import { digitalTools } from "../data/services";
 import type {
-  AboutContent,
   Article,
   CareersContent,
-  ContactContent,
-  DigitalTool,
-  HomeContent,
-  Issue,
   JobOpening,
   Market,
   Project,
-  ResearchContent,
   Service,
 } from "../types/content";
 import type {
@@ -25,33 +25,45 @@ import type {
  * Talks to the Spring Boot backend. Activated by
  * `NEXT_PUBLIC_CONTENT_SOURCE=api`.
  *
- * Endpoints assumed here — adjust to match the controllers once they exist:
+ * **Not everything goes over HTTP.** The backend persists only what the CMS
+ * manages — markets, services, projects, news and vacancies — plus the enquiry
+ * inbox. The page bundles (home, about, careers, research, contact) and the
+ * digital tools list are editorial prose with no screen in `manage-web` and no
+ * table in the database, so they are served from `../data` here exactly as the
+ * mock repository serves them. Editing them is a code change and a deploy,
+ * which is what they were already.
+ *
+ * That keeps this file the single source either way: a caller still asks the
+ * repository and does not know or care which half answered.
+ *
+ * Endpoints this implementation calls:
  *
  *   GET  /api/markets                 → Market[]
  *   GET  /api/markets/{slug}          → Market
  *   GET  /api/services                → Service[]
  *   GET  /api/services/{slug}         → Service
- *   GET  /api/digital-tools           → DigitalTool[]
  *   GET  /api/projects?market=&service=&slugs=&limit=
  *                                     → Project[]
  *   GET  /api/projects/{slug}         → Project
  *   GET  /api/articles?tag=&limit=&exclude=
  *                                     → Article[]
  *   GET  /api/articles/{slug}         → Article
- *   GET  /api/issues?limit=           → Issue[]
- *   GET  /api/issues/{slug}           → Issue
- *   GET  /api/pages/home              → HomeContent
- *   GET  /api/pages/about             → AboutContent
- *   GET  /api/pages/careers           → CareersContent
- *   GET  /api/pages/research          → ResearchContent
- *   GET  /api/pages/contact           → ContactContent
+ *   GET  /api/jobs                    → JobOpening[]  (candidate-facing:
+ *                                       status Open, deadline not passed)
  *   POST /api/enquiries               → EnquiryResult
  *
- * Writes, called only from the admin area. `{collection}` is one of `markets`,
- * `services`, `projects`, `articles`, `issues` or `job-openings`:
+ * Served from `../data`, no endpoint: `/pages/*` and `/digital-tools`.
  *
- *   GET    /api/job-openings          → JobOpening[]
- *   GET    /api/job-openings/{id}     → JobOpening
+ * Writes, called only from the admin area. `{collection}` is one of `markets`,
+ * `services`, `projects`, `articles` or `jobs`:
+ *
+ * The admin *reads* sit under `/api/admin/` because every other GET is public:
+ * the candidate-facing `/api/jobs` shows openings only, and a draft vacancy
+ * should not be readable just because `GET /api/**` is `permitAll`. Writes need
+ * no prefix — they already require the admin role.
+ *
+ *   GET    /api/admin/jobs            → JobOpening[]  (every status)
+ *   GET    /api/admin/jobs/{id}       → JobOpening
  *   POST   /api/{collection}          → 200/201, body is the entity
  *   PUT    /api/{collection}/{id}     → 200/204, body is the entity
  *   DELETE /api/{collection}/{id}     → 200/204
@@ -78,8 +90,8 @@ export const httpRepository: ContentAdminRepository = {
     return apiRequestOrNull<Service>(`/services/${encodeURIComponent(slug)}`);
   },
 
-  listDigitalTools() {
-    return apiRequest<DigitalTool[]>("/digital-tools");
+  async listDigitalTools() {
+    return [...digitalTools];
   },
 
   listProjects(query: ProjectQuery = {}) {
@@ -111,40 +123,49 @@ export const httpRepository: ContentAdminRepository = {
     return apiRequestOrNull<Article>(`/articles/${encodeURIComponent(slug)}`);
   },
 
-  listIssues(limit) {
-    return apiRequest<Issue[]>("/issues", { query: { limit } });
-  },
-
-  getIssue(slug) {
-    return apiRequestOrNull<Issue>(`/issues/${encodeURIComponent(slug)}`);
-  },
-
+  // Every job, whatever its status — the CMS listing, hence the admin path.
   listJobOpenings() {
-    return apiRequest<JobOpening[]>("/job-openings");
+    return apiRequest<JobOpening[]>("/admin/jobs");
   },
 
   getJobOpening(id) {
-    return apiRequestOrNull<JobOpening>(`/job-openings/${encodeURIComponent(id)}`);
+    return apiRequestOrNull<JobOpening>(`/admin/jobs/${encodeURIComponent(id)}`);
   },
 
-  getHomeContent() {
-    return apiRequest<HomeContent>("/pages/home");
+  // --- Page bundles: code-edited, not stored ------------------------------
+  //
+  // Identical to `mock.repository.ts` on purpose. These have no CMS screen and
+  // no table, so there is nothing for the backend to serve; going through the
+  // repository anyway is what keeps the switch invisible to the UI.
+
+  async getHomeContent() {
+    return homeContent;
   },
 
-  getAboutContent() {
-    return apiRequest<AboutContent>("/pages/about");
+  async getAboutContent() {
+    return aboutContent;
   },
 
-  getCareersContent() {
-    return apiRequest<CareersContent>("/pages/careers");
+  /**
+   * The one hybrid. Everything but the vacancies is code-edited; the vacancies
+   * are the part the CMS manages, so they come from the backend and are spliced
+   * in here — the same shape `mock.repository.ts` assembles from its store.
+   */
+  async getCareersContent(): Promise<CareersContent> {
+    return {
+      ...careersContent,
+      // `/jobs` is the candidate-facing list: the backend applies the opening
+      // rule, so nothing needs filtering here.
+      openings: await apiRequest<JobOpening[]>("/jobs"),
+    };
   },
 
-  getResearchContent() {
-    return apiRequest<ResearchContent>("/pages/research");
+  async getResearchContent() {
+    return researchContent;
   },
 
-  getContactContent() {
-    return apiRequest<ContactContent>("/pages/contact");
+  async getContactContent() {
+    return contactContent;
   },
 
   submitEnquiry(input: EnquiryInput) {
@@ -189,20 +210,15 @@ export const httpRepository: ContentAdminRepository = {
     return remove("articles", slug);
   },
 
-  saveIssue(issue) {
-    return upsert("issues", issue.slug, issue);
-  },
-
-  deleteIssue(slug) {
-    return remove("issues", slug);
-  },
-
   saveJobOpening(opening) {
-    return upsert("job-openings", opening.id, opening);
+    // Probed against the admin path, not the public one: a draft job is absent
+    // from `/jobs`, so probing there would read "does not exist", POST, and
+    // collide with the row that is already in the table.
+    return upsert("jobs", opening.id, opening, "admin/jobs");
   },
 
   deleteJobOpening(id) {
-    return remove("job-openings", id);
+    return remove("jobs", id);
   },
 };
 
@@ -215,15 +231,22 @@ async function upsert(
   collection: string,
   id: string,
   body: unknown,
+  /**
+   * Where to look the entity up, when that is not where it is written. Only
+   * jobs need it: their public read is filtered, so existence has to be checked
+   * against the unfiltered admin path.
+   */
+  readCollection: string = collection,
 ): Promise<void> {
-  const path = `/${collection}/${encodeURIComponent(id)}`;
-  const existing = await apiRequestOrNull<unknown>(path, { revalidate: 0 });
+  const existing = await apiRequestOrNull<unknown>(
+    `/${readCollection}/${encodeURIComponent(id)}`,
+    { revalidate: 0 },
+  );
 
-  await apiRequest<void>(existing ? path : `/${collection}`, {
-    method: existing ? "PUT" : "POST",
-    body,
-    revalidate: 0,
-  });
+  await apiRequest<void>(
+    existing ? `/${collection}/${encodeURIComponent(id)}` : `/${collection}`,
+    { method: existing ? "PUT" : "POST", body, revalidate: 0 },
+  );
 }
 
 function remove(collection: string, id: string): Promise<void> {

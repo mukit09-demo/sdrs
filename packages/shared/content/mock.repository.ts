@@ -5,6 +5,7 @@ import { homeContent } from "../data/home";
 import { researchContent } from "../data/research";
 import { digitalTools } from "../data/services";
 import { sortByDateDesc } from "../utils/format";
+import { isOpening } from "./jobs";
 import type { CareersContent } from "../types/content";
 import type {
   ArticleQuery,
@@ -91,11 +92,6 @@ export const mockRepository: ContentAdminRepository = {
     return (await readStore()).articles.find((article) => article.slug === slug) ?? null;
   },
 
-  async listIssues(limit) {
-    const { issues } = await readStore();
-    return limit ? issues.slice(0, limit) : [...issues];
-  },
-
   async getHomeContent() {
     return homeContent;
   },
@@ -107,7 +103,12 @@ export const mockRepository: ContentAdminRepository = {
   async getCareersContent(): Promise<CareersContent> {
     // Everything but the vacancies is still code-edited; those come from the
     // store so the admin can add one without touching this file.
-    return { ...careersContent, openings: [...(await readStore()).openings] };
+    //
+    // Filtered to actual openings — a draft or an expired role is in the store
+    // but is not advertised. `listJobOpenings` below deliberately is not, so
+    // the CMS can see a draft in order to publish it.
+    const openings = (await readStore()).openings.filter((job) => isOpening(job));
+    return { ...careersContent, openings };
   },
 
   async getResearchContent() {
@@ -166,18 +167,7 @@ export const mockRepository: ContentAdminRepository = {
     return remove("articles", slug, (a) => a.slug);
   },
 
-  async getIssue(slug) {
-    return (await readStore()).issues.find((issue) => issue.slug === slug) ?? null;
-  },
-
-  saveIssue(issue) {
-    return upsert("issues", issue, (i) => i.slug);
-  },
-
-  deleteIssue(slug) {
-    return remove("issues", slug, (i) => i.slug);
-  },
-
+  /** Every job, whatever its status — this is the CMS listing. */
   async listJobOpenings() {
     return [...(await readStore()).openings];
   },

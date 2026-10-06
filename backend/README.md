@@ -30,6 +30,38 @@ tables are empty, because only `news.ts` has been turned into a seed changeSet.
 
 ## Running it
 
+**`gradlew` and `gradlew.bat` are not committed** — the repo-root `.gitignore`
+drops them with `*/gradlew*`. The other two wrapper files are committed, so
+generate the scripts once per clone from the jar that is already there:
+
+```bash
+java -classpath gradle/wrapper/gradle-wrapper.jar \
+     org.gradle.wrapper.GradleWrapperMain wrapper
+git checkout gradle/wrapper/gradle-wrapper.properties
+```
+
+The jar bootstraps the pinned Gradle 9.7.1 and runs the `wrapper` task against
+it, so the scripts come out byte-identical every time and already executable —
+no `chmod`. The second line is not optional: the `wrapper` task rewrites
+`gradle-wrapper.properties` from Gradle's defaults, which silently undoes the
+`networkTimeout=120000` / `retries=3` tuning there.
+
+That same incantation runs any task, so you can skip the generating step
+entirely if you prefer — `GradleWrapperMain build` works as `./gradlew build`
+does. In IntelliJ, the *wrapper* task under **Tasks → build setup** in the
+Gradle tool window is the same thing, with the same caveat about the properties
+file.
+
+Do not reach for a system `gradle wrapper` unless it is 8.14+ or 9.x. An older
+one cannot even configure this build:
+
+```
+Spring Boot plugin requires Gradle 8.x (8.14 or later) or 9.x.
+The current version is Gradle 8.12.1
+```
+
+Everything below assumes the scripts exist.
+
 ```bash
 docker compose up -d                 # postgres 15432, redis 16379
 

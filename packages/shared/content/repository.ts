@@ -5,7 +5,6 @@ import type {
   ContactContent,
   DigitalTool,
   HomeContent,
-  Issue,
   JobOpening,
   Market,
   Project,
@@ -70,8 +69,6 @@ export interface ContentRepository {
   listArticles(query?: ArticleQuery): Promise<Article[]>;
   getArticle(slug: Slug): Promise<Article | null>;
 
-  listIssues(limit?: number): Promise<Issue[]>;
-
   getHomeContent(): Promise<HomeContent>;
   getAboutContent(): Promise<AboutContent>;
   getCareersContent(): Promise<CareersContent>;
@@ -102,10 +99,6 @@ export interface ContentAdminRepository extends ContentRepository {
 
   saveArticle(article: Article): Promise<void>;
   deleteArticle(slug: Slug): Promise<void>;
-
-  getIssue(slug: Slug): Promise<Issue | null>;
-  saveIssue(issue: Issue): Promise<void>;
-  deleteIssue(slug: Slug): Promise<void>;
 
   /**
    * Vacancies. These are also reachable as `CareersContent.openings`, which is

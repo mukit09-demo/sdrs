@@ -4,7 +4,6 @@ import type {
   Article,
   CardItem,
   DigitalTool,
-  Issue,
   Market,
   Project,
   ResearchProgramme,
@@ -72,23 +71,8 @@ export function articleToCard(article: Article): CardItem {
 }
 
 /**
- * Issues have no detail route in this build, so they link to the news index.
- * Point `href` at `routes.article(...)` once the backend serves issue pages.
- */
-export function issueToCard(issue: Issue): CardItem {
-  return {
-    id: issue.slug,
-    href: routes.news,
-    title: issue.question,
-    eyebrow: "Issue",
-    summary: issue.summary,
-    image: issue.image,
-  };
-}
-
-/**
- * Programmes have no detail route in this build, so — like issues — the card
- * links back to its own index. Point `href` at a programme page once one exists.
+ * Programmes have no detail route in this build, so the card links back to its
+ * own index. Point `href` at a programme page once one exists.
  */
 export function researchProgrammeToCard(programme: ResearchProgramme): CardItem {
   return {

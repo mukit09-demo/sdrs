@@ -12,6 +12,10 @@ export const careersContent: CareersContent = {
     { value: "1,200", unit: "+", label: "Early careers roles each year" },
   ],
 
+  // Vacancies. `status` and `deadline` gate whether each one is an opening:
+  // the repository serves only "Open" roles whose deadline has not passed, so
+  // **these dates going stale silently empties /careers**. Refresh them, or
+  // drop the deadline for "open until filled" as the two Leadership roles do.
   openings: [
     {
       id: "job-1001",
@@ -20,7 +24,9 @@ export const careersContent: CareersContent = {
       location: "London, United Kingdom",
       employmentType: "Full time",
       level: "Senior",
+      status: "Open",
       postedAt: "2026-09-12",
+      deadline: "2026-12-11",
     },
     {
       id: "job-1002",
@@ -29,7 +35,9 @@ export const careersContent: CareersContent = {
       location: "Manchester, United Kingdom",
       employmentType: "Full time",
       level: "Graduate",
+      status: "Open",
       postedAt: "2026-09-10",
+      deadline: "2026-12-09",
     },
     {
       id: "job-1003",
@@ -38,7 +46,9 @@ export const careersContent: CareersContent = {
       location: "Dublin, Ireland",
       employmentType: "Full time",
       level: "Experienced",
+      status: "Open",
       postedAt: "2026-09-08",
+      deadline: "2026-12-07",
     },
     {
       id: "job-1004",
@@ -47,7 +57,9 @@ export const careersContent: CareersContent = {
       location: "Singapore",
       employmentType: "Full time",
       level: "Experienced",
+      status: "Open",
       postedAt: "2026-09-05",
+      deadline: "2026-12-04",
     },
     {
       id: "job-1005",
@@ -56,7 +68,9 @@ export const careersContent: CareersContent = {
       location: "Amsterdam, Netherlands",
       employmentType: "Full time",
       level: "Experienced",
+      status: "Open",
       postedAt: "2026-09-02",
+      deadline: "2026-12-01",
     },
     {
       id: "job-1006",
@@ -65,6 +79,7 @@ export const careersContent: CareersContent = {
       location: "Melbourne, Australia",
       employmentType: "Full time",
       level: "Leadership",
+      status: "Open",
       postedAt: "2026-08-29",
     },
     {
@@ -74,7 +89,9 @@ export const careersContent: CareersContent = {
       location: "Toronto, Canada",
       employmentType: "Full time",
       level: "Experienced",
+      status: "Open",
       postedAt: "2026-08-26",
+      deadline: "2026-11-24",
     },
     {
       id: "job-1008",
@@ -83,7 +100,9 @@ export const careersContent: CareersContent = {
       location: "Madrid, Spain",
       employmentType: "Part time",
       level: "Experienced",
+      status: "Open",
       postedAt: "2026-08-22",
+      deadline: "2026-11-20",
     },
     {
       id: "job-1009",
@@ -92,7 +111,9 @@ export const careersContent: CareersContent = {
       location: "Cardiff, United Kingdom",
       employmentType: "Full time",
       level: "Graduate",
+      status: "Open",
       postedAt: "2026-08-19",
+      deadline: "2026-11-17",
     },
     {
       id: "job-1010",
@@ -101,6 +122,7 @@ export const careersContent: CareersContent = {
       location: "New York, United States",
       employmentType: "Full time",
       level: "Leadership",
+      status: "Open",
       postedAt: "2026-08-15",
     },
     {
@@ -110,7 +132,9 @@ export const careersContent: CareersContent = {
       location: "Berlin, Germany",
       employmentType: "Full time",
       level: "Graduate",
+      status: "Open",
       postedAt: "2026-08-11",
+      deadline: "2026-11-09",
     },
     {
       id: "job-1012",
@@ -119,7 +143,9 @@ export const careersContent: CareersContent = {
       location: "Hong Kong SAR",
       employmentType: "Contract",
       level: "Experienced",
+      status: "Open",
       postedAt: "2026-08-07",
+      deadline: "2026-11-05",
     },
   ],
 

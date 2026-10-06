@@ -1,15 +1,17 @@
 # sdrs
 
-Front end for SDRS — Shawkat Design and Research Studio — built with Next.js 16
-(App Router), React 19, TypeScript and Tailwind CSS v4.
-
-Two services in one npm workspace:
+SDRS — Shawkat Design and Research Studio. Two Next.js 16 front ends (App
+Router, React 19, TypeScript, Tailwind CSS v4) and a Spring Boot API.
 
 | | | |
 |---|---|---|
 | **`core-web/`** | port 3002 | The public site. Reads content. No auth, no admin route, nothing that hints a CMS exists. |
 | **`manage-web/`** | port 3003 | The CMS. Signed-in only, its own administration UI, never linked from the public site. |
 | **`packages/shared/`** | — | `@sdrs/shared`: the domain model and content layer both apps need. |
+| **`backend/`** | port 3004 | `sdrs-api` — Spring Boot, Postgres, Redis. Gradle, not npm: it is not a workspace. See [`backend/README.md`](backend/README.md). |
+
+The three npm packages are one workspace; `backend/` is outside it, so
+`npm install` neither sees nor needs it.
 
 They are separate apps so that public code and admin code never mix, and so the
 CMS can be deployed where the public internet cannot reach it — a VPN, an IP
@@ -62,14 +64,14 @@ The honest trade-off, because it is not free:
 
 | Route | Contents |
 |-------|----------|
-| `/` | Hero, studio film, firm stats, six markets as looping films, featured projects, issues, latest news |
+| `/` | Hero, studio film, firm stats, six markets as looping films, featured projects, latest news |
 | `/markets`, `/markets/[slug]` | 14 markets, the index card for each one playing its film; detail pages add capabilities, stats, projects and related services |
 | `/services`, `/services/[slug]` | 12 services plus in-house digital tools; each with deliverables and projects |
 | `/projects`, `/projects/[slug]` | 20 projects, filterable by market; detail pages with client, stats and highlights |
 | `/about-us` | Intro, stats, founder quote, values, history timeline, leadership, commitments |
 | `/careers` | Intro, stats, benefits, filterable vacancies, hiring process, colleague profiles |
 | `/research-and-training` | Intro, stats, filterable research programmes, how research is funded, filterable courses, publications, partners |
-| `/news`, `/news/[slug]` | Lead story, filterable index, issues; article pages with related reading |
+| `/news`, `/news/[slug]` | Lead story, filterable index by category; article pages with related reading |
 | `/contact-us` | Enquiry form (server action + validation), FAQs, office directory by region |
 | `not-found` | 404 with links into every section |
 
@@ -77,7 +79,17 @@ The honest trade-off, because it is not free:
 
 ```
 sdrs/
-├── package.json              # the workspace root
+├── package.json              # the workspace root (the three npm packages only)
+├── backend/                  # sdrs-api — Spring Boot 4, Gradle, Postgres, Redis
+│   └── src/main/java/com/banyan/lab/sdrs/
+│       ├── controller/       # one package per layer, not per feature
+│       ├── service/
+│       ├── repository/
+│       ├── entity/           # @Entity, @Embeddable and the enums they persist
+│       ├── dto/              # the wire shapes, matching types/content.ts
+│       ├── mapper/           # MapStruct, entity ↔ dto
+│       ├── exception/        # the domain exceptions + @RestControllerAdvice
+│       └── config/           # security, cache, admin credential
 ├── packages/shared/          # @sdrs/shared — source only, no build step
 │   ├── types/content.ts      # the domain model
 │   ├── content/              # repository contract + both implementations + the JSON store
@@ -120,12 +132,20 @@ by how long each part lives:
 | `types/content.ts` + `content/repository.ts` | 490 | permanent — the domain contract |
 | `api/http.ts` + `content/http.repository.ts` | 359 | permanent — the Spring Boot client |
 | `utils/` | 144 | permanent — small helpers |
-| `content/mock.repository.ts`, `content/store.ts`, `data/` | 2,721 | temporary — goes when the backend lands |
+| `content/mock.repository.ts`, `content/store.ts` | ~500 | temporary — goes when the backend lands |
+| `data/` | ~2,200 | **mixed** — the five CMS collections are seed data and go; the page bundles, offices, people, research and digital tools are permanent, because nothing manages them |
 
-So long-term it is about a thousand lines, and almost all of it is the domain
-model. That is the part worth sharing: both apps will map the same Spring Boot
-DTOs, and two copies of `types/content.ts` would drift silently — the CMS saves a
-renamed field, the site renders `undefined`, and nothing fails at compile time.
+So long-term this is the domain contract plus the page copy nobody manages.
+The contract is the part obviously worth sharing: both apps map the same Spring
+Boot DTOs, and two copies of `types/content.ts` would drift silently — the CMS
+saves a renamed field, the site renders `undefined`, and nothing fails at
+compile time.
+
+The page copy staying here is a decision rather than an oversight. `about.ts`,
+`careers.ts`, `research.ts`, `contact.ts` and `home.ts` describe screens with no
+editor in `manage-web`, so putting them in Postgres would create tables only a
+deploy could ever write to. They are served from this package under both content
+sources, and `backend/` has no table for them.
 
 **No UI is shared.** The two apps look nothing alike on purpose: the site is
 editorial, the CMS is a tool. They have separate `@theme` token scales and
@@ -165,36 +185,60 @@ So going live is:
 2. Set `BACKEND_ORIGIN` (the `/api/*` rewrite in `next.config.ts` proxies to it,
    which avoids configuring CORS in development) or point
    `NEXT_PUBLIC_API_BASE_URL` straight at the API.
-3. Make the API return the shapes in `packages/shared/types/content.ts`.
+3. Make the API return the shapes in `packages/shared/types/content.ts` for the
+   five CMS collections. The page bundles need nothing — `http.repository.ts`
+   serves those from `packages/shared/data` under either source.
 
 Set it in **both** apps, or they disagree about where content lives. No file
-under either app's `app/` or `components/` changes. The endpoints the HTTP
-implementation expects are documented at the top of `http.repository.ts`:
+under either app's `app/` or `components/` changes.
+
+**`backend/` now implements step 3 for news.** `/api/articles` is live against
+Postgres, seeded from `packages/shared/data/news.ts` so the site renders the
+same either side of the switch. The other collections still 404 under `api`, so
+`mock` remains the default for front-end work until they land — the pattern to
+copy is in [`backend/README.md`](backend/README.md).
+
+The endpoints the HTTP implementation expects are documented at the top of
+`http.repository.ts` (✅ = implemented in `backend/`):
 
 ```
 GET  /api/markets                GET  /api/markets/{slug}
 GET  /api/services               GET  /api/services/{slug}
-GET  /api/digital-tools
 GET  /api/projects?market=&service=&slugs=&limit=
 GET  /api/projects/{slug}
-GET  /api/articles?tag=&limit=&exclude=
-GET  /api/articles/{slug}        GET  /api/issues?limit=
-GET  /api/pages/home|about|careers|research|contact
+GET  /api/articles?tag=&limit=&exclude=   ✅
+GET  /api/articles/{slug}                 ✅
 POST /api/enquiries
 
-GET    /api/job-openings         GET    /api/job-openings/{id}
+GET  /api/jobs                            ← candidate-facing, openings only
+
+GET    /api/admin/jobs           GET    /api/admin/jobs/{id}
 POST   /api/{collection}         PUT    /api/{collection}/{id}
 DELETE /api/{collection}/{id}
+                                 (all three ✅ for `articles`)
 ```
 
 The last three are the admin's writes, where `{collection}` is `markets`,
-`services`, `projects`, `articles`, `issues` or `job-openings`.
+`services`, `projects`, `articles` or `jobs`.
+
+**There is no `/api/pages/*` and no `/api/digital-tools`.** The page bundles and
+the digital tools list have no CMS screen, so they have no table and no
+endpoint: `http.repository.ts` serves them from `packages/shared/data`, the same
+place `mock.repository.ts` does. Careers is the one hybrid — prose from the
+bundled data, vacancies from `/api/jobs`.
+
+**Vacancies have a status and a deadline.** `GET /api/jobs` is candidate-facing
+and returns only openings — `status: "Open"` with a deadline that has not passed
+— while the CMS reads `GET /api/admin/jobs`, which returns every job so an
+editor can see a draft in order to publish it. That is why the admin reads sit
+under `/api/admin/`: every other `GET /api/**` is public, and a draft vacancy
+should not be readable just because of it.
 
 ### How the code is kept reusable
 
 - **One card, one grid.** Every entity is mapped to a single `CardItem` shape by
   `core-web/src/lib/content/mappers.ts`, so `ContentCard`, `CardGrid` and
-  `FilterableGrid` render markets, services, projects, news, issues and digital
+  `FilterableGrid` render markets, services, projects, news and digital
   tools alike. A new entity needs a mapper, not a new component. The market
   films arrived this way: one optional field on `CardItem`, set by one mapper.
 - **Filters are derived from content.** `core-web/src/lib/content/filters.ts` builds
@@ -310,8 +354,8 @@ only signing in fails.
 
 ### What it manages
 
-The six collections: **Markets**, **Services**, **Projects**, **News**,
-**Issues** and **Vacancies**. Create, edit and delete for each.
+The five collections: **Markets**, **Services**, **Projects**, **News** and
+**Vacancies**. Create, edit and delete for each.
 
 Page copy that is not a list is still edited in code: the home film, About,
 Research and training, Contact us, and the digital tools. Images are referenced by
@@ -320,7 +364,7 @@ renders, exactly as it does for the bundled content.
 
 ### How it is built
 
-One list page and one form page serve all six collections, driven by the registry
+One list page and one form page serve all five collections, driven by the registry
 in `manage-web/src/lib/admin/collections.ts`. A descriptor there declares the
 entity's fields, how to list it, how to load it into the form and how to save it;
 the pages deal only in `AdminRow` and `FieldValues` and never see a `Market`. The

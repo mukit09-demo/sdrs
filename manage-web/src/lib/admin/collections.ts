@@ -5,8 +5,8 @@ import type {
   CareerLevel,
   EmploymentType,
   Film,
-  Issue,
   JobOpening,
+  JobStatus,
   Market,
   Project,
   Service,
@@ -112,15 +112,21 @@ function slugField(hint: string): ScalarSpec {
   };
 }
 
-function dateField(name: string, label: string): ScalarSpec {
+function dateField(
+  name: string,
+  label: string,
+  { required = true, hint }: { required?: boolean; hint?: string } = {},
+): ScalarSpec {
   return {
     name,
     label,
     kind: "text",
-    required: true,
-    hint: "YYYY-MM-DD",
+    required,
+    hint: hint ?? "YYYY-MM-DD",
+    // An optional date has to accept blank, or clearing it is impossible.
     refine: (value) =>
-      DATE_PATTERN.test(value) && !Number.isNaN(Date.parse(value))
+      (!required && value.trim() === "") ||
+      (DATE_PATTERN.test(value) && !Number.isNaN(Date.parse(value)))
         ? undefined
         : "Enter a date as YYYY-MM-DD.",
   };
@@ -188,6 +194,14 @@ const CAREER_LEVELS: readonly CareerLevel[] = [
   "Senior",
   "Leadership",
 ];
+
+/**
+ * Order matters twice over: it is what a new vacancy's select defaults to, and
+ * `asOption` falls back to the first entry for an unrecognised value. "Draft"
+ * leads so that neither a fresh form nor a bad submission can publish a role by
+ * accident — going live has to be a deliberate choice.
+ */
+const JOB_STATUSES: readonly JobStatus[] = ["Draft", "Open", "Closed"];
 
 /** Narrows a submitted select value back to its union, falling back to the first option. */
 function asOption<T extends string>(value: string, options: readonly T[]): T {
@@ -649,80 +663,15 @@ const articles: AdminCollection = {
   },
 };
 
-// --- Issues ----------------------------------------------------------------
-
-const issues: AdminCollection = {
-  name: "issues",
-  label: "Issues",
-  singular: "issue",
-  description:
-    'The "big questions" shown on the home page and /news. They have no detail page of their own.',
-  fields: [
-    slugField("Identifies the issue. It has no page of its own yet."),
-    {
-      name: "question",
-      label: "Question",
-      kind: "text",
-      required: true,
-      maxLength: 200,
-      hint: "Phrased as a question — it is the card's heading.",
-    },
-    {
-      name: "summary",
-      label: "Summary",
-      kind: "textarea",
-      required: true,
-      maxLength: 400,
-    },
-    imageField(),
-  ],
-
-  async list() {
-    const entities = await content.listIssues();
-    return entities.map((issue) => ({
-      id: issue.slug,
-      title: issue.question,
-      meta: [issue.summary],
-    }));
-  },
-
-  async values(id) {
-    const issue = await content.getIssue(id);
-    if (!issue) return null;
-
-    return {
-      slug: issue.slug,
-      question: issue.question,
-      summary: issue.summary,
-      image: imageToValues(issue.image),
-    };
-  },
-
-  async save(values, previousId) {
-    const issue: Issue = {
-      slug: str(values, "slug"),
-      question: str(values, "question"),
-      summary: str(values, "summary"),
-      image: image(values, "image"),
-    };
-
-    await content.saveIssue(issue);
-    await removeRenamed(previousId, issue.slug, content.deleteIssue);
-    return issue.slug;
-  },
-
-  remove(id) {
-    return content.deleteIssue(id);
-  },
-};
-
 // --- Vacancies -------------------------------------------------------------
 
 const openings: AdminCollection = {
   name: "job-openings",
   label: "Vacancies",
   singular: "vacancy",
-  description: "Open roles in the filterable list on /careers.",
+  description:
+    'Roles on /careers. Only "Open" ones whose deadline has not passed are ' +
+    "shown there — this list shows every job, including drafts.",
   fields: [
     {
       name: "id",
@@ -750,7 +699,13 @@ const openings: AdminCollection = {
     },
     selectField("employmentType", "Employment type", EMPLOYMENT_TYPES),
     selectField("level", "Level", CAREER_LEVELS),
+    selectField("status", "Status", JOB_STATUSES),
     dateField("postedAt", "Posted"),
+    dateField("deadline", "Deadline", {
+      required: false,
+      hint: 'YYYY-MM-DD. Leave blank for "open until filled" — a role with no '
+        + "deadline stays advertised until you close it.",
+    }),
   ],
 
   async list() {
@@ -758,7 +713,15 @@ const openings: AdminCollection = {
     return entities.map((opening) => ({
       id: opening.id,
       title: opening.title,
-      meta: [opening.discipline, opening.location, opening.level, opening.postedAt],
+      // Status first: it is the one field that decides whether /careers shows
+      // the role at all, so it is what an editor scans this list for.
+      meta: [
+        opening.status,
+        opening.discipline,
+        opening.location,
+        opening.level,
+        opening.deadline ? `closes ${opening.deadline}` : "open until filled",
+      ],
     }));
   },
 
@@ -773,7 +736,9 @@ const openings: AdminCollection = {
       location: opening.location,
       employmentType: opening.employmentType,
       level: opening.level,
+      status: opening.status,
       postedAt: opening.postedAt,
+      deadline: opening.deadline ?? "",
     };
   },
 
@@ -787,7 +752,11 @@ const openings: AdminCollection = {
       location: str(values, "location"),
       employmentType: asOption(str(values, "employmentType"), EMPLOYMENT_TYPES),
       level: asOption(str(values, "level"), CAREER_LEVELS),
+      status: asOption(str(values, "status"), JOB_STATUSES),
       postedAt: str(values, "postedAt"),
+      // Blank means no deadline, which is a value rather than an omission —
+      // `deadline?: string` so undefined, not "".
+      deadline: str(values, "deadline") || undefined,
     };
 
     await content.saveJobOpening(opening);
@@ -823,7 +792,6 @@ export const adminCollections: readonly AdminCollection[] = [
   services,
   projects,
   articles,
-  issues,
   openings,
   usersCollection,
 ] as const;

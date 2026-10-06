@@ -4,13 +4,12 @@ import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { careersContent } from "../data/careers";
 import { markets as seedMarkets } from "../data/markets";
-import { articles as seedArticles, issues as seedIssues } from "../data/news";
+import { articles as seedArticles } from "../data/news";
 import { projects as seedProjects } from "../data/projects";
 import { services as seedServices } from "../data/services";
 import { contentStorePath } from "../config/content-env";
 import type {
   Article,
-  Issue,
   JobOpening,
   Market,
   Project,
@@ -36,7 +35,6 @@ export interface ContentStore {
   services: Service[];
   projects: Project[];
   articles: Article[];
-  issues: Issue[];
   /** `CareersContent.openings`, promoted to a collection of its own so it can be edited. */
   openings: JobOpening[];
 }
@@ -50,15 +48,14 @@ function seed(): ContentStore {
     services: structuredClone(seedServices),
     projects: structuredClone(seedProjects),
     articles: structuredClone(seedArticles),
-    issues: structuredClone(seedIssues),
     openings: structuredClone(careersContent.openings),
   };
 }
 
 /**
- * Cached so that a page rendering six collections does not read the file six
- * times — but keyed on the file's modification time, not held for the life of
- * the process.
+ * Cached so that a page rendering several collections does not read the file
+ * once per collection — but keyed on the file's modification time, not held for
+ * the life of the process.
  *
  * That matters because two apps share this store: `manage-web` writes it and
  * `core-web` reads it. A process-lifetime cache would mean `core-web` never saw

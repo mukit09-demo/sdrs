@@ -10,7 +10,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # sdrs conventions
 
-This is an npm-workspace monorepo with two Next apps and one shared package. See
+This is an npm-workspace monorepo with two Next apps and one shared package,
+plus a Gradle-managed Spring Boot backend that is *not* a workspace. See
 `README.md` for the architecture. When changing this codebase:
 
 ## Which workspace
@@ -24,6 +25,13 @@ This is an npm-workspace monorepo with two Next apps and one shared package. See
   because both apps map the same Spring Boot DTOs. Source only: Turbopack
   compiles workspace packages, so there is no build step. **Nothing UI goes in
   here** — the two apps look nothing alike and should not share components.
+- **`backend/`** (`sdrs-api`) — the Spring Boot API, port 3004. Java 25, Gradle,
+  Postgres, Redis. Outside the npm workspace, so nothing here is reachable from
+  either app's imports; the only coupling is the HTTP contract. Read
+  `backend/README.md` before changing it — Spring Boot 4 is a real break from
+  3.x (`spring-boot-starter-webmvc` not `-web`, Jackson 3 under `tools.jackson`,
+  `@MockitoBean` not `@MockBean`), so training-data habits will mislead you the
+  same way they do for Next.
 
 ## Everywhere
 
@@ -86,8 +94,54 @@ This is an npm-workspace monorepo with two Next apps and one shared package. See
   surfaces that message verbatim and reports anything else generically. Use it for
   "username taken" or "last admin account", not for bugs.
 
+## backend
+
+- **One package per layer, not per feature.** `com.banyan.lab.sdrs.controller`,
+  `.service`, `.repository`, `.entity`, `.dto`, `.mapper`, `.exception`,
+  `.config`. A new collection adds one class to each, following the news classes
+  already there — not a new subtree. `@Embeddable` types and the enums an entity
+  persists live in `.entity` beside it; the wire types keep a `Dto` suffix so
+  `Author` and `AuthorDto` can both be named in a mapper.
+- **If the CMS cannot edit it, it does not get a table.** The database holds the
+  five collections registered in `manage-web/src/lib/admin/collections.ts` —
+  markets, services, projects, news, vacancies — plus the enquiry inbox. Page
+  copy, the office directory, people, research programmes, courses and digital
+  tools are code-edited in `packages/shared/data` and served from there by
+  *both* repository implementations. Adding a table means adding a collection
+  descriptor in the same change, or it is dead weight nothing can write to.
+- **There is no `/api/pages/*`.** `http.repository.ts` answers those from
+  `../data`, which is why it imports them. Careers is the one hybrid: prose from
+  the bundled data, vacancies from `GET /api/jobs`.
+- **An enum whose TypeScript counterpart is a string union implements
+  `Labelled`.** The constant goes in the column, the label goes on the wire
+  (`PRESS_RELEASE` vs `"Press release"`). Do not add a bare enum for one of
+  those unions.
+- **The DTO shape is dictated by `packages/shared/types/content.ts`**, not
+  chosen here. A controller test asserting the JSON field by field is the only
+  thing that catches a drift, because nothing else fails — the site just renders
+  wrongly.
+- **Liquibase owns the schema.** `ddl-auto: validate`. A schema change is a new
+  changeSet under `db/changelog/changes/`, added to the master changelog — never
+  an edit to an applied changeSet (Liquibase checksums those and will refuse to
+  start), and never a `ddl-auto` bump. Use Liquibase's logical column types, not
+  Postgres's, and reach for `<sql>` only where a change type does not exist or
+  is Pro-only (check constraints are).
+- **Authorisation lives in `config/SecurityConfig` only.** Reads are public
+  because core-web has no credential to present; writes need the admin. A
+  controller that decides its own access rules is how one endpoint ends up
+  forgetting to.
+- **`process.env`'s counterpart is `application.properties`.** One file, one
+  profile, flat keys, every value from an environment variable with a local
+  default. Add new ones there *and* to `backend/.env.example`.
+
 ## Verifying
 
 From the repo root, `npm run typecheck`, `npm run lint` and `npm run build` cover
 both apps. Expect zero warnings. core-web's build output must keep prerendering
 every public route at its existing path.
+
+For the backend, `./gradlew build` from `backend/` compiles and runs the tests;
+they are unit tests and need no database. `docker compose up -d` first only if
+you want to run the service itself. `gradlew` is not committed — if it is
+missing, generate it as `backend/README.md` describes rather than falling back
+to a system `gradle`, which is too old here to configure the build.
