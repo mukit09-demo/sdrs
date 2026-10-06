@@ -1,0 +1,51 @@
+# Postgres and Redis for local development only.
+#
+# Not a deployment artefact: the credentials are fixed and weak on purpose so
+# they match the defaults in application.properties and `./gradlew bootRun`
+# works with no environment set. A deployed environment supplies SDRS_DB_* and
+# SDRS_REDIS_* and never reads this file.
+#
+# **Non-default host ports.** Postgres is on 15432 and Redis on 16379, not 5432
+# and 6379, because those are commonly already taken by another project's stack
+# — and a second Postgres silently binding the same port is a confusing failure
+# to debug. Inside the containers the ports are standard; only the host side
+# moves. Both are below 32768 on purpose, so they cannot collide with a client's
+# ephemeral source port.
+
+name: sdrs
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: sdrs-postgres
+    environment:
+      POSTGRES_DB: sdrs
+      POSTGRES_USER: sdrs
+      POSTGRES_PASSWORD: sdrs
+    ports:
+      - "15432:5432"
+    volumes:
+      - sdrs-postgres:/var/lib/postgresql/data
+    healthcheck:
+      # Liquibase runs at startup, so the API needs the database actually
+      # accepting connections rather than just the container being up.
+      test: ["CMD-SHELL", "pg_isready -U sdrs -d sdrs"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    container_name: sdrs-redis
+    ports:
+      - "16379:6379"
+    # No persistence: this is a cache. Losing it costs one slow request.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  sdrs-postgres:

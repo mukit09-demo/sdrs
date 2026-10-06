@@ -1,0 +1,10 @@
+# Gradle
+.gradle/
+build/
+
+# Rolling log output — see src/main/resources/logback-spring.xml
+logs/
+
+# Local overrides. application.yml reads every value from the environment, so
+# this is the place for a local credential; it is never committed.
+.env

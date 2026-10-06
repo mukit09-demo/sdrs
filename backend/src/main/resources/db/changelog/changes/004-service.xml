@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Services. The in-house digital tools listed beside them on /services are
+  code-edited in packages/shared/data/services.ts, not stored here.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <changeSet id="004-service-01-create-service" author="sdrs">
+        <createTable tableName="service">
+            <column name="slug" type="varchar(160)">
+                <constraints primaryKey="true" primaryKeyName="pk_service" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="varchar(60)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tagline" type="varchar(300)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="varchar(2000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_url" type="varchar(600)"/>
+            <column name="image_alt" type="varchar(300)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_seed" type="varchar(160)"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="004-service-02-create-service-capability" author="sdrs">
+        <createTable tableName="service_capability">
+            <column name="service_slug" type="varchar(160)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="position" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="capability" type="varchar(300)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="service_capability" columnNames="service_slug, position"
+                       constraintName="pk_service_capability"/>
+
+        <addForeignKeyConstraint baseTableName="service_capability" baseColumnNames="service_slug"
+                                 referencedTableName="service" referencedColumnNames="slug"
+                                 constraintName="fk_service_capability_owner" onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="004-service-03-create-service-related-market" author="sdrs">
+        <createTable tableName="service_related_market">
+            <column name="service_slug" type="varchar(160)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="position" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="market_slug" type="varchar(160)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="service_related_market" columnNames="service_slug, position"
+                       constraintName="pk_service_related_market"/>
+
+        <addForeignKeyConstraint baseTableName="service_related_market" baseColumnNames="service_slug"
+                                 referencedTableName="service" referencedColumnNames="slug"
+                                 constraintName="fk_service_related_market_owner" onDelete="CASCADE"/>
+
+        <createIndex tableName="service_related_market" indexName="idx_service_related_market_market_slug">
+            <column name="market_slug"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

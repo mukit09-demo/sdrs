@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  News: the Article of the shared domain model.
+
+  The slug is the primary key, not a surrogate id: it is the route segment
+  (/news/{slug}) and the identifier both apps and the CMS already address an
+  article by. A rename is therefore a delete plus an insert, which is exactly
+  how the CMS treats it.
+
+  Column types are Liquibase's logical names (clob, int, date) rather than
+  Postgres's, so the mapping to a concrete type is Liquibase's job — clob
+  becomes text here. The exception is the check constraints, which go through
+  <sql>: addCheckConstraint is a Liquibase Pro change type and this is not Pro.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <changeSet id="001-01-create-news-article" author="sdrs">
+        <comment>The article itself. image_url and image_seed are nullable
+            because the front end renders a deterministic gradient placeholder
+            until real asset URLs exist; image_alt is not, because a placeholder
+            still needs an accessible description.</comment>
+
+        <createTable tableName="news_article">
+            <column name="slug" type="varchar(160)">
+                <constraints primaryKey="true" primaryKeyName="pk_news_article" nullable="false"/>
+            </column>
+            <column name="title" type="varchar(300)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="excerpt" type="varchar(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="news_type" type="varchar(40)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="published_at" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reading_minutes" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="author_name" type="varchar(160)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="author_role" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_url" type="varchar(600)"/>
+            <column name="image_alt" type="varchar(300)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_seed" type="varchar(160)"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="001-02-news-article-check-constraints" author="sdrs">
+        <comment>The five news_type values are NewsType's constants, not its
+            labels — PRESS_RELEASE in the column, "Press release" on the wire.</comment>
+
+        <sql>
+            alter table news_article
+                add constraint news_article_reading_minutes_positive
+                check (reading_minutes &gt; 0);
+
+            alter table news_article
+                add constraint news_article_news_type_known
+                check (news_type in ('PRESS_RELEASE', 'INSIGHT', 'AWARD', 'REPORT', 'EVENT'));
+        </sql>
+
+        <rollback>
+            <sql>
+                alter table news_article drop constraint news_article_news_type_known;
+                alter table news_article drop constraint news_article_reading_minutes_positive;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="001-03-create-news-article-body" author="sdrs">
+        <comment>Body paragraphs, ordered. `position` is in the primary key so
+            the order is a property of the data rather than of however the rows
+            happen to come back.</comment>
+
+        <createTable tableName="news_article_body">
+            <column name="article_slug" type="varchar(160)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="position" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="paragraph" type="clob">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="news_article_body"
+                       columnNames="article_slug, position"
+                       constraintName="pk_news_article_body"/>
+
+        <addForeignKeyConstraint baseTableName="news_article_body"
+                                 baseColumnNames="article_slug"
+                                 referencedTableName="news_article"
+                                 referencedColumnNames="slug"
+                                 constraintName="fk_news_article_body_article"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="001-04-create-news-article-tag" author="sdrs">
+        <comment>Market and theme slugs, ordered the same way.</comment>
+
+        <createTable tableName="news_article_tag">
+            <column name="article_slug" type="varchar(160)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="position" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag" type="varchar(120)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="news_article_tag"
+                       columnNames="article_slug, position"
+                       constraintName="pk_news_article_tag"/>
+
+        <addForeignKeyConstraint baseTableName="news_article_tag"
+                                 baseColumnNames="article_slug"
+                                 referencedTableName="news_article"
+                                 referencedColumnNames="slug"
+                                 constraintName="fk_news_article_tag_article"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="001-05-create-news-indexes" author="sdrs">
+        <comment>Every list query is `order by published_at desc, slug`, and the
+            ?tag= filter joins news_article_tag.</comment>
+
+        <createIndex tableName="news_article" indexName="idx_news_article_published_at">
+            <column name="published_at" descending="true"/>
+            <column name="slug"/>
+        </createIndex>
+
+        <createIndex tableName="news_article_tag" indexName="idx_news_article_tag_tag">
+            <column name="tag"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

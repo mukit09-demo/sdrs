@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Projects. project_market and project_service are what the
+  market and service filters match on, so both are indexed.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <changeSet id="005-project-01-create-project" author="sdrs">
+        <createTable tableName="project">
+            <column name="slug" type="varchar(160)">
+                <constraints primaryKey="true" primaryKeyName="pk_project" nullable="false"/>
+            </column>
+            <column name="title" type="varchar(300)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_city" type="varchar(160)"/>
+            <column name="location_country" type="varchar(160)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="year" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client" type="varchar(300)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="summary" type="varchar(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="varchar(2000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_url" type="varchar(600)"/>
+            <column name="image_alt" type="varchar(300)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_seed" type="varchar(160)"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="project" indexName="idx_project_year">
+            <column name="year"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="005-project-02-create-project-stat" author="sdrs">
+        <createTable tableName="project_stat">
+            <column name="project_slug" type="varchar(160)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="position" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stat_value" type="varchar(60)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unit" type="varchar(40)"/>
+            <column name="label" type="varchar(300)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="project_stat" columnNames="project_slug, position"
+                       constraintName="pk_project_stat"/>
+
+        <addForeignKeyConstraint baseTableName="project_stat" baseColumnNames="project_slug"
+                                 referencedTableName="project" referencedColumnNames="slug"
+                                 constraintName="fk_project_stat_owner" onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="005-project-03-create-project-highlight" author="sdrs">
+        <createTable tableName="project_highlight">
+            <column name="project_slug" type="varchar(160)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="position" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="highlight" type="varchar(600)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="project_highlight" columnNames="project_slug, position"
+                       constraintName="pk_project_highlight"/>
+
+        <addForeignKeyConstraint baseTableName="project_highlight" baseColumnNames="project_slug"
+                                 referencedTableName="project" referencedColumnNames="slug"
+                                 constraintName="fk_project_highlight_owner" onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="005-project-04-create-project-market" author="sdrs">
+        <createTable tableName="project_market">
+            <column name="project_slug" type="varchar(160)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="position" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="market_slug" type="varchar(160)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="project_market" columnNames="project_slug, position"
+                       constraintName="pk_project_market"/>
+
+        <addForeignKeyConstraint baseTableName="project_market" baseColumnNames="project_slug"
+                                 referencedTableName="project" referencedColumnNames="slug"
+                                 constraintName="fk_project_market_owner" onDelete="CASCADE"/>
+
+        <createIndex tableName="project_market" indexName="idx_project_market_market_slug">
+            <column name="market_slug"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="005-project-05-create-project-service" author="sdrs">
+        <createTable tableName="project_service">
+            <column name="project_slug" type="varchar(160)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="position" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="service_slug" type="varchar(160)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="project_service" columnNames="project_slug, position"
+                       constraintName="pk_project_service"/>
+
+        <addForeignKeyConstraint baseTableName="project_service" baseColumnNames="project_slug"
+                                 referencedTableName="project" referencedColumnNames="slug"
+                                 constraintName="fk_project_service_owner" onDelete="CASCADE"/>
+
+        <createIndex tableName="project_service" indexName="idx_project_service_service_slug">
+            <column name="service_slug"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

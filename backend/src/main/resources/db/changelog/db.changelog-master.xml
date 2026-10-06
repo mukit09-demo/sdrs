@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The master changelog. Includes only — no changeSet lives here, so that two
+  branches adding migrations conflict on their own files rather than on this one.
+
+  Order is the order they ran, and it never changes retroactively: an applied
+  changeSet is immutable. Correcting something means a new changeSet, because
+  Liquibase checksums what it has already run and will refuse to start if a
+  file it applied has been edited underneath it.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <include file="changes/001-news-schema.xml" relativeToChangelogFile="true"/>
+    <include file="changes/002-news-seed.sql" relativeToChangelogFile="true"/>
+    <include file="changes/003-market.xml" relativeToChangelogFile="true"/>
+    <include file="changes/004-service.xml" relativeToChangelogFile="true"/>
+    <include file="changes/005-project.xml" relativeToChangelogFile="true"/>
+    <include file="changes/006-job.xml" relativeToChangelogFile="true"/>
+    <include file="changes/007-enquiry.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>
