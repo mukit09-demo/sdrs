@@ -6,7 +6,7 @@ import { requireAdmin, requireUser } from "@/lib/auth/dal";
 import { routes } from "@/lib/config/routes";
 import { hasErrors, readField } from "@sdrs/shared/utils/validate";
 import type { EntityFormState } from "./admin";
-import { SaveRejected, findCollection } from "./collections";
+import { SaveRejected, findEditableCollection } from "./collections";
 import { parseFields, validateFieldSpecs } from "./fields";
 
 /**
@@ -26,7 +26,7 @@ export async function saveEntityAction(
 ): Promise<EntityFormState> {
   await requireUser();
 
-  const collection = findCollection(readField(formData, "collection"));
+  const collection = findEditableCollection(readField(formData, "collection"));
   if (!collection) {
     return {
       status: "error",
@@ -78,7 +78,7 @@ export async function saveEntityAction(
 export async function deleteEntityAction(formData: FormData): Promise<void> {
   await requireUser();
 
-  const collection = findCollection(readField(formData, "collection"));
+  const collection = findEditableCollection(readField(formData, "collection"));
   const id = readField(formData, "id");
   if (!collection || !id) return;
 

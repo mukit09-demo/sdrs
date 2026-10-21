@@ -4,52 +4,32 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.time.LocalDate;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-/**
- * A job. The table holds every one of them — drafts and withdrawn roles
- * included — which is why it is {@code job} and not {@code job_opening}: an
- * "opening" is the subset that happens to be advertised right now, and that is
- * a query, not a table.
- *
- * <p>That subset is {@link #isPubliclyVisible()}: {@link JobStatus#OPEN} and the
- * deadline not yet passed. The candidate-facing list applies it; the CMS listing
- * does not, because an editor has to be able to see a draft in order to publish
- * it.
- *
- * <p>This is the one part of the careers page the CMS manages, which is why it
- * is stored at all — the prose around it lives in
- * {@code packages/shared/data/careers.ts} and never reaches this database.
- *
- * <p>The id is a free-text reference the CMS may generate, not a sequence.
- */
 @Entity
 @Table(name = "job")
 @Getter
 @Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class Job {
 
     @Id
-    @NotBlank
-    @Size(max = 60)
-    @Column(name = "id", length = 60, nullable = false, updatable = false)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "job_id_generator")
+    @SequenceGenerator(name = "job_id_generator", sequenceName = "job_id_seq", allocationSize = 1)
+    @Column(name = "id", nullable = false, updatable = false)
+    private Long id;
 
     @NotBlank
     @Size(max = 300)
@@ -86,13 +66,6 @@ public class Job {
     @Column(name = "posted_at", nullable = false)
     private LocalDate postedAt;
 
-    /**
-     * Last day applications are accepted, inclusive.
-     *
-     * <p>Null means no closing date — advertised until somebody takes it down.
-     * That is a real case ("open until filled"), not missing data, which is why
-     * the column is nullable rather than defaulted to something far away.
-     */
     @Column(name = "deadline")
     private LocalDate deadline;
 

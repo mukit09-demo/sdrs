@@ -1,6 +1,6 @@
 import { uniqueSorted } from "@sdrs/shared/utils/array";
 import type {
-  Article,
+  ArticleSummary,
   FilterGroup,
   Market,
   Project,
@@ -81,7 +81,7 @@ export function trainingLevelFilterGroup(courses: TrainingCourse[]): FilterGroup
   };
 }
 
-export function articleCategoryFilterGroup(articles: Article[]): FilterGroup {
+export function articleCategoryFilterGroup(articles: ArticleSummary[]): FilterGroup {
   return {
     id: "category",
     label: "Category",

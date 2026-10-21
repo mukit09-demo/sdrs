@@ -5,13 +5,17 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,44 +25,30 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-/**
- * A news article — the {@code Article} of the shared domain model.
- *
- * <p>The slug is the primary key rather than a surrogate id, because it is the
- * route segment ({@code /news/{slug}}) and the identifier every endpoint and
- * the CMS already address articles by. A rename is therefore a delete plus an
- * insert, which is exactly how {@code removeRenamed} in the CMS treats it.
- *
- * <p>{@code body} and {@code tags} are ordered element collections, not a
- * delimited string and not a JSON blob: body paragraphs read in sequence, and
- * losing that order would scramble an article with nothing failing loudly.
- *
- * <p>No {@code @Data} or {@code @EqualsAndHashCode} — generating those over an
- * entity's collections drags lazy associations into every {@code hashCode} call.
- * Identity here is the slug, and JPA already keys on it.
- */
 @Entity
-@Table(name = "news_article")
+@Table(
+        name = "news_article",
+        uniqueConstraints = @UniqueConstraint(name = "uk_news_article_slug", columnNames = "slug"))
 @Getter
 @Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class NewsArticle {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "news_article_id_generator")
+    @SequenceGenerator(
+            name = "news_article_id_generator", sequenceName = "news_article_id_seq", allocationSize = 1)
+    @Column(name = "id", nullable = false, updatable = false)
+    private Long id;
+
     @NotBlank
     @Size(max = 160)
-    @Column(name = "slug", length = 160, nullable = false, updatable = false)
+    @Column(name = "slug", length = 160, nullable = false)
     private String slug;
 
     @NotBlank
@@ -87,33 +77,25 @@ public class NewsArticle {
     @Valid
     @NotNull
     @Embedded
-    private Author author;
-
-    @Valid
-    @NotNull
-    @Embedded
     private MediaImage image;
 
-    /** Paragraphs of body copy, in order. */
-    @BatchSize(size = 50)
-    @ElementCollection(fetch = FetchType.EAGER)
+    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "news_article_body",
-            joinColumns = @JoinColumn(name = "article_slug", nullable = false))
+            joinColumns = @JoinColumn(name = "article_id", nullable = false))
     @OrderColumn(name = "position", nullable = false)
     @Column(name = "paragraph", nullable = false, columnDefinition = "text")
-    @Builder.Default
     private List<String> body = new ArrayList<>();
 
     /** Market and theme slugs, used to build related-reading lists. */
-    @BatchSize(size = 50)
-    @ElementCollection(fetch = FetchType.EAGER)
+    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "news_article_tag",
-            joinColumns = @JoinColumn(name = "article_slug", nullable = false))
+            joinColumns = @JoinColumn(name = "article_id", nullable = false))
     @OrderColumn(name = "position", nullable = false)
     @Column(name = "tag", length = 120, nullable = false)
-    @Builder.Default
     private List<String> tags = new ArrayList<>();
 
     @CreationTimestamp
@@ -135,7 +117,6 @@ public class NewsArticle {
         this.newsType = incoming.newsType;
         this.publishedAt = incoming.publishedAt;
         this.readingMinutes = incoming.readingMinutes;
-        this.author = incoming.author;
         this.image = incoming.image;
 
         // Mutated rather than reassigned: Hibernate tracks these collection

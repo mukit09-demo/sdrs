@@ -15,6 +15,7 @@ import type {
   Project,
   Service,
 } from "../types/content";
+import type { Enquiry } from "./repository";
 
 /**
  * The mock repository's writable "database".
@@ -37,6 +38,16 @@ export interface ContentStore {
   articles: Article[];
   /** `CareersContent.openings`, promoted to a collection of its own so it can be edited. */
   openings: JobOpening[];
+  /**
+   * The enquiry inbox. The one key here that is not seeded from `../data` and
+   * not editable: it starts empty and grows as the contact form is used.
+   *
+   * It earns its place in the shared file because the two apps sit on opposite
+   * ends of it — `core-web` appends, `manage-web` reads — so a submission in
+   * development shows up in the CMS, which is the whole behaviour worth
+   * exercising before pointing at the API.
+   */
+  enquiries: Enquiry[];
 }
 
 /** The collections the admin manages — the keys of `ContentStore`. */
@@ -49,6 +60,7 @@ function seed(): ContentStore {
     projects: structuredClone(seedProjects),
     articles: structuredClone(seedArticles),
     openings: structuredClone(careersContent.openings),
+    enquiries: [],
   };
 }
 

@@ -2,39 +2,36 @@ package com.banyan.lab.sdrs.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
-/**
- * A submitted contact-form enquiry — what {@code POST /api/enquiries} stores.
- *
- * <p>The only table written by an unauthenticated caller, which is why it holds
- * no relations and nothing derived: it is an inbox, not content. The reference
- * is the id, because that is what the form shows the visitor afterwards.
- *
- * <p>No {@code updated_at}: an enquiry is never edited.
- */
 @Entity
-@Table(name = "enquiry")
+@Table(
+        name = "enquiry",
+        uniqueConstraints = @UniqueConstraint(name = "uk_enquiry_reference", columnNames = "reference"))
 @Getter
 @Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class Enquiry {
 
-    /** The reference quoted back to the visitor, e.g. {@code ENQ-M1X2Y3}. */
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "enquiry_id_generator")
+    @SequenceGenerator(
+            name = "enquiry_id_generator", sequenceName = "enquiry_id_seq", allocationSize = 1)
+    @Column(name = "id", nullable = false, updatable = false)
+    private Long id;
+
+    /** The reference quoted back to the visitor, e.g. {@code ENQ-M1X2Y3}. */
     @NotBlank
     @Size(max = 40)
     @Column(name = "reference", length = 40, nullable = false, updatable = false)
@@ -55,12 +52,6 @@ public class Enquiry {
     @Column(name = "organisation", length = 200)
     private String organisation;
 
-    /**
-     * Matches one of the topic values on the contact page, which are code-edited
-     * in {@code packages/shared/data/contact.ts} rather than stored here. Kept as
-     * free text for that reason: validating against a list this database does not
-     * hold would be a lie.
-     */
     @NotBlank
     @Size(max = 120)
     @Column(name = "topic", length = 120, nullable = false)

@@ -55,6 +55,25 @@ export type FieldSpec =
       hint?: string;
       required?: boolean;
     }
+  /**
+   * A `string[]` of free-text tags, one per line like `lines`, but normalised on
+   * parse (`normaliseTags`) and rendered with the tags already in use offered as
+   * suggestions. Tags match by exact text, so a variant spelling is a different
+   * tag — this is what keeps that from happening silently.
+   */
+  | {
+      kind: "tags";
+      name: string;
+      label: string;
+      hint?: string;
+      required?: boolean;
+      /**
+       * Tags in use elsewhere. `exceptId` is the entity being edited, left out
+       * so its own saved tags do not count as "already in use" — otherwise a
+       * misspelling, once saved, would be suggested back as if it were real.
+       */
+      suggestions: (exceptId?: string) => Promise<string[]>;
+    }
   /** A `MediaImage`. Leave the URL blank and the gradient placeholder renders. */
   | { kind: "image"; name: string; label: string; hint?: string }
   /** A repeatable list of objects — `Stat[]`. */
@@ -65,7 +84,7 @@ export type FieldSpec =
       hint?: string;
       columns: ScalarSpec[];
     }
-  /** A fixed nested object — a location, an author, a film. */
+  /** A fixed nested object — a location, a film. */
   | {
       kind: "group";
       name: string;
@@ -102,6 +121,31 @@ export function isScalar(field: FieldSpec): field is ScalarSpec {
     field.kind === "select" ||
     field.kind === "password"
   );
+}
+
+/**
+ * The longest tag the backend accepts — `@Size(max = 120)` on
+ * `ArticleRequest.tags`. Checked here as well so the mock source refuses what
+ * the API would.
+ */
+export const TAG_MAX_LENGTH = 120;
+
+/**
+ * `"  Water and Environment "` → `"water-and-environment"`: trimmed, lowercase,
+ * whitespace runs to one hyphen. The existing tags are all slug-shaped, and this
+ * folds the commonest variants onto them. It cannot fix a misspelling — that is
+ * what the suggestions are for.
+ *
+ * `NewsMapper.normaliseTags` on the backend applies the same rule. Keep the two
+ * identical, or a tag saved through one source stops matching the other.
+ */
+export function normaliseTag(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, "-");
+}
+
+/** Normalises each tag, then drops blanks and repeats, keeping first-use order. */
+export function normaliseTags(values: string[]): string[] {
+  return [...new Set(values.map(normaliseTag).filter(Boolean))];
 }
 
 /** The sub-inputs a `kind: "image"` field renders. */
@@ -146,42 +190,69 @@ export interface FieldView {
   required?: boolean;
   maxLength?: number;
   options?: readonly string[];
+  /** Resolved suggestions for `tags`. */
+  suggestions?: string[];
   /** Sub-inputs for `image`, `group` and `rows`. */
   members?: FieldView[];
 }
 
-export function toFieldViews(fields: FieldSpec[]): FieldView[] {
-  return fields.map((field) => {
-    if (isScalar(field)) {
-      return {
-        kind: field.kind,
-        name: field.name,
-        label: field.label,
-        hint: field.hint,
-        required: field.required,
-        maxLength: field.maxLength,
-        options: field.options,
-      };
-    }
+/**
+ * Async because a `tags` field's suggestions are loaded here, on the server,
+ * and handed to the form as plain strings.
+ *
+ * @param exceptId the entity being edited, if any — see `suggestions`.
+ */
+export async function toFieldViews(
+  fields: FieldSpec[],
+  exceptId?: string,
+): Promise<FieldView[]> {
+  return Promise.all(fields.map((field) => toFieldView(field, exceptId)));
+}
 
-    const members =
-      field.kind === "image"
-        ? IMAGE_MEMBERS
-        : field.kind === "group"
-          ? field.fields
-          : field.kind === "rows"
-            ? field.columns
-            : undefined;
-
+async function toFieldView(field: FieldSpec, exceptId?: string): Promise<FieldView> {
+  if (isScalar(field)) {
     return {
       kind: field.kind,
       name: field.name,
       label: field.label,
       hint: field.hint,
-      required: field.kind === "lines" ? field.required : undefined,
-      ...(members ? { members: toFieldViews(members) } : {}),
+      required: field.required,
+      maxLength: field.maxLength,
+      options: field.options,
     };
-  });
+  }
+
+  if (field.kind === "tags") {
+    return {
+      kind: field.kind,
+      name: field.name,
+      label: field.label,
+      hint: field.hint,
+      required: field.required,
+      maxLength: TAG_MAX_LENGTH,
+      suggestions: normaliseTags(await field.suggestions(exceptId)).sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    };
+  }
+
+  const members =
+    field.kind === "image"
+      ? IMAGE_MEMBERS
+      : field.kind === "group"
+        ? field.fields
+        : field.kind === "rows"
+          ? field.columns
+          : undefined;
+
+  return {
+    kind: field.kind,
+    name: field.name,
+    label: field.label,
+    hint: field.hint,
+    required: field.kind === "lines" ? field.required : undefined,
+    ...(members ? { members: await toFieldViews(members) } : {}),
+  };
 }
 
 // --- Parsing ---------------------------------------------------------------
@@ -209,6 +280,10 @@ export function parseFields(formData: FormData, fields: FieldSpec[]): FieldValue
     switch (field.kind) {
       case "lines":
         values[field.name] = splitLines(readOne(formData, field.name));
+        break;
+
+      case "tags":
+        values[field.name] = normaliseTags(splitLines(readOne(formData, field.name)));
         break;
 
       case "image":
@@ -321,10 +396,17 @@ export function validateFieldSpecs(
       continue;
     }
 
-    if (field.kind === "lines") {
+    if (field.kind === "lines" || field.kind === "tags") {
       const lines = (values[field.name] ?? []) as string[];
       if (field.required && lines.length === 0) {
         errors[field.name] = `${field.label} needs at least one entry.`;
+      }
+
+      const tooLong =
+        field.kind === "tags" && lines.find((line) => line.length > TAG_MAX_LENGTH);
+      if (tooLong) {
+        errors[field.name] =
+          `"${tooLong.slice(0, 40)}…" is longer than ${TAG_MAX_LENGTH} characters.`;
       }
       continue;
     }

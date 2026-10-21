@@ -2,6 +2,7 @@
 
 # backend
 */gradlew*
+*/logs
 
 # dependencies
 /node_modules

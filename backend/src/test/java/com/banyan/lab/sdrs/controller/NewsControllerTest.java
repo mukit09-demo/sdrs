@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.banyan.lab.sdrs.config.SecurityConfig;
 import com.banyan.lab.sdrs.dto.ArticleResponse;
+import com.banyan.lab.sdrs.dto.ArticleSummaryResponse;
 import com.banyan.lab.sdrs.exception.ResourceNotFoundException;
 import com.banyan.lab.sdrs.mapper.NewsMapper;
 import com.banyan.lab.sdrs.service.NewsService;
@@ -70,7 +71,6 @@ class NewsControllerTest {
               "category": "Press release",
               "publishedAt": "2026-08-28",
               "readingMinutes": 4,
-              "author": { "name": "Priya Raghunathan", "role": "Comms Lead" },
               "image": { "alt": "A stadium at dusk", "seed": "news-kai-tak-park" },
               "tags": ["buildings"]
             }
@@ -86,10 +86,14 @@ class NewsControllerTest {
         return Mappers.getMapper(NewsMapper.class).toResponse(NewsTestData.article());
     }
 
+    private static ArticleSummaryResponse summary() {
+        return Mappers.getMapper(NewsMapper.class).toSummary(NewsTestData.article());
+    }
+
     @Test
-    @DisplayName("GET /api/articles serves the Article shape the front end types")
+    @DisplayName("GET /api/articles serves the ArticleSummary shape the front end types")
     void listMatchesTheSharedContract() throws Exception {
-        when(service.list(null, null, null)).thenReturn(List.of(response()));
+        when(service.list(null, null, null)).thenReturn(List.of(summary()));
 
         mvc.perform(get("/api/articles"))
                 .andExpect(status().isOk())
@@ -101,15 +105,24 @@ class NewsControllerTest {
                 // A bare date, not an ISO timestamp and not an epoch number.
                 .andExpect(jsonPath("$[0].publishedAt").value("2026-08-28"))
                 .andExpect(jsonPath("$[0].readingMinutes").value(4))
-                .andExpect(jsonPath("$[0].author.name").value("Priya Raghunathan"))
-                .andExpect(jsonPath("$[0].body", hasSize(3)))
-                .andExpect(jsonPath("$[0].tags[0]").value("buildings"));
+                // The byline was removed from the contract; the key must not come back.
+                .andExpect(jsonPath("$[0].author").doesNotExist())
+                // A list is cards; the body is only served for one article.
+                .andExpect(jsonPath("$[0].body").doesNotExist())
+                .andExpect(jsonPath("$[0].excerpt").exists())
+                .andExpect(jsonPath("$[0].tags[0]").value("buildings"))
+                // The audit pair is the mirror image of publishedAt: a full
+                // instant with an offset, not a bare date and not an epoch
+                // number. The CMS converts these to the operator's zone, so a
+                // drift to either would still render — just hours out.
+                .andExpect(jsonPath("$[0].createdAt").value("2026-08-26T09:15:30Z"))
+                .andExpect(jsonPath("$[0].updatedAt").value("2026-08-28T14:42:05Z"));
     }
 
     @Test
     @DisplayName("an image with no url omits the key rather than sending null")
     void absentImageUrlIsOmitted() throws Exception {
-        when(service.list(null, null, null)).thenReturn(List.of(response()));
+        when(service.list(null, null, null)).thenReturn(List.of(summary()));
 
         mvc.perform(get("/api/articles"))
                 .andExpect(status().isOk())
@@ -130,6 +143,21 @@ class NewsControllerTest {
                 .andExpect(status().isOk());
 
         verify(service).list("buildings", "other-slug", 3);
+    }
+
+    @Test
+    @DisplayName("GET /api/articles/{slug} serves the full Article, body included")
+    void getMatchesTheSharedContract() throws Exception {
+        when(service.get(NewsTestData.SLUG)).thenReturn(response());
+
+        mvc.perform(get("/api/articles/" + NewsTestData.SLUG))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.slug").value(NewsTestData.SLUG))
+                .andExpect(jsonPath("$.category").value("Press release"))
+                .andExpect(jsonPath("$.publishedAt").value("2026-08-28"))
+                .andExpect(jsonPath("$.body", hasSize(3)))
+                .andExpect(jsonPath("$.tags[0]").value("buildings"))
+                .andExpect(jsonPath("$.createdAt").value("2026-08-26T09:15:30Z"));
     }
 
     @Test

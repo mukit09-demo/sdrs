@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EntityForm } from "@/components/admin/EntityForm";
 import { Button } from "@/components/ui/Button";
-import { findCollection } from "@/lib/admin/collections";
+import { findEditableCollection } from "@/lib/admin/collections";
 import { toFieldViews } from "@/lib/admin/fields";
 import { requireAdmin, requireUser } from "@/lib/auth/dal";
 import { routes } from "@/lib/config/routes";
@@ -15,7 +15,7 @@ export async function generateMetadata({
   params,
 }: NewEntityPageProps): Promise<Metadata> {
   const { collection } = await params;
-  const found = findCollection(collection);
+  const found = findEditableCollection(collection);
   return {
     title: found ? `New ${found.singular}` : "Not found",
     robots: { index: false, follow: false },
@@ -26,9 +26,11 @@ export default async function NewEntityPage({ params }: NewEntityPageProps) {
   await requireUser();
 
   const { collection: name } = await params;
-  const collection = findCollection(name);
+  const collection = findEditableCollection(name);
   if (!collection) notFound();
   if (collection.adminOnly) await requireAdmin();
+
+  const views = await toFieldViews(collection.fields);
 
   return (
     <>
@@ -47,7 +49,7 @@ export default async function NewEntityPage({ params }: NewEntityPageProps) {
         <EntityForm
           collection={collection.name}
           singular={collection.singular}
-          views={toFieldViews(collection.fields)}
+          views={views}
           values={{}}
         />
       </div>

@@ -9,6 +9,7 @@ import {
 } from "@/lib/admin/fields";
 import type { FieldErrors } from "@sdrs/shared/utils/validate";
 import { RowsField } from "./RowsField";
+import { TagsField } from "./TagsField";
 
 /**
  * Renders one `FieldView` with the site's existing form primitives, so admin
@@ -103,6 +104,15 @@ export function FieldRenderer({
         />
       );
 
+    case "tags":
+      return (
+        <TagsField
+          field={field}
+          initial={Array.isArray(value) ? (value as string[]) : []}
+          error={errors[field.name]}
+        />
+      );
+
     case "image":
     case "group":
       return (
@@ -133,7 +143,7 @@ export function FieldRenderer({
   }
 }
 
-/** A nested object — an image, a location, an author, a film — as a fieldset. */
+/** A nested object — an image, a location, a film — as a fieldset. */
 function MemberGroup({
   field,
   value,

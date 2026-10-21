@@ -8,7 +8,7 @@ Router, React 19, TypeScript, Tailwind CSS v4) and a Spring Boot API.
 | **`core-web/`** | port 3002 | The public site. Reads content. No auth, no admin route, nothing that hints a CMS exists. |
 | **`manage-web/`** | port 3003 | The CMS. Signed-in only, its own administration UI, never linked from the public site. |
 | **`packages/shared/`** | — | `@sdrs/shared`: the domain model and content layer both apps need. |
-| **`backend/`** | port 3004 | `sdrs-api` — Spring Boot, Postgres, Redis. Gradle, not npm: it is not a workspace. See [`backend/README.md`](backend/README.md). |
+| **`backend/`** | port 8085 | `sdrs-api` — Spring Boot, Postgres, Redis. Gradle, not npm: it is not a workspace. See [`backend/README.md`](backend/README.md). |
 
 The three npm packages are one workspace; `backend/` is outside it, so
 `npm install` neither sees nor needs it.

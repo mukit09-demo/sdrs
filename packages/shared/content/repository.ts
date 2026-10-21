@@ -1,11 +1,13 @@
 import type {
   AboutContent,
   Article,
+  ArticleSummary,
   CareersContent,
   ContactContent,
   DigitalTool,
   HomeContent,
   JobOpening,
+  JobOpeningDraft,
   Market,
   Project,
   ResearchContent,
@@ -40,6 +42,26 @@ export interface EnquiryInput {
 
 export interface EnquiryResult {
   reference: string;
+  /**
+   * ISO-8601 *instant* with an offset (`2026-10-09T16:04:21Z`) — not the
+   * `YYYY-MM-DD` the content dates use. Render it with `formatLocalDateTime`,
+   * which converts to the reader's own zone; the bare-date formatters in
+   * `utils/format.ts` pin UTC and would silently drop the time.
+   */
+  receivedAt: string;
+}
+
+/**
+ * One enquiry as the CMS inbox reads it — `EnquiryInput` plus what the server
+ * assigned. The inbox is read-only, so there is no draft counterpart.
+ *
+ * Deliberately not in `types/content.ts`: that file is the *content* model, and
+ * an enquiry is not content. It is never rendered by the public site, has no
+ * slug, and `core-web` has no method that returns one.
+ */
+export interface Enquiry extends EnquiryInput {
+  reference: string;
+  /** ISO-8601 instant, as on `EnquiryResult`. */
   receivedAt: string;
 }
 
@@ -66,7 +88,8 @@ export interface ContentRepository {
   listProjects(query?: ProjectQuery): Promise<Project[]>;
   getProject(slug: Slug): Promise<Project | null>;
 
-  listArticles(query?: ArticleQuery): Promise<Article[]>;
+  /** Summaries — no `body`. Fetch one article with `getArticle` for that. */
+  listArticles(query?: ArticleQuery): Promise<ArticleSummary[]>;
   getArticle(slug: Slug): Promise<Article | null>;
 
   getHomeContent(): Promise<HomeContent>;
@@ -106,7 +129,23 @@ export interface ContentAdminRepository extends ContentRepository {
    * without loading and rewriting the whole careers page bundle.
    */
   listJobOpenings(): Promise<JobOpening[]>;
-  getJobOpening(id: string): Promise<JobOpening | null>;
-  saveJobOpening(opening: JobOpening): Promise<void>;
-  deleteJobOpening(id: string): Promise<void>;
+  getJobOpening(id: number): Promise<JobOpening | null>;
+  /**
+   * The one `save` that returns something. Jobs are the only entity whose id
+   * the backend assigns, so they are the only one where the caller cannot know
+   * the id up front — the saved entity carries it back.
+   */
+  saveJobOpening(opening: JobOpeningDraft): Promise<JobOpening>;
+  deleteJobOpening(id: number): Promise<void>;
+
+  /**
+   * The enquiry inbox, newest first.
+   *
+   * Read-only, and the one admin method with no `save` or `delete` beside it:
+   * an enquiry is submitted by a visitor and then only ever read. It sits on
+   * this interface rather than `ContentRepository` because the payload is
+   * personal data — names, addresses and message bodies — and `core-web`
+   * should have no method that returns it even by accident.
+   */
+  listEnquiries(): Promise<Enquiry[]>;
 }

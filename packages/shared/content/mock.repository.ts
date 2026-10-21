@@ -6,10 +6,16 @@ import { researchContent } from "../data/research";
 import { digitalTools } from "../data/services";
 import { sortByDateDesc } from "../utils/format";
 import { isOpening } from "./jobs";
-import type { CareersContent } from "../types/content";
+import type {
+  Article,
+  ArticleSummary,
+  CareersContent,
+  JobOpening,
+} from "../types/content";
 import type {
   ArticleQuery,
   ContentAdminRepository,
+  Enquiry,
   EnquiryInput,
   EnquiryResult,
   ProjectQuery,
@@ -85,7 +91,7 @@ export const mockRepository: ContentAdminRepository = {
     if (tag) result = result.filter((article) => article.tags.includes(tag));
     if (excludeSlug) result = result.filter((article) => article.slug !== excludeSlug);
 
-    return limit ? result.slice(0, limit) : result;
+    return (limit ? result.slice(0, limit) : result).map(toArticleSummary);
   },
 
   async getArticle(slug) {
@@ -120,17 +126,38 @@ export const mockRepository: ContentAdminRepository = {
   },
 
   async submitEnquiry(input: EnquiryInput): Promise<EnquiryResult> {
-    // Stands in for the POST the backend will handle. Logged so the form can be
-    // exercised end to end in development.
-    console.info("[mock] Enquiry received", {
-      topic: input.topic,
-      email: input.email,
-    });
-
-    return {
+    // Stands in for the POST the backend handles. Persisted rather than only
+    // logged, so the CMS inbox has something to show and the submit-then-read
+    // path can be exercised before switching to the API.
+    const enquiry: Enquiry = {
+      ...input,
       reference: `ENQ-${Date.now().toString(36).toUpperCase()}`,
+      // An instant, matching what the backend sends. `toISOString` is always
+      // UTC with a `Z`, which is what the inbox needs to convert to the
+      // operator's zone.
       receivedAt: new Date().toISOString(),
     };
+
+    await writeStore((store) => {
+      store.enquiries.push(enquiry);
+    });
+
+    console.info("[mock] Enquiry received", {
+      reference: enquiry.reference,
+      topic: enquiry.topic,
+    });
+
+    return { reference: enquiry.reference, receivedAt: enquiry.receivedAt };
+  },
+
+  /**
+   * Newest first, to match the backend's ordering. Sorted on read rather than
+   * inserted in order because the store is append-only and a plain string
+   * compare on ISO-8601 instants is a chronological compare.
+   */
+  async listEnquiries(): Promise<Enquiry[]> {
+    const { enquiries } = await readStore();
+    return [...enquiries].sort((a, b) => b.receivedAt.localeCompare(a.receivedAt));
   },
 
   // --- Writes ------------------------------------------------------------
@@ -176,8 +203,20 @@ export const mockRepository: ContentAdminRepository = {
     return (await readStore()).openings.find((opening) => opening.id === id) ?? null;
   },
 
-  saveJobOpening(opening) {
-    return upsert("openings", opening, (o) => o.id);
+  /**
+   * Stands in for the database sequence: a draft with no id gets the next one.
+   * Returns the saved entity, because that id is the only way the caller learns
+   * what was created.
+   */
+  async saveJobOpening(draft) {
+    const existing = (await readStore()).openings;
+    const saved: JobOpening = {
+      ...draft,
+      id: draft.id ?? Math.max(0, ...existing.map((o) => o.id)) + 1,
+    };
+
+    await upsert("openings", saved, (o) => o.id);
+    return saved;
   },
 
   deleteJobOpening(id) {
@@ -192,7 +231,9 @@ export const mockRepository: ContentAdminRepository = {
 function upsert<K extends keyof ContentStore>(
   collection: K,
   entity: ContentStore[K][number],
-  idOf: (entity: ContentStore[K][number]) => string,
+  // `string | number` because jobs are keyed on a numeric sequence and
+  // everything else on a slug.
+  idOf: (entity: ContentStore[K][number]) => string | number,
 ): Promise<void> {
   return writeStore((store) => {
     const entities = store[collection] as ContentStore[K][number][];
@@ -205,8 +246,8 @@ function upsert<K extends keyof ContentStore>(
 
 function remove<K extends keyof ContentStore>(
   collection: K,
-  id: string,
-  idOf: (entity: ContentStore[K][number]) => string,
+  id: string | number,
+  idOf: (entity: ContentStore[K][number]) => string | number,
 ): Promise<void> {
   return writeStore((store) => {
     const entities = store[collection] as ContentStore[K][number][];
@@ -214,4 +255,13 @@ function remove<K extends keyof ContentStore>(
 
     if (index !== -1) entities.splice(index, 1);
   });
+}
+
+/**
+ * What `GET /api/articles` sends: the article without its body. The mock drops
+ * it too, so a page that wrongly reads `body` off a list item fails on the mock
+ * source as well, rather than only once the backend is switched on.
+ */
+function toArticleSummary({ body: _body, ...summary }: Article): ArticleSummary {
+  return summary;
 }

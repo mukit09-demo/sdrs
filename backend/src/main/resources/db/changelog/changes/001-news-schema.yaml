@@ -1,0 +1,216 @@
+# News: the Article of the shared domain model.
+#
+# The slug is the primary key, not a surrogate id: it is the route segment
+# (/news/{slug}) and the identifier both apps and the CMS already address an
+# article by. A rename is therefore a delete plus an insert, which is exactly
+# how the CMS treats it.
+#
+# Column types are Liquibase's logical names (clob, int, date) rather than
+# Postgres's, so the mapping to a concrete type is Liquibase's job — clob
+# becomes text here. The exception is the check constraints, which go through
+# <sql>: addCheckConstraint is a Liquibase Pro change type and this is not Pro.
+
+databaseChangeLog:
+  - changeSet:
+      id: "001-00-create-news-article-sequence"
+      author: "mukit09"
+      comment: >-
+        increment by 1 must match allocationSize = 1 on the entity's
+        @SequenceGenerator. If they disagree Hibernate hands out ids the
+        database has already issued, and not until a reserved band runs out —
+        so it fails late, not on the first insert.
+      changes:
+        - createSequence:
+            sequenceName: "news_article_id_seq"
+            startValue: 1
+            incrementBy: 1
+            cycle: false
+  - changeSet:
+      id: "001-01-create-news-article"
+      author: "mukit09"
+      comment: >-
+        The article itself. image_url and image_seed are nullable because the
+        front end renders a deterministic gradient placeholder until real asset
+        URLs exist; image_alt is not, because a placeholder still needs an
+        accessible description.
+      changes:
+        - createTable:
+            tableName: "news_article"
+            columns:
+              - column:
+                  name: "id"
+                  type: "bigint"
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: "pk_news_article"
+                    nullable: false
+              - column:
+                  name: "slug"
+                  type: "varchar(160)"
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: "uk_news_article_slug"
+              - column:
+                  name: "title"
+                  type: "varchar(300)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "excerpt"
+                  type: "varchar(1000)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "news_type"
+                  type: "varchar(40)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "published_at"
+                  type: "date"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "reading_minutes"
+                  type: "int"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "image_url"
+                  type: "varchar(600)"
+              - column:
+                  name: "image_alt"
+                  type: "varchar(300)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "image_seed"
+                  type: "varchar(160)"
+              - column:
+                  name: "created_at"
+                  type: "timestamp with time zone"
+                  defaultValueComputed: "now()"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "updated_at"
+                  type: "timestamp with time zone"
+                  defaultValueComputed: "now()"
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: "001-02-news-article-check-constraints"
+      author: "mukit09"
+      comment: >-
+        The five news_type values are NewsType's constants, not its labels —
+        PRESS_RELEASE in the column, "Press release" on the wire.
+      changes:
+        - sql:
+            sql: |-
+              alter table news_article
+                  add constraint news_article_reading_minutes_positive
+                  check (reading_minutes > 0);
+
+              alter table news_article
+                  add constraint news_article_news_type_known
+                  check (news_type in ('PRESS_RELEASE', 'INSIGHT', 'AWARD', 'REPORT', 'EVENT'));
+      rollback:
+        - sql:
+            sql: |-
+              alter table news_article drop constraint news_article_news_type_known;
+              alter table news_article drop constraint news_article_reading_minutes_positive;
+  - changeSet:
+      id: "001-03-create-news-article-body"
+      author: "mukit09"
+      comment: >-
+        Body paragraphs, ordered. `position` is in the primary key so the order
+        is a property of the data rather than of however the rows happen to come
+        back.
+      changes:
+        - createTable:
+            tableName: "news_article_body"
+            columns:
+              - column:
+                  name: "article_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "position"
+                  type: "int"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "paragraph"
+                  type: "clob"
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: "news_article_body"
+            columnNames: "article_id, position"
+            constraintName: "pk_news_article_body"
+        - addForeignKeyConstraint:
+            baseTableName: "news_article_body"
+            baseColumnNames: "article_id"
+            referencedTableName: "news_article"
+            referencedColumnNames: "id"
+            constraintName: "fk_news_article_body_article"
+            onDelete: "CASCADE"
+  - changeSet:
+      id: "001-04-create-news-article-tag"
+      author: "mukit09"
+      comment: >-
+        Market and theme slugs, ordered the same way.
+      changes:
+        - createTable:
+            tableName: "news_article_tag"
+            columns:
+              - column:
+                  name: "article_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "position"
+                  type: "int"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "tag"
+                  type: "varchar(120)"
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: "news_article_tag"
+            columnNames: "article_id, position"
+            constraintName: "pk_news_article_tag"
+        - addForeignKeyConstraint:
+            baseTableName: "news_article_tag"
+            baseColumnNames: "article_id"
+            referencedTableName: "news_article"
+            referencedColumnNames: "id"
+            constraintName: "fk_news_article_tag_article"
+            onDelete: "CASCADE"
+  - changeSet:
+      id: "001-05-create-news-indexes"
+      author: "mukit09"
+      comment: >-
+        Every list query is `order by published_at desc, slug`, and the ?tag=
+        filter joins news_article_tag.
+      changes:
+        - createIndex:
+            tableName: "news_article"
+            indexName: "idx_news_article_published_at"
+            columns:
+              - column:
+                  name: "published_at"
+                  descending: true
+              - column:
+                  name: "slug"
+        - createIndex:
+            tableName: "news_article_tag"
+            indexName: "idx_news_article_tag_tag"
+            columns:
+              - column:
+                  name: "tag"

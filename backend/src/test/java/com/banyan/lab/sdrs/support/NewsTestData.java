@@ -1,12 +1,11 @@
 package com.banyan.lab.sdrs.support;
 
-import com.banyan.lab.sdrs.entity.Author;
 import com.banyan.lab.sdrs.entity.MediaImage;
 import com.banyan.lab.sdrs.entity.NewsArticle;
 import com.banyan.lab.sdrs.entity.NewsType;
 import com.banyan.lab.sdrs.dto.ArticleRequest;
-import com.banyan.lab.sdrs.dto.AuthorDto;
 import com.banyan.lab.sdrs.dto.MediaImageDto;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,31 +24,44 @@ public final class NewsTestData {
     public static final String SLUG = "kai-tak-sports-park-opens";
     public static final LocalDate PUBLISHED = LocalDate.of(2026, 8, 28);
 
+    /**
+     * Hibernate assigns these in production; a unit test has no session, so the
+     * fixture sets them. They are set at all because the audit pair is the only
+     * part of the payload the CMS renders in the operator's own zone, and that
+     * conversion is correct only while they stay ISO-8601 with an offset — which
+     * is what {@code NewsControllerTest} asserts. Left null they would serialise
+     * as nothing and the assertion would pass vacuously.
+     *
+     * <p>Deliberately a non-midnight, non-UTC-looking instant: a value like
+     * {@code T00:00:00Z} survives being mangled into a bare date.
+     */
+    public static final Instant CREATED = Instant.parse("2026-08-26T09:15:30Z");
+    public static final Instant UPDATED = Instant.parse("2026-08-28T14:42:05Z");
+
     public static NewsArticle article() {
-        return NewsArticle.builder()
-                .slug(SLUG)
-                .title("Kai Tak Sports Park opens to the public in Hong Kong")
-                .excerpt("The 50,000-seat stadium at the heart of the Kai Tak development has "
-                        + "hosted its first full-capacity event.")
-                .newsType(NewsType.PRESS_RELEASE)
-                .publishedAt(PUBLISHED)
-                .readingMinutes(4)
-                .author(Author.builder()
-                        .name("Priya Raghunathan")
-                        .role("Regional Communications Lead, East Asia")
-                        .build())
-                // No url — the gradient-placeholder case, which is the default
-                // for every piece of bundled content.
-                .image(MediaImage.builder()
-                        .alt("A stadium with a retractable roof at dusk")
-                        .seed("news-kai-tak-park")
-                        .build())
-                .body(new ArrayList<>(List.of(
-                        "Kai Tak Sports Park has opened on the site of Hong Kong's former airport.",
-                        "Our teams worked across structural engineering and crowd movement.",
-                        "The district cooling network also supplies the surrounding plots.")))
-                .tags(new ArrayList<>(List.of("buildings", "cities-and-communities")))
-                .build();
+        // No url — the gradient-placeholder case, which is the default for
+        // every piece of bundled content.
+        MediaImage image = new MediaImage();
+        image.setAlt("A stadium with a retractable roof at dusk");
+        image.setSeed("news-kai-tak-park");
+
+        NewsArticle article = new NewsArticle();
+        article.setSlug(SLUG);
+        article.setTitle("Kai Tak Sports Park opens to the public in Hong Kong");
+        article.setExcerpt("The 50,000-seat stadium at the heart of the Kai Tak development has "
+                + "hosted its first full-capacity event.");
+        article.setNewsType(NewsType.PRESS_RELEASE);
+        article.setPublishedAt(PUBLISHED);
+        article.setReadingMinutes(4);
+        article.setImage(image);
+        article.setBody(new ArrayList<>(List.of(
+                "Kai Tak Sports Park has opened on the site of Hong Kong's former airport.",
+                "Our teams worked across structural engineering and crowd movement.",
+                "The district cooling network also supplies the surrounding plots.")));
+        article.setTags(new ArrayList<>(List.of("buildings", "cities-and-communities")));
+        article.setCreatedAt(CREATED);
+        article.setUpdatedAt(UPDATED);
+        return article;
     }
 
     public static ArticleRequest request() {
@@ -65,7 +77,6 @@ public final class NewsTestData {
                 NewsType.PRESS_RELEASE,
                 PUBLISHED,
                 4,
-                new AuthorDto("Priya Raghunathan", "Regional Communications Lead, East Asia"),
                 new MediaImageDto(null, "A stadium with a retractable roof at dusk", "news-kai-tak-park"),
                 List.of("buildings", "cities-and-communities"));
     }

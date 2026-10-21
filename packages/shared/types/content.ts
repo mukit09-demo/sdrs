@@ -141,10 +141,32 @@ export interface Article {
   /** ISO-8601 date (`YYYY-MM-DD`). */
   publishedAt: string;
   readingMinutes: number;
-  author: Author;
   image: MediaImage;
   tags: string[];
+  /**
+   * When the record was first stored, as an ISO-8601 *instant* with an offset
+   * (`2026-10-10T14:32:05Z`) — unlike `publishedAt`, which is a calendar date.
+   * The CMS renders these in the operator's own zone with
+   * `formatLocalDateTime`; `publishedAt` must keep using the UTC-pinned
+   * formatters, because an editorial date should read the same everywhere.
+   *
+   * Optional because only the API source supplies them: the mock repository
+   * reads bundled files that were never written through a database and have no
+   * audit trail to report. A consumer must handle their absence rather than
+   * assume the backend is behind it.
+   */
+  createdAt?: string;
+  /** Last write, as an ISO-8601 instant. See `createdAt`. */
+  updatedAt?: string;
 }
+
+/**
+ * An article as a list returns it — everything but `body`. Lists render cards,
+ * which show the excerpt, so the paragraphs are only fetched for one article at
+ * a time, by `getArticle`. Typed apart rather than leaving `body` optional on
+ * `Article`, so the page that renders the body can rely on it being there.
+ */
+export type ArticleSummary = Omit<Article, "body">;
 
 export interface Person {
   id: string;
@@ -210,7 +232,15 @@ export type JobStatus = "Draft" | "Open" | "Closed";
  * an editor has to see a draft in order to publish it.
  */
 export interface JobOpening {
-  id: string;
+  /**
+   * Assigned by the backend, not typed by an editor.
+   *
+   * It used to be a string reference (`"job-1001"`) that the CMS minted from a
+   * timestamp. Two jobs created in the same millisecond got the same one, and
+   * because saving is an upsert keyed on the id, the second silently replaced
+   * the first. A server-assigned key cannot collide.
+   */
+  id: number;
   title: string;
   discipline: string;
   location: string;
@@ -228,6 +258,15 @@ export interface JobOpening {
    */
   deadline?: string;
 }
+
+/**
+ * What a caller submits when saving a job.
+ *
+ * The id is optional because a create does not have one yet — the backend
+ * assigns it. Readers keep `JobOpening`, where `id` is required, so nothing
+ * rendering a vacancy has to handle an absent id.
+ */
+export type JobOpeningDraft = Omit<JobOpening, "id"> & { id?: number };
 
 export interface ProcessStep {
   step: number;
@@ -267,7 +306,7 @@ export interface ResearchProgramme {
   summary: string;
   /** Year the programme was funded. */
   startedYear: number;
-  /** Reuses `Author` — a name and a role is all a research lead needs here. */
+  /** `Author` is a name and a role, which is all a research lead needs here. */
   lead: Author;
   /** Universities, institutes and clients working on it with us. */
   partners: string[];

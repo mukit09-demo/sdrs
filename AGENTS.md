@@ -25,7 +25,7 @@ plus a Gradle-managed Spring Boot backend that is *not* a workspace. See
   because both apps map the same Spring Boot DTOs. Source only: Turbopack
   compiles workspace packages, so there is no build step. **Nothing UI goes in
   here** — the two apps look nothing alike and should not share components.
-- **`backend/`** (`sdrs-api`) — the Spring Boot API, port 3004. Java 25, Gradle,
+- **`backend/`** (`sdrs-api`) — the Spring Boot API, port 8085. Java 25, Gradle,
   Postgres, Redis. Outside the npm workspace, so nothing here is reachable from
   either app's imports; the only coupling is the HTTP contract. Read
   `backend/README.md` before changing it — Spring Boot 4 is a real break from
@@ -101,7 +101,7 @@ plus a Gradle-managed Spring Boot backend that is *not* a workspace. See
   `.config`. A new collection adds one class to each, following the news classes
   already there — not a new subtree. `@Embeddable` types and the enums an entity
   persists live in `.entity` beside it; the wire types keep a `Dto` suffix so
-  `Author` and `AuthorDto` can both be named in a mapper.
+  `MediaImage` and `MediaImageDto` can both be named in a mapper.
 - **If the CMS cannot edit it, it does not get a table.** The database holds the
   five collections registered in `manage-web/src/lib/admin/collections.ts` —
   markets, services, projects, news, vacancies — plus the enquiry inbox. Page
@@ -120,12 +120,30 @@ plus a Gradle-managed Spring Boot backend that is *not* a workspace. See
   chosen here. A controller test asserting the JSON field by field is the only
   thing that catches a drift, because nothing else fails — the site just renders
   wrongly.
-- **Liquibase owns the schema.** `ddl-auto: validate`. A schema change is a new
-  changeSet under `db/changelog/changes/`, added to the master changelog — never
-  an edit to an applied changeSet (Liquibase checksums those and will refuse to
-  start), and never a `ddl-auto` bump. Use Liquibase's logical column types, not
-  Postgres's, and reach for `<sql>` only where a change type does not exist or
-  is Pro-only (check constraints are).
+- **Liquibase owns the schema, in YAML.** `ddl-auto: validate`. A schema change
+  is a new changeSet under `db/changelog/changes/`, added to
+  `db.changelog-master.yaml` — never an edit to an applied changeSet (Liquibase
+  checksums those and will refuse to start), and never a `ddl-auto` bump. Use
+  Liquibase's logical column types, not Postgres's, and reach for a raw `sql:`
+  change only where a change type does not exist or is Pro-only (check
+  constraints are).
+- **Filter an element collection with `isMember`, never a join.** Every
+  collection table here is keyed on `(owner_id, position)`, so a value may
+  repeat — and `root.join("tags")` then returns the owner once per matching row,
+  which silently breaks both the result and `limit`. `isMember` compiles to an
+  `exists` subquery: one row per owner. This applies to `tags`, and to
+  `project_market`, `project_service`, `service_related_market` and
+  `market_featured_project` when their filters get written.
+- **Collections are `LAZY`, and every one carries `@BatchSize`.** Lazy is the
+  default the mapping should state, so a query that does not need a collection
+  can avoid loading it. `@BatchSize` is what keeps that safe: without it, a list
+  of 20 whose mapper touches two collections is 41 queries instead of 3.
+- **Map inside the service's transaction. Never return an entity from a
+  service.** `open-in-view` is false, so a lazy collection touched after the
+  transaction closes throws `LazyInitializationException` — correctly, but at
+  runtime. The unit tests mock the repository and so cannot catch it; the
+  service being `@Transactional(readOnly = true)` with the mapper called inside
+  is what prevents it.
 - **Authorisation lives in `config/SecurityConfig` only.** Reads are public
   because core-web has no credential to present; writes need the admin. A
   controller that decides its own access rules is how one endpoint ends up

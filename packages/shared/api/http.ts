@@ -55,6 +55,15 @@ function resolveUrl(path: string, query?: RequestOptions["query"]): string {
   return url.toString();
 }
 
+/** HTTP Basic for the admin account, when this app has one. See `env.backendCredentials`. */
+function authorization(): Record<string, string> {
+  const credentials = env.backendCredentials;
+  if (!credentials) return {};
+
+  const token = Buffer.from(`${credentials.username}:${credentials.password}`).toString("base64");
+  return { Authorization: `Basic ${token}` };
+}
+
 /**
  * The single outbound HTTP path to the Spring Boot backend. Everything in
  * `../content/http.repository.ts` goes through here, so retries, auth
@@ -80,6 +89,7 @@ export async function apiRequest<T>(
     headers: {
       Accept: "application/json",
       ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+      ...authorization(),
       ...headers,
     },
     body: body === undefined ? undefined : JSON.stringify(body),

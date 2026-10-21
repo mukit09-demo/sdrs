@@ -5,7 +5,7 @@ import type {
   CareerLevel,
   EmploymentType,
   Film,
-  JobOpening,
+  JobOpeningDraft,
   JobStatus,
   Market,
   Project,
@@ -63,9 +63,26 @@ export interface AdminRow {
   title: string;
   /** Secondary facts, rendered as a dot-separated row. */
   meta: string[];
+  /**
+   * An ISO-8601 instant to show beside the row, rendered in the operator's own
+   * time zone.
+   *
+   * Separate from `meta` because `meta` is strings the server has already
+   * formatted, and a zone-dependent string formatted on the server is the
+   * container's zone rather than the reader's. This stays raw so `LocalTime`
+   * can format it in the browser.
+   */
+  instant?: string;
+  /**
+   * A block of prose shown under the row, for a collection whose entries are
+   * read in the list rather than opened. Only the inbox uses it: an enquiry has
+   * no edit page to read the message on, so the list is the only place it can
+   * appear.
+   */
+  body?: string;
 }
 
-export interface AdminCollection {
+interface AdminCollectionBase {
   /** URL segment and store key. */
   name: string;
   label: string;
@@ -78,9 +95,15 @@ export interface AdminCollection {
    * because hiding a link is not access control.
    */
   adminOnly?: boolean;
-  fields: FieldSpec[];
 
   list(): Promise<AdminRow[]>;
+}
+
+/** A collection with a form behind it — every content collection, and accounts. */
+export interface EditableCollection extends AdminCollectionBase {
+  readOnly?: false;
+  fields: FieldSpec[];
+
   /** Form defaults for an existing entity, or `null` when there is no such id. */
   values(id: string): Promise<FieldValues | null>;
   /**
@@ -90,6 +113,22 @@ export interface AdminCollection {
   save(values: FieldValues, previousId?: string): Promise<string>;
   remove(id: string): Promise<void>;
 }
+
+/**
+ * A collection that can only be listed — the enquiry inbox.
+ *
+ * It has no `fields`, `values`, `save` or `remove` rather than stubs that
+ * throw, which makes `AdminCollection` a discriminated union and turns every
+ * write path into a compile error until it narrows on `readOnly`. That is the
+ * point: the generic form and delete paths are shared by every collection, so
+ * "this one cannot be written" has to be something the compiler enforces and
+ * not a convention the next descriptor forgets.
+ */
+export interface ReadOnlyCollection extends AdminCollectionBase {
+  readOnly: true;
+}
+
+export type AdminCollection = EditableCollection | ReadOnlyCollection;
 
 // --- Shared field fragments ------------------------------------------------
 
@@ -598,17 +637,21 @@ const articles: AdminCollection = {
       "One paragraph per line. Blank lines are ignored.",
       true,
     ),
-    {
-      kind: "group",
-      name: "author",
-      label: "Author",
-      fields: [
-        { name: "name", label: "Name", kind: "text", required: true, maxLength: 120 },
-        { name: "role", label: "Role", kind: "text", required: true, maxLength: 160 },
-      ],
-    },
     imageField(),
-    linesField("tags", "Tags", "One per line. Drives related reading and filters."),
+    {
+      kind: "tags",
+      name: "tags",
+      label: "Tags",
+      hint:
+        "One per line. The first one picks the related stories under the article. " +
+        "Saved lowercase, with spaces turned into hyphens.",
+      async suggestions(exceptSlug) {
+        const articles = await content.listArticles();
+        return articles
+          .filter((article) => article.slug !== exceptSlug)
+          .flatMap((article) => article.tags);
+      },
+    },
   ],
 
   async list() {
@@ -616,7 +659,11 @@ const articles: AdminCollection = {
     return entities.map((article) => ({
       id: article.slug,
       title: article.title,
-      meta: [article.category, article.publishedAt, article.author.name],
+      meta: [article.category, article.publishedAt],
+      // `publishedAt` above is the editorial date and stays a plain string —
+      // it reads the same in every zone on purpose. This is the audit instant,
+      // and it is absent on the mock source, which has no audit trail.
+      instant: article.updatedAt,
     }));
   },
 
@@ -632,14 +679,12 @@ const articles: AdminCollection = {
       readingMinutes: article.readingMinutes,
       excerpt: article.excerpt,
       body: article.body,
-      author: { name: article.author.name, role: article.author.role },
       image: imageToValues(article.image),
       tags: article.tags,
     };
   },
 
   async save(values, previousId) {
-    const author = group(values, "author");
     const article: Article = {
       slug: str(values, "slug"),
       title: str(values, "title"),
@@ -648,7 +693,6 @@ const articles: AdminCollection = {
       category: asOption(str(values, "category"), ARTICLE_CATEGORIES),
       publishedAt: str(values, "publishedAt"),
       readingMinutes: num(values, "readingMinutes"),
-      author: { name: author.name ?? "", role: author.role ?? "" },
       image: image(values, "image"),
       tags: list(values, "tags"),
     };
@@ -663,6 +707,41 @@ const articles: AdminCollection = {
   },
 };
 
+// --- Enquiries -------------------------------------------------------------
+
+/**
+ * The contact-form inbox. The only read-only collection, and the only one not
+ * seeded from `packages/shared/data` — it starts empty and fills up as the
+ * public site is used.
+ *
+ * Not `adminOnly`. The role split in this app is accounts and nothing else, and
+ * an editor answering enquiries is the ordinary case; gating it would be the
+ * third capability split that the conventions say to add a role for instead.
+ */
+const enquiries: ReadOnlyCollection = {
+  name: "enquiries",
+  label: "Enquiries",
+  singular: "enquiry",
+  description:
+    "Contact-form submissions, newest first. Received times are shown in your own time zone.",
+  readOnly: true,
+
+  async list() {
+    const submitted = await content.listEnquiries();
+    return submitted.map((enquiry) => ({
+      id: enquiry.reference,
+      title: `${enquiry.name} — ${enquiry.topic}`,
+      meta: [enquiry.email, enquiry.organisation].filter(
+        (value): value is string => Boolean(value),
+      ),
+      body: enquiry.message,
+      // The one instant in the CMS that is not an audit field: it is the fact
+      // the operator actually wants, so it is rendered in their own zone.
+      instant: enquiry.receivedAt,
+    }));
+  },
+};
+
 // --- Vacancies -------------------------------------------------------------
 
 const openings: AdminCollection = {
@@ -673,13 +752,8 @@ const openings: AdminCollection = {
     'Roles on /careers. Only "Open" ones whose deadline has not passed are ' +
     "shown there — this list shows every job, including drafts.",
   fields: [
-    {
-      name: "id",
-      label: "Reference",
-      kind: "text",
-      maxLength: 40,
-      hint: "Leave blank to generate one.",
-    },
+    // No id field. The backend assigns it, so there is nothing here for an
+    // editor to type or to get wrong.
     { name: "title", label: "Title", kind: "text", required: true, maxLength: 200 },
     {
       name: "discipline",
@@ -711,7 +785,7 @@ const openings: AdminCollection = {
   async list() {
     const entities = await content.listJobOpenings();
     return entities.map((opening) => ({
-      id: opening.id,
+      id: String(opening.id),
       title: opening.title,
       // Status first: it is the one field that decides whether /careers shows
       // the role at all, so it is what an editor scans this list for.
@@ -726,11 +800,11 @@ const openings: AdminCollection = {
   },
 
   async values(id) {
-    const opening = await content.getJobOpening(id);
+    // Route params are strings whatever the id's real type.
+    const opening = await content.getJobOpening(Number(id));
     if (!opening) return null;
 
     return {
-      id: opening.id,
       title: opening.title,
       discipline: opening.discipline,
       location: opening.location,
@@ -743,10 +817,10 @@ const openings: AdminCollection = {
   },
 
   async save(values, previousId) {
-    const opening: JobOpening = {
-      // Vacancies are the one collection without a slug, so a new one needs a
-      // reference generating rather than typing.
-      id: str(values, "id") || `job-${Date.now().toString(36)}`,
+    const draft: JobOpeningDraft = {
+      // Absent on a create — the backend assigns it. On an edit it comes from
+      // the route, not the form, so it cannot be changed by hand.
+      id: previousId ? Number(previousId) : undefined,
       title: str(values, "title"),
       discipline: str(values, "discipline"),
       location: str(values, "location"),
@@ -759,13 +833,14 @@ const openings: AdminCollection = {
       deadline: str(values, "deadline") || undefined,
     };
 
-    await content.saveJobOpening(opening);
-    await removeRenamed(previousId, opening.id, content.deleteJobOpening);
-    return opening.id;
+    // No `removeRenamed`: a sequence id is immutable, so there is no rename to
+    // chase. That dance exists for the slug-keyed collections.
+    const saved = await content.saveJobOpening(draft);
+    return String(saved.id);
   },
 
   remove(id) {
-    return content.deleteJobOpening(id);
+    return content.deleteJobOpening(Number(id));
   },
 };
 
@@ -793,6 +868,7 @@ export const adminCollections: readonly AdminCollection[] = [
   projects,
   articles,
   openings,
+  enquiries,
   usersCollection,
 ] as const;
 
@@ -804,4 +880,20 @@ export function collectionsForRole(role: UserRole): readonly AdminCollection[] {
 
 export function findCollection(name: string): AdminCollection | undefined {
   return adminCollections.find((collection) => collection.name === name);
+}
+
+/**
+ * The collection at `name`, but only if it has a form behind it.
+ *
+ * Every write path goes through this rather than narrowing `findCollection`
+ * itself, so a read-only collection is indistinguishable from a missing one to
+ * the form pages and the save and delete actions: they already handle "no such
+ * collection" by 404ing or refusing, and that is exactly the right answer for
+ * `/enquiries/new`.
+ */
+export function findEditableCollection(
+  name: string,
+): EditableCollection | undefined {
+  const collection = findCollection(name);
+  return collection && !collection.readOnly ? collection : undefined;
 }

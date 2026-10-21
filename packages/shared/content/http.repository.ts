@@ -7,8 +7,10 @@ import { researchContent } from "../data/research";
 import { digitalTools } from "../data/services";
 import type {
   Article,
+  ArticleSummary,
   CareersContent,
   JobOpening,
+  JobOpeningDraft,
   Market,
   Project,
   Service,
@@ -16,6 +18,7 @@ import type {
 import type {
   ArticleQuery,
   ContentAdminRepository,
+  Enquiry,
   EnquiryInput,
   EnquiryResult,
   ProjectQuery,
@@ -46,7 +49,7 @@ import type {
  *                                     → Project[]
  *   GET  /api/projects/{slug}         → Project
  *   GET  /api/articles?tag=&limit=&exclude=
- *                                     → Article[]
+ *                                     → ArticleSummary[]
  *   GET  /api/articles/{slug}         → Article
  *   GET  /api/jobs                    → JobOpening[]  (candidate-facing:
  *                                       status Open, deadline not passed)
@@ -64,14 +67,19 @@ import type {
  *
  *   GET    /api/admin/jobs            → JobOpening[]  (every status)
  *   GET    /api/admin/jobs/{id}       → JobOpening
+ *   GET    /api/admin/enquiries       → Enquiry[]     (the inbox, newest first)
+ *   POST   /api/jobs                  → 201 + JobOpening, id assigned
+ *   PUT    /api/jobs/{id}             → 204
  *   POST   /api/{collection}          → 200/201, body is the entity
  *   PUT    /api/{collection}/{id}     → 200/204, body is the entity
  *   DELETE /api/{collection}/{id}     → 200/204
  *
  * `save` upserts: PUT when the entity already exists, POST when it is new, which
- * `upsert` below decides by asking the backend for it first. Writes will need an
- * admin bearer token once Spring Boot enforces one — that belongs in
- * `../api/http.ts`, which is the single place outbound headers are set.
+ * `upsert` below decides by asking the backend for it first. Writes and the
+ * `/api/admin/` reads carry the admin account as HTTP Basic, added in
+ * `../api/http.ts` — the single place outbound headers are set — from
+ * `BACKEND_ADMIN_USERNAME` / `BACKEND_ADMIN_PASSWORD`, which only `manage-web`
+ * sets.
  */
 export const httpRepository: ContentAdminRepository = {
   listMarkets() {
@@ -110,7 +118,7 @@ export const httpRepository: ContentAdminRepository = {
   },
 
   listArticles(query: ArticleQuery = {}) {
-    return apiRequest<Article[]>("/articles", {
+    return apiRequest<ArticleSummary[]>("/articles", {
       query: {
         tag: query.tag,
         limit: query.limit,
@@ -129,7 +137,7 @@ export const httpRepository: ContentAdminRepository = {
   },
 
   getJobOpening(id) {
-    return apiRequestOrNull<JobOpening>(`/admin/jobs/${encodeURIComponent(id)}`);
+    return apiRequestOrNull<JobOpening>(`/admin/jobs/${id}`);
   },
 
   // --- Page bundles: code-edited, not stored ------------------------------
@@ -166,6 +174,17 @@ export const httpRepository: ContentAdminRepository = {
 
   async getContactContent() {
     return contactContent;
+  },
+
+  /**
+   * The inbox. Under `/api/admin/` for the same reason the admin job reads are,
+   * only more sharply: `GET /api/**` is `permitAll` in the backend's
+   * `SecurityConfig`, so at `/enquiries` this payload — names, email addresses
+   * and message bodies — would be world-readable. The prefix is the
+   * authorisation, so this path is not interchangeable with the one below.
+   */
+  listEnquiries() {
+    return apiRequest<Enquiry[]>("/admin/enquiries");
   },
 
   submitEnquiry(input: EnquiryInput) {
@@ -210,11 +229,30 @@ export const httpRepository: ContentAdminRepository = {
     return remove("articles", slug);
   },
 
-  saveJobOpening(opening) {
-    // Probed against the admin path, not the public one: a draft job is absent
-    // from `/jobs`, so probing there would read "does not exist", POST, and
-    // collide with the row that is already in the table.
-    return upsert("jobs", opening.id, opening, "admin/jobs");
+  /**
+   * Jobs do not go through `upsert` below, because they are the one collection
+   * whose id the backend assigns. There is nothing to probe for on a create —
+   * the absence of an id *is* the signal — so the choice between POST and PUT is
+   * made here rather than by asking the server whether a key is taken.
+   */
+  async saveJobOpening(draft: JobOpeningDraft) {
+    if (draft.id === undefined) {
+      return apiRequest<JobOpening>("/jobs", {
+        method: "POST",
+        body: draft,
+        revalidate: 0,
+      });
+    }
+
+    await apiRequest<void>(`/jobs/${draft.id}`, {
+      method: "PUT",
+      body: draft,
+      revalidate: 0,
+    });
+
+    // PUT answers 204, and the id was ours to begin with, so there is nothing
+    // to read back — returning the draft avoids a round trip for no new fact.
+    return { ...draft, id: draft.id };
   },
 
   deleteJobOpening(id) {
@@ -231,26 +269,19 @@ async function upsert(
   collection: string,
   id: string,
   body: unknown,
-  /**
-   * Where to look the entity up, when that is not where it is written. Only
-   * jobs need it: their public read is filtered, so existence has to be checked
-   * against the unfiltered admin path.
-   */
-  readCollection: string = collection,
 ): Promise<void> {
-  const existing = await apiRequestOrNull<unknown>(
-    `/${readCollection}/${encodeURIComponent(id)}`,
-    { revalidate: 0 },
-  );
+  const path = `/${collection}/${encodeURIComponent(id)}`;
+  const existing = await apiRequestOrNull<unknown>(path, { revalidate: 0 });
 
-  await apiRequest<void>(
-    existing ? `/${collection}/${encodeURIComponent(id)}` : `/${collection}`,
-    { method: existing ? "PUT" : "POST", body, revalidate: 0 },
-  );
+  await apiRequest<void>(existing ? path : `/${collection}`, {
+    method: existing ? "PUT" : "POST",
+    body,
+    revalidate: 0,
+  });
 }
 
-function remove(collection: string, id: string): Promise<void> {
-  return apiRequest<void>(`/${collection}/${encodeURIComponent(id)}`, {
+function remove(collection: string, id: string | number): Promise<void> {
+  return apiRequest<void>(`/${collection}/${encodeURIComponent(String(id))}`, {
     method: "DELETE",
     revalidate: 0,
   });

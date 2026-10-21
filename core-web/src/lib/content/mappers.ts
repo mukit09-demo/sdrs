@@ -1,7 +1,7 @@
 import { routes } from "@/lib/config/routes";
 import { formatLocation, formatShortDate } from "@sdrs/shared/utils/format";
 import type {
-  Article,
+  ArticleSummary,
   CardItem,
   DigitalTool,
   Market,
@@ -57,7 +57,7 @@ export function projectToCard(project: Project): CardItem {
   };
 }
 
-export function articleToCard(article: Article): CardItem {
+export function articleToCard(article: ArticleSummary): CardItem {
   return {
     id: article.slug,
     href: routes.article(article.slug),

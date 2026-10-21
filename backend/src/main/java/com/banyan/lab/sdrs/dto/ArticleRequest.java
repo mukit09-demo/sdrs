@@ -44,8 +44,6 @@ public record ArticleRequest(
 
         @Positive int readingMinutes,
 
-        @NotNull @Valid AuthorDto author,
-
         @NotNull @Valid MediaImageDto image,
 
         @NotNull List<@NotBlank @Size(max = 120) String> tags) {}

@@ -18,7 +18,7 @@ export const careersContent: CareersContent = {
   // drop the deadline for "open until filled" as the two Leadership roles do.
   openings: [
     {
-      id: "job-1001",
+      id: 1,
       title: "Senior Structural Engineer — Tall Buildings",
       discipline: "Structural engineering",
       location: "London, United Kingdom",
@@ -29,7 +29,7 @@ export const careersContent: CareersContent = {
       deadline: "2026-12-11",
     },
     {
-      id: "job-1002",
+      id: 2,
       title: "Graduate Building Services Engineer",
       discipline: "Building services",
       location: "Manchester, United Kingdom",
@@ -40,7 +40,7 @@ export const careersContent: CareersContent = {
       deadline: "2026-12-09",
     },
     {
-      id: "job-1003",
+      id: 3,
       title: "Data Centre Cooling Specialist",
       discipline: "Building services",
       location: "Dublin, Ireland",
@@ -51,7 +51,7 @@ export const careersContent: CareersContent = {
       deadline: "2026-12-07",
     },
     {
-      id: "job-1004",
+      id: 4,
       title: "Climate Resilience Consultant",
       discipline: "Advisory",
       location: "Singapore",
@@ -62,7 +62,7 @@ export const careersContent: CareersContent = {
       deadline: "2026-12-04",
     },
     {
-      id: "job-1005",
+      id: 5,
       title: "Computational Designer",
       discipline: "Digital",
       location: "Amsterdam, Netherlands",
@@ -73,7 +73,7 @@ export const careersContent: CareersContent = {
       deadline: "2026-12-01",
     },
     {
-      id: "job-1006",
+      id: 6,
       title: "Principal Acoustics Consultant",
       discipline: "Acoustics",
       location: "Melbourne, Australia",
@@ -83,7 +83,7 @@ export const careersContent: CareersContent = {
       postedAt: "2026-08-29",
     },
     {
-      id: "job-1007",
+      id: 7,
       title: "Geotechnical Engineer — Tunnelling",
       discipline: "Geotechnics",
       location: "Toronto, Canada",
@@ -94,7 +94,7 @@ export const careersContent: CareersContent = {
       deadline: "2026-11-24",
     },
     {
-      id: "job-1008",
+      id: 8,
       title: "Transport Planner",
       discipline: "Transport planning",
       location: "Madrid, Spain",
@@ -105,7 +105,7 @@ export const careersContent: CareersContent = {
       deadline: "2026-11-20",
     },
     {
-      id: "job-1009",
+      id: 9,
       title: "Apprentice Civil Engineering Technician",
       discipline: "Civil engineering",
       location: "Cardiff, United Kingdom",
@@ -116,7 +116,7 @@ export const careersContent: CareersContent = {
       deadline: "2026-11-17",
     },
     {
-      id: "job-1010",
+      id: 10,
       title: "Programme Controls Lead — Rail",
       discipline: "Programme management",
       location: "New York, United States",
@@ -126,7 +126,7 @@ export const careersContent: CareersContent = {
       postedAt: "2026-08-15",
     },
     {
-      id: "job-1011",
+      id: 11,
       title: "Sustainability Analyst — Whole Life Carbon",
       discipline: "Advisory",
       location: "Berlin, Germany",
@@ -137,7 +137,7 @@ export const careersContent: CareersContent = {
       deadline: "2026-11-09",
     },
     {
-      id: "job-1012",
+      id: 12,
       title: "Fire Engineer",
       discipline: "Fire engineering",
       location: "Hong Kong SAR",

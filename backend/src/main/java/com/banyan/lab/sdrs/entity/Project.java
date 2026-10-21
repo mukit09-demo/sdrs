@@ -5,11 +5,15 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -17,35 +21,30 @@ import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-/**
- * A delivered piece of work. Twenty of them drive {@code /projects}.
- *
- * <p>{@code marketSlugs} and {@code serviceSlugs} are what the market and
- * service filters match on, so they are indexed. Like the other cross-collection
- * references in this model they carry no foreign key — see {@link Market}.
- */
 @Entity
-@Table(name = "project")
+@Table(
+        name = "project",
+        uniqueConstraints = @UniqueConstraint(name = "uk_project_slug", columnNames = "slug"))
 @Getter
 @Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class Project {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "project_id_generator")
+    @SequenceGenerator(
+            name = "project_id_generator", sequenceName = "project_id_seq", allocationSize = 1)
+    @Column(name = "id", nullable = false, updatable = false)
+    private Long id;
+
     @NotBlank
     @Size(max = 160)
-    @Column(name = "slug", length = 160, nullable = false, updatable = false)
+    @Column(name = "slug", length = 160, nullable = false)
     private String slug;
 
     @NotBlank
@@ -83,39 +82,35 @@ public class Project {
     @Embedded
     private MediaImage image;
 
-    @BatchSize(size = 50)
-    @ElementCollection(fetch = FetchType.EAGER)
+    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "project_stat",
-            joinColumns = @JoinColumn(name = "project_slug", nullable = false))
+            joinColumns = @JoinColumn(name = "project_id", nullable = false))
     @OrderColumn(name = "position", nullable = false)
-    @Builder.Default
     private List<Stat> stats = new ArrayList<>();
 
-    @BatchSize(size = 50)
-    @ElementCollection(fetch = FetchType.EAGER)
+    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "project_highlight",
-            joinColumns = @JoinColumn(name = "project_slug", nullable = false))
+            joinColumns = @JoinColumn(name = "project_id", nullable = false))
     @OrderColumn(name = "position", nullable = false)
     @Column(name = "highlight", length = 600, nullable = false)
-    @Builder.Default
     private List<String> highlights = new ArrayList<>();
 
-    @BatchSize(size = 50)
-    @ElementCollection(fetch = FetchType.EAGER)
+    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "project_market",
-            joinColumns = @JoinColumn(name = "project_slug", nullable = false))
+            joinColumns = @JoinColumn(name = "project_id", nullable = false))
     @OrderColumn(name = "position", nullable = false)
     @Column(name = "market_slug", length = 160, nullable = false)
-    @Builder.Default
     private List<String> marketSlugs = new ArrayList<>();
 
-    @BatchSize(size = 50)
-    @ElementCollection(fetch = FetchType.EAGER)
+    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "project_service",
-            joinColumns = @JoinColumn(name = "project_slug", nullable = false))
+            joinColumns = @JoinColumn(name = "project_id", nullable = false))
     @OrderColumn(name = "position", nullable = false)
     @Column(name = "service_slug", length = 160, nullable = false)
-    @Builder.Default
     private List<String> serviceSlugs = new ArrayList<>();
 
     @CreationTimestamp

@@ -3,9 +3,14 @@ package com.banyan.lab.sdrs.mapper;
 import com.banyan.lab.sdrs.entity.NewsArticle;
 import com.banyan.lab.sdrs.dto.ArticleRequest;
 import com.banyan.lab.sdrs.dto.ArticleResponse;
+import com.banyan.lab.sdrs.dto.ArticleSummaryResponse;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
 /**
@@ -16,6 +21,11 @@ import org.mapstruct.ReportingPolicy;
  * <p>The one deliberate rename is {@code newsType} ↔ {@code category}: the
  * column and the enum say what the value is, the wire name matches
  * {@code Article.category} in the shared TypeScript model.
+ *
+ * <p>{@code id} appears on neither side of the wire. The surrogate key is
+ * internal — {@code Article} in the shared model has a slug and no id — so
+ * {@code toResponse} simply has nowhere to put it and {@code toEntity} ignores
+ * it.
  */
 @Mapper(componentModel = "spring", unmappedSourcePolicy = ReportingPolicy.IGNORE)
 public interface NewsMapper {
@@ -23,10 +33,53 @@ public interface NewsMapper {
     @Mapping(target = "category", source = "newsType")
     ArticleResponse toResponse(NewsArticle entity);
 
-    List<ArticleResponse> toResponses(List<NewsArticle> entities);
+    /**
+     * For lists. The target has no {@code body}, so the generated code never
+     * calls {@code getBody()} and the lazy collection stays unloaded.
+     */
+    @Mapping(target = "category", source = "newsType")
+    ArticleSummaryResponse toSummary(NewsArticle entity);
+
+    List<ArticleSummaryResponse> toSummaries(List<NewsArticle> entities);
 
     @Mapping(target = "newsType", source = "category")
+    // The surrogate key is the database's to assign, and the audit timestamps
+    // are Hibernate's. A client may set none of them.
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "tags", qualifiedByName = "normaliseTags")
     NewsArticle toEntity(ArticleRequest request);
+
+    /**
+     * {@code "  Water and Environment "} → {@code "water-and-environment"}:
+     * stripped, lowercase, whitespace runs to one hyphen, then blanks and
+     * repeats dropped, keeping first-use order — the first tag is the one
+     * related reading keys on.
+     *
+     * <p>Tags match by exact text, in the {@code ?tag=} filter and on the site,
+     * so case and spacing variants would otherwise be different tags that never
+     * meet. {@code normaliseTag} in {@code manage-web/src/lib/admin/fields.ts}
+     * applies the same rule to the mock source; keep the two identical.
+     *
+     * <p>{@code @Named} so MapStruct uses it only where asked: as a plain
+     * {@code List<String> → List<String>} method it would also be picked up for
+     * {@code body}, and lowercase the paragraphs.
+     */
+    @Named("normaliseTags")
+    default List<String> normaliseTags(List<String> tags) {
+        if (tags == null) {
+            return null;
+        }
+
+        LinkedHashSet<String> normalised = new LinkedHashSet<>();
+        for (String tag : tags) {
+            String value = tag.strip().toLowerCase(Locale.ROOT).replaceAll("(?U)\\s+", "-");
+            if (!value.isEmpty()) {
+                normalised.add(value);
+            }
+        }
+        // Mutable: the entity's collection is mutated in place by replaceWith.
+        return new ArrayList<>(normalised);
+    }
 }

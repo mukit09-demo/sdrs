@@ -64,7 +64,7 @@ class NewsServiceTest {
     @Test
     @DisplayName("a slug that does not exist is not found, not an empty result")
     void getMissingThrows() {
-        when(repository.findById("nope")).thenReturn(Optional.empty());
+        when(repository.findBySlug("nope")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service().get("nope"))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -74,7 +74,7 @@ class NewsServiceTest {
     @Test
     @DisplayName("creating over an existing slug conflicts instead of replacing")
     void createDuplicateThrows() {
-        when(repository.existsById(NewsTestData.SLUG)).thenReturn(true);
+        when(repository.existsBySlug(NewsTestData.SLUG)).thenReturn(true);
 
         assertThatThrownBy(() -> service().create(NewsTestData.request()))
                 .isInstanceOf(DuplicateResourceException.class);
@@ -136,7 +136,7 @@ class NewsServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("a-different-slug");
 
-        verify(repository, never()).findById(any());
+        verify(repository, never()).findBySlug(any());
     }
 
     @Test
@@ -144,7 +144,7 @@ class NewsServiceTest {
     void updateReplacesInPlace() {
         NewsArticle existing = NewsTestData.article();
         existing.setTitle("The old title");
-        when(repository.findById(NewsTestData.SLUG)).thenReturn(Optional.of(existing));
+        when(repository.findBySlug(NewsTestData.SLUG)).thenReturn(Optional.of(existing));
 
         service().update(NewsTestData.SLUG, NewsTestData.request());
 
@@ -155,7 +155,7 @@ class NewsServiceTest {
     @Test
     @DisplayName("deleting something absent is a 404, not a silent success")
     void deleteMissingThrows() {
-        when(repository.findById("nope")).thenReturn(Optional.empty());
+        when(repository.findBySlug("nope")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service().delete("nope"))
                 .isInstanceOf(ResourceNotFoundException.class);

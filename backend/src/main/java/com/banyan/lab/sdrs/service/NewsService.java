@@ -3,6 +3,7 @@ package com.banyan.lab.sdrs.service;
 import com.banyan.lab.sdrs.config.CacheNames;
 import com.banyan.lab.sdrs.dto.ArticleRequest;
 import com.banyan.lab.sdrs.dto.ArticleResponse;
+import com.banyan.lab.sdrs.dto.ArticleSummaryResponse;
 import com.banyan.lab.sdrs.entity.NewsArticle;
 import com.banyan.lab.sdrs.exception.DuplicateResourceException;
 import com.banyan.lab.sdrs.exception.ResourceNotFoundException;
@@ -47,15 +48,19 @@ public class NewsService {
     private final NewsRepository repository;
     private final NewsMapper mapper;
 
+    /**
+     * Summaries, not full articles: a list renders cards, which never show the
+     * body, so it is not loaded. {@link #get} is where the body comes from.
+     */
     @Cacheable(cacheNames = CacheNames.ARTICLES, key = "{#tag, #excludeSlug, #limit}")
-    public List<ArticleResponse> list(String tag, String excludeSlug, Integer limit) {
+    public List<ArticleSummaryResponse> list(String tag, String excludeSlug, Integer limit) {
         Specification<NewsArticle> specification = filter(tag, excludeSlug);
 
         List<NewsArticle> found = (limit == null || limit <= 0)
                 ? repository.findAll(specification, NEWEST_FIRST)
                 : repository.findAll(specification, PageRequest.of(0, limit, NEWEST_FIRST)).getContent();
 
-        return mapper.toResponses(found);
+        return mapper.toSummaries(found);
     }
 
     @Cacheable(cacheNames = CacheNames.ARTICLE, key = "#slug")
@@ -69,7 +74,7 @@ public class NewsService {
         @CacheEvict(cacheNames = CacheNames.ARTICLE, allEntries = true)
     })
     public ArticleResponse create(ArticleRequest request) {
-        if (repository.existsById(request.slug())) {
+        if (repository.existsBySlug(request.slug())) {
             throw new DuplicateResourceException(RESOURCE, request.slug());
         }
 
@@ -110,21 +115,31 @@ public class NewsService {
     }
 
     private NewsArticle require(String slug) {
-        return repository.findById(slug)
+        return repository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException(RESOURCE, slug));
     }
 
     /**
-     * {@code tag} joins the element collection rather than filtering in Java,
-     * and {@code exclude} is the "related reading" case — show me recent
-     * articles, but not the one already on screen.
+     * {@code tag} filters in the database rather than in Java, and
+     * {@code exclude} is the "related reading" case — show me recent articles,
+     * but not the one already on screen.
+     *
+     * <p>{@code isMember} rather than {@code root.join("tags")}, which is what
+     * this was. A join multiplies the root row by every matching tag row, and
+     * {@code news_article_tag} is keyed on {@code (article_id, position)} — so
+     * an article carrying the same tag twice came back twice, and {@code limit}
+     * then returned fewer distinct articles than asked for. {@code isMember}
+     * compiles to an {@code exists} subquery: one row per article, whatever the
+     * tags do. It also keeps the filter away from the collection Hibernate
+     * fetches, so there is no way for a restricted join to populate
+     * {@code tags} with only the matched value.
      */
     private static Specification<NewsArticle> filter(String tag, String excludeSlug) {
         return (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             if (StringUtils.hasText(tag)) {
-                predicates.add(builder.equal(root.join("tags"), tag));
+                predicates.add(builder.isMember(tag, root.<List<String>>get("tags")));
             }
             if (StringUtils.hasText(excludeSlug)) {
                 predicates.add(builder.notEqual(root.get("slug"), excludeSlug));

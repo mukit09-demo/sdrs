@@ -1,0 +1,137 @@
+# Jobs.
+#
+# The table is `job`, not `job_opening`, because it holds every job — drafts and
+# withdrawn roles included. An "opening" is the subset that is advertised right
+# now, which is a query:
+#
+#     status = 'OPEN' and (deadline is null or deadline >= current_date)
+#
+# Nothing flips OPEN to CLOSED when a deadline expires. That would need a
+# scheduled sweep, and between the deadline and the sweep the database would be
+# advertising a role nobody can apply for. Deriving it is never stale.
+
+databaseChangeLog:
+  - changeSet:
+      id: "006-job-01-create-job-sequence"
+      author: "mukit09"
+      comment: >-
+        increment by 1 must match allocationSize = 1 on Job's
+        @SequenceGenerator. If they disagree Hibernate hands out ids the
+        database has already issued — a duplicate-key failure that only appears
+        once a reserved band runs out, not on the first insert.
+      changes:
+        - createSequence:
+            sequenceName: "job_id_seq"
+            startValue: 1
+            incrementBy: 1
+            cycle: false
+  - changeSet:
+      id: "006-job-02-create-job"
+      author: "mukit09"
+      comment: >-
+        deadline is nullable because "open until filled" is a real case, not
+        missing data. The id is a sequence, not a reference an editor types.
+      changes:
+        - createTable:
+            tableName: "job"
+            columns:
+              - column:
+                  name: "id"
+                  type: "bigint"
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: "pk_job"
+                    nullable: false
+              - column:
+                  name: "title"
+                  type: "varchar(300)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "discipline"
+                  type: "varchar(160)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "location"
+                  type: "varchar(160)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "employment_type"
+                  type: "varchar(40)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "level"
+                  type: "varchar(40)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "status"
+                  type: "varchar(20)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "posted_at"
+                  type: "date"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "deadline"
+                  type: "date"
+              - column:
+                  name: "created_at"
+                  type: "timestamp with time zone"
+                  defaultValueComputed: "now()"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "updated_at"
+                  type: "timestamp with time zone"
+                  defaultValueComputed: "now()"
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: "006-job-03-job-check-constraints"
+      author: "mukit09"
+      comment: >-
+        A deadline before the posting date is always a typo. The status values
+        are JobStatus's constants, not its labels.
+      changes:
+        - sql:
+            sql: |-
+              alter table job
+                  add constraint job_status_known
+                  check (status in ('DRAFT', 'OPEN', 'CLOSED'));
+
+              alter table job
+                  add constraint job_deadline_after_posted
+                  check (deadline is null or deadline >= posted_at);
+      rollback:
+        - sql:
+            sql: |-
+              alter table job drop constraint job_deadline_after_posted;
+              alter table job drop constraint job_status_known;
+  - changeSet:
+      id: "006-job-04-create-job-indexes"
+      author: "mukit09"
+      comment: >-
+        Covers the visibility predicate the candidate-facing list runs on every
+        request, and the newest-first ordering.
+      changes:
+        - createIndex:
+            tableName: "job"
+            indexName: "idx_job_status_deadline"
+            columns:
+              - column:
+                  name: "status"
+              - column:
+                  name: "deadline"
+        - createIndex:
+            tableName: "job"
+            indexName: "idx_job_posted_at"
+            columns:
+              - column:
+                  name: "posted_at"
+                  descending: true

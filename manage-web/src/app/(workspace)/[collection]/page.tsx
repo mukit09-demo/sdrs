@@ -47,9 +47,12 @@ export default async function CollectionPage({
           </h1>
           <p className="mt-3 max-w-2xl text-ink-600">{collection.description}</p>
         </div>
-        <Button href={routes.create(collection.name)}>
-          New {collection.singular}
-        </Button>
+        {/* A read-only collection has no create form to link to. */}
+        {!collection.readOnly && (
+          <Button href={routes.create(collection.name)}>
+            New {collection.singular}
+          </Button>
+        )}
       </div>
 
       {error && (
@@ -70,6 +73,7 @@ export default async function CollectionPage({
           collection={collection.name}
           singular={collection.singular}
           rows={rows}
+          readOnly={collection.readOnly}
         />
       </div>
     </>

@@ -2,6 +2,7 @@ package com.banyan.lab.sdrs.controller;
 
 import com.banyan.lab.sdrs.dto.ArticleRequest;
 import com.banyan.lab.sdrs.dto.ArticleResponse;
+import com.banyan.lab.sdrs.dto.ArticleSummaryResponse;
 import com.banyan.lab.sdrs.service.NewsService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -38,7 +39,7 @@ public class NewsController {
     private final NewsService service;
 
     @GetMapping
-    public List<ArticleResponse> list(
+    public List<ArticleSummaryResponse> list(
             @RequestParam(required = false) String tag,
             @RequestParam(required = false) @Positive Integer limit,
             @RequestParam(required = false) String exclude) {

@@ -1,0 +1,83 @@
+# Submitted contact-form enquiries — the only table an
+# unauthenticated caller writes to. An inbox, not content.
+#
+# The primary key is a surrogate id, as everywhere else here. The reference is a
+# separate unique column: it is the token the form shows the visitor, which makes
+# it a label for people rather than an identifier for rows, and whoever mints it
+# should be free to change its shape without rewriting the key.
+
+databaseChangeLog:
+  - changeSet:
+      id: "007-enquiry-00-create-enquiry-sequence"
+      author: "mukit09"
+      comment: >-
+        increment by 1 must match allocationSize = 1 on Enquiry's
+        @SequenceGenerator. If they disagree Hibernate hands out ids the
+        database has already issued — a duplicate-key failure that only appears
+        once a reserved band runs out, not on the first insert.
+      changes:
+        - createSequence:
+            sequenceName: "enquiry_id_seq"
+            startValue: 1
+            incrementBy: 1
+            cycle: false
+  - changeSet:
+      id: "007-enquiry-01-create-enquiry"
+      author: "mukit09"
+      comment: >-
+        reference is unique and not null, so the key the visitor quotes still
+        resolves to exactly one row — the constraint is what enforces that now
+        that it is no longer the primary key.
+      changes:
+        - createTable:
+            tableName: "enquiry"
+            columns:
+              - column:
+                  name: "id"
+                  type: "bigint"
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: "pk_enquiry"
+                    nullable: false
+              - column:
+                  name: "reference"
+                  type: "varchar(40)"
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: "uk_enquiry_reference"
+              - column:
+                  name: "name"
+                  type: "varchar(200)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "email"
+                  type: "varchar(200)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "organisation"
+                  type: "varchar(200)"
+              - column:
+                  name: "topic"
+                  type: "varchar(120)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "message"
+                  type: "clob"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "received_at"
+                  type: "timestamp with time zone"
+                  defaultValueComputed: "now()"
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: "enquiry"
+            indexName: "idx_enquiry_received_at"
+            columns:
+              - column:
+                  name: "received_at"

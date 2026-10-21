@@ -41,9 +41,26 @@ export const env = {
 
   /** Seconds before cached API responses are revalidated. */
   defaultRevalidateSeconds: Number(process.env.CONTENT_REVALIDATE_SECONDS ?? 300),
+
+  /**
+   * The Spring Boot admin account (`SDRS_ADMIN_USERNAME` / `SDRS_ADMIN_PASSWORD`
+   * there), sent as HTTP Basic on every request when set. The backend refuses
+   * writes and `/api/admin/**` without it.
+   *
+   * Set in `manage-web` only. `core-web` is a public site and must never hold
+   * it — unset, no header is sent, and the public reads need none. Not
+   * `NEXT_PUBLIC_`, so it is never inlined into a browser bundle either.
+   */
+  backendCredentials: readBackendCredentials(),
 } as const;
 
 export const isUsingMockContent = env.contentSource === "mock";
+
+function readBackendCredentials(): { username: string; password: string } | undefined {
+  const username = process.env.BACKEND_ADMIN_USERNAME?.trim();
+  const password = process.env.BACKEND_ADMIN_PASSWORD;
+  return username && password ? { username, password } : undefined;
+}
 
 /**
  * Where the mock repository keeps edits made in `manage-web`.

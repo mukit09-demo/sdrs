@@ -66,7 +66,7 @@ Everything below assumes the scripts exist.
 docker compose up -d                 # postgres 15432, redis 16379
 
 export SDRS_ADMIN_PASSWORD='something-you-choose'
-./gradlew bootRun                    # http://localhost:3004
+./gradlew bootRun                    # http://localhost:8085
 ```
 
 There is no default admin password, and the application will not start without
@@ -90,9 +90,11 @@ so `./gradlew test` passes on a clean checkout.
 | `POST` | `/api/articles` | `201`, or `409` if the slug is taken. Admin |
 | `PUT` | `/api/articles/{slug}` | `204`. Admin |
 | `DELETE` | `/api/articles/{slug}` | `204`. Admin |
+| `POST` | `/api/enquiries` | `200` + the reference and received instant. Public |
+| `GET` | `/api/admin/enquiries` | The inbox, newest first. Admin |
 | `GET` | `/actuator/health` | Public |
 
-The service listens on **3004** (core-web is 3002, manage-web 3003), Postgres on
+The service listens on **8085** (core-web is 3002, manage-web 3003), Postgres on
 **15432** and Redis on **16379** — all deliberately off their defaults, because
 8080, 5432 and 6379 are the three ports most likely to be taken already by
 something else on a developer machine.
@@ -107,10 +109,10 @@ anything, it just makes the site render wrongly.
 Try it:
 
 ```bash
-curl -s localhost:3004/api/articles | jq '.[0]'
-curl -s localhost:3004/api/articles/kai-tak-sports-park-opens | jq .
+curl -s localhost:8085/api/articles | jq '.[0]'
+curl -s localhost:8085/api/articles/kai-tak-sports-park-opens | jq .
 curl -s -u admin:$SDRS_ADMIN_PASSWORD -X DELETE \
-     localhost:3004/api/articles/kai-tak-sports-park-opens -o /dev/null -w '%{http_code}\n'
+     localhost:8085/api/articles/kai-tak-sports-park-opens -o /dev/null -w '%{http_code}\n'
 ```
 
 ## Pointing the front end at it
@@ -119,7 +121,7 @@ In **both** `core-web/.env.local` and `manage-web/.env.local`:
 
 ```
 NEXT_PUBLIC_CONTENT_SOURCE=api
-BACKEND_ORIGIN=http://localhost:3004
+BACKEND_ORIGIN=http://localhost:8085
 ```
 
 `BACKEND_ORIGIN` drives the `/api/*` rewrite in each app's `next.config.ts`, so
@@ -141,8 +143,8 @@ com.banyan.lab.sdrs
 ├── controller/    NewsController
 ├── service/       NewsService
 ├── repository/    NewsRepository
-├── entity/        6 @Entity, 5 @Embeddable, 4 enums
-├── dto/           ArticleRequest, ArticleResponse, AuthorDto, MediaImageDto
+├── entity/        6 @Entity, 4 @Embeddable, 4 enums
+├── dto/           ArticleRequest, ArticleResponse, MediaImageDto
 ├── mapper/        NewsMapper
 ├── exception/     ResourceNotFoundException, DuplicateResourceException,
 │                  ApiError, ApiExceptionHandler
@@ -155,11 +157,11 @@ persistence concerns:
 | | |
 |---|---|
 | **Entities** | `Market` `Service` `Project` `NewsArticle` `Job` `Enquiry` |
-| **Embeddables** | `MediaImage` `Author` `Stat` `ProjectLocation` `Film` |
+| **Embeddables** | `MediaImage` `Stat` `ProjectLocation` `Film` |
 | **Enums** | `NewsType` `ServiceCategory` `EmploymentType` `CareerLevel` `JobStatus` — each implements `Labelled`, storing the constant and serving the label |
 
-The wire types keep the `Dto` suffix — `AuthorDto` against `Author` — because
-the mapper names both and one of them would otherwise need qualifying.
+The wire types keep the `Dto` suffix — `MediaImageDto` against `MediaImage` —
+because the mapper names both and one of them would otherwise need qualifying.
 
 ### Decisions in the schema worth knowing
 
@@ -208,8 +210,10 @@ with the shared fixture in `support/NewsTestData`.
 
 A few choices worth knowing before changing something:
 
-- **Liquibase owns the schema.** `ddl-auto: validate`, so Hibernate's only job
-  is to refuse to start when the entities and the changelog have drifted. A
+- **Liquibase owns the schema**, in YAML — `db/changelog/db.changelog-master.yaml`,
+  which is also Boot's default location, so nothing has to point at it.
+  `ddl-auto: validate`, so Hibernate's only job is to refuse to start when the
+  entities and the changelog have drifted. A
   schema change is a new changeSet, never an edit to an applied one — Liquibase
   checksums what it has run and fails rather than silently diverging. The master
   changelog holds includes only, so two branches adding migrations conflict on
@@ -244,9 +248,9 @@ A few choices worth knowing before changing something:
 Markets, services, projects and vacancies are each one class per layer plus a
 migration — follow the news classes in each package:
 
-1. `db/changelog/changes/{nnn}-{collection}-schema.xml`, plus an `<include>`
-   in `db.changelog-master.xml`.
-2. `entity/` — the entity, reusing `MediaImage` and `Author` where they fit.
+1. `db/changelog/changes/{nnn}-{collection}-schema.yaml`, plus an `include:`
+   entry in `db.changelog-master.yaml`.
+2. `entity/` — the entity, reusing `MediaImage` where it fits.
    `Stat` will need adding for markets and projects.
 3. `dto/` — request and response records matching the TypeScript interface
    exactly, and a controller test that asserts it does.
@@ -259,8 +263,14 @@ Do not add authorisation to the controller; add the path to `SecurityConfig`.
 Do not add a table for something the CMS cannot edit — see the first schema
 decision above.
 
-Still to do beyond the four remaining collections: `POST /api/enquiries` (the
-table exists, the endpoint does not), seed changeSets for markets, services,
-projects and vacancies, and moving CMS accounts off
+The inbox read is at `/api/admin/enquiries`, not `/api/enquiries`, and that is
+load-bearing rather than tidy: `SecurityConfig` permits every `GET /api/**`
+before it reaches any enquiry rule, so at the unprefixed path the submitted
+names, addresses and message bodies would be world-readable. Nothing in the
+controller would fail if the path moved — `EnquiryControllerTest` is what holds
+it there.
+
+Still to do beyond the four remaining collections: seed changeSets for markets,
+services, projects and vacancies, and moving CMS accounts off
 `manage-web/.data/users.json` behind a `POST /api/auth/login` — see the root
 README's admin section for why that one is not just a port of the existing code.

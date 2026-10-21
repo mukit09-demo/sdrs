@@ -16,19 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
-/**
- * Public reads, authenticated writes.
- *
- * <p>{@code core-web} is a public website with no credential to present, so the
- * GETs have to be open — this API is only ever as private as the network it is
- * on. The writes come from {@code manage-web} server-side, which can hold a
- * secret.
- *
- * <p>Stateless with CSRF disabled, which is correct here and would not be for a
- * browser session: there is no cookie to ride on. The credential is an
- * {@code Authorization} header the caller has to construct deliberately, which
- * is the thing CSRF protection exists to prevent happening by accident.
- */
 @Configuration
 @EnableWebSecurity
 @EnableConfigurationProperties(AdminProperties.class)
@@ -40,22 +27,12 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Admin reads, before the public GET rule below — the
-                        // first matcher wins, so this ordering *is* the access
-                        // control. The CMS listings live here because they show
-                        // what the public list filters out: draft and withdrawn
-                        // jobs. A draft vacancy is not a secret, but it is also
-                        // not published, and /api/** being blanket-public would
-                        // publish it.
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // Reads: anyone. This is the public site's content, and
-                        // the candidate-facing job list.
                         .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
-                        // Writes: the admin account, and nothing else.
+                        .requestMatchers(HttpMethod.POST, "/api/enquiries").permitAll()
+                        // Every other write: the admin account, and nothing else.
                         .requestMatchers("/api/**").hasRole("ADMIN")
-                        // Everything else — the rest of /actuator included — is
-                        // closed by default rather than open by omission.
                         .anyRequest().denyAll())
                 .httpBasic(Customizer.withDefaults())
                 .build();

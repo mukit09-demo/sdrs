@@ -1,0 +1,216 @@
+# Markets — the sectors the practice works in.
+# market_featured_project holds plain slugs with no foreign key to project:
+# the read path already drops references it cannot resolve, and an FK would
+# stop the CMS saving a market that names a project not yet created.
+
+databaseChangeLog:
+  - changeSet:
+      id: "003-00-create-market-sequence"
+      author: "mukit09"
+      comment: >-
+        increment by 1 must match allocationSize = 1 on the entity's
+        @SequenceGenerator. If they disagree Hibernate hands out ids the
+        database has already issued, and not until a reserved band runs out —
+        so it fails late, not on the first insert.
+      changes:
+        - createSequence:
+            sequenceName: "market_id_seq"
+            startValue: 1
+            incrementBy: 1
+            cycle: false
+  - changeSet:
+      id: "003-market-01-create-market"
+      author: "mukit09"
+      changes:
+        - createTable:
+            tableName: "market"
+            columns:
+              - column:
+                  name: "id"
+                  type: "bigint"
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: "pk_market"
+                    nullable: false
+              - column:
+                  name: "slug"
+                  type: "varchar(160)"
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: "uk_market_slug"
+              - column:
+                  name: "name"
+                  type: "varchar(200)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "tagline"
+                  type: "varchar(300)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "description"
+                  type: "varchar(2000)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "image_url"
+                  type: "varchar(600)"
+              - column:
+                  name: "image_alt"
+                  type: "varchar(300)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "image_seed"
+                  type: "varchar(160)"
+              - column:
+                  name: "film_video_url"
+                  type: "varchar(600)"
+              - column:
+                  name: "film_video_embed_url"
+                  type: "varchar(600)"
+              - column:
+                  name: "film_video_alt"
+                  type: "varchar(300)"
+              - column:
+                  name: "film_video_captions_url"
+                  type: "varchar(600)"
+              - column:
+                  name: "film_poster_url"
+                  type: "varchar(600)"
+              - column:
+                  name: "film_poster_alt"
+                  type: "varchar(300)"
+              - column:
+                  name: "film_poster_seed"
+                  type: "varchar(160)"
+              - column:
+                  name: "film_caption"
+                  type: "varchar(600)"
+              - column:
+                  name: "created_at"
+                  type: "timestamp with time zone"
+                  defaultValueComputed: "now()"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "updated_at"
+                  type: "timestamp with time zone"
+                  defaultValueComputed: "now()"
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: "003-market-02-create-market-capability"
+      author: "mukit09"
+      changes:
+        - createTable:
+            tableName: "market_capability"
+            columns:
+              - column:
+                  name: "market_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "position"
+                  type: "int"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "capability"
+                  type: "varchar(300)"
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: "market_capability"
+            columnNames: "market_id, position"
+            constraintName: "pk_market_capability"
+        - addForeignKeyConstraint:
+            baseTableName: "market_capability"
+            baseColumnNames: "market_id"
+            referencedTableName: "market"
+            referencedColumnNames: "id"
+            constraintName: "fk_market_capability_owner"
+            onDelete: "CASCADE"
+  - changeSet:
+      id: "003-market-03-create-market-stat"
+      author: "mukit09"
+      changes:
+        - createTable:
+            tableName: "market_stat"
+            columns:
+              - column:
+                  name: "market_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "position"
+                  type: "int"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "stat_value"
+                  type: "varchar(60)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "unit"
+                  type: "varchar(40)"
+              - column:
+                  name: "label"
+                  type: "varchar(300)"
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: "market_stat"
+            columnNames: "market_id, position"
+            constraintName: "pk_market_stat"
+        - addForeignKeyConstraint:
+            baseTableName: "market_stat"
+            baseColumnNames: "market_id"
+            referencedTableName: "market"
+            referencedColumnNames: "id"
+            constraintName: "fk_market_stat_owner"
+            onDelete: "CASCADE"
+  - changeSet:
+      id: "003-market-04-create-market-featured-project"
+      author: "mukit09"
+      changes:
+        - createTable:
+            tableName: "market_featured_project"
+            columns:
+              - column:
+                  name: "market_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "position"
+                  type: "int"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "project_slug"
+                  type: "varchar(160)"
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: "market_featured_project"
+            columnNames: "market_id, position"
+            constraintName: "pk_market_featured_project"
+        - addForeignKeyConstraint:
+            baseTableName: "market_featured_project"
+            baseColumnNames: "market_id"
+            referencedTableName: "market"
+            referencedColumnNames: "id"
+            constraintName: "fk_market_featured_project_owner"
+            onDelete: "CASCADE"
+        - createIndex:
+            tableName: "market_featured_project"
+            indexName: "idx_market_featured_project_project_slug"
+            columns:
+              - column:
+                  name: "project_slug"
