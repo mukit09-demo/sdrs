@@ -26,7 +26,7 @@ class NewsMapperTest {
 
     @Test
     @DisplayName("maps newsType to the category field the front end expects")
-    void mapsCategory() {
+    void testIfNewsTypeMapsToCategory() {
         ArticleResponse response = mapper.toResponse(NewsTestData.article());
 
         assertThat(response.category()).isEqualTo(NewsType.PRESS_RELEASE);
@@ -36,7 +36,7 @@ class NewsMapperTest {
 
     @Test
     @DisplayName("preserves body paragraph order")
-    void preservesBodyOrder() {
+    void testIfBodyParagraphOrderIsPreserved() {
         ArticleResponse response = mapper.toResponse(NewsTestData.article());
 
         assertThat(response.body())
@@ -49,7 +49,7 @@ class NewsMapperTest {
 
     @Test
     @DisplayName("a summary never reads the body, so the lazy collection is not loaded")
-    void summaryDoesNotTouchBody() {
+    void testIfSummaryNeverReadsTheBody() {
         NewsArticle article = spy(NewsTestData.article());
 
         ArticleSummaryResponse summary = mapper.toSummary(article);
@@ -64,7 +64,7 @@ class NewsMapperTest {
 
     @Test
     @DisplayName("a summary carries every field of the full response except the body")
-    void summaryMatchesResponseWithoutBody() {
+    void testIfSummaryMatchesResponseWithoutBody() {
         assertThat(mapper.toSummary(NewsTestData.article()))
                 .usingRecursiveComparison()
                 .isEqualTo(mapper.toResponse(NewsTestData.article()));
@@ -72,19 +72,17 @@ class NewsMapperTest {
 
     @Test
     @DisplayName("leaves an absent image url null rather than blank")
-    void keepsImageUrlAbsent() {
+    void testIfAbsentImageUrlStaysNull() {
         ArticleResponse response = mapper.toResponse(NewsTestData.article());
 
         // An empty string would be truthy enough to break the front end's
         // gradient placeholder, which branches on the url being absent.
-        assertThat(response.image().url()).isNull();
-        assertThat(response.image().alt()).isEqualTo("A stadium with a retractable roof at dusk");
-        assertThat(response.image().seed()).isEqualTo("news-kai-tak-park");
+        assertThat(response.imageUrl()).isNull();
     }
 
     @Test
     @DisplayName("round-trips a request through the entity without losing a field")
-    void roundTrips() {
+    void testIfRequestRoundTripsThroughEntity() {
         NewsArticle entity = mapper.toEntity(NewsTestData.request());
         ArticleResponse response = mapper.toResponse(entity);
 
@@ -100,11 +98,11 @@ class NewsMapperTest {
 
     @Test
     @DisplayName("normalises tags on the way in: lowercase, hyphenated, no blanks or repeats")
-    void normalisesTags() {
+    void testIfTagsAreNormalisedOnTheWayIn() {
         ArticleRequest base = NewsTestData.request();
         ArticleRequest request = new ArticleRequest(
                 base.slug(), base.title(), base.excerpt(), base.body(), base.category(),
-                base.publishedAt(), base.readingMinutes(), base.image(),
+                base.publishedAt(), base.readingMinutes(), base.imageUrl(),
                 List.of("  Buildings ", "Water and\tEnvironment", "buildings", "ENERGY"));
 
         NewsArticle entity = mapper.toEntity(request);
@@ -116,7 +114,7 @@ class NewsMapperTest {
 
     @Test
     @DisplayName("leaves the body alone — the tag rule is not applied to other string lists")
-    void doesNotNormaliseBody() {
+    void testIfBodyIsNotNormalised() {
         NewsArticle entity = mapper.toEntity(NewsTestData.request());
 
         assertThat(entity.getBody().getFirst())
@@ -125,11 +123,59 @@ class NewsMapperTest {
 
     @Test
     @DisplayName("does not carry audit timestamps in from a request")
-    void ignoresAuditFields() {
+    void testIfToEntityIgnoresAuditFields() {
         NewsArticle entity = mapper.toEntity(NewsTestData.request());
 
         // Hibernate sets these; a client must not be able to.
         assertThat(entity.getCreatedAt()).isNull();
         assertThat(entity.getUpdatedAt()).isNull();
+    }
+
+    @Test
+    @DisplayName("null tags stay null rather than becoming an empty list")
+    void testIfNullTagsStayNull() {
+        assertThat(mapper.normaliseTags(null)).isNull();
+    }
+
+    @Test
+    @DisplayName("tags that are only whitespace are dropped, leaving an empty list")
+    void testIfBlankTagsAreDropped() {
+        assertThat(mapper.normaliseTags(List.of("", "   ", "\t\n"))).isEmpty();
+    }
+
+    @Test
+    @DisplayName("any run of whitespace, including Unicode spaces, becomes one hyphen")
+    void testIfWhitespaceRunsCollapseToOneHyphen() {
+        assertThat(mapper.normaliseTags(List.of("cities \t\n and\u00A0communities")))
+                .containsExactly("cities-and-communities");
+    }
+
+    @Test
+    @DisplayName("normalised tags are mutable, since replaceWith refills the entity's list")
+    void testIfNormalisedTagsAreMutable() {
+        List<String> tags = mapper.normaliseTags(List.of("rail"));
+
+        tags.add("water");
+
+        assertThat(tags).containsExactly("rail", "water");
+    }
+
+    @Test
+    @DisplayName("an image url, when present, is carried through")
+    void testIfPresentImageUrlIsCarriedThrough() {
+        NewsArticle article = NewsTestData.article();
+        article.setImageUrl("https://example.com/kai-tak.jpg");
+
+        assertThat(mapper.toResponse(article).imageUrl()).isEqualTo("https://example.com/kai-tak.jpg");
+        assertThat(mapper.toSummary(article).imageUrl()).isEqualTo("https://example.com/kai-tak.jpg");
+    }
+
+    @Test
+    @DisplayName("summaries map element for element, and null maps to null")
+    void testIfSummariesMapEachArticleAndNullMapsToNull() {
+        assertThat(mapper.toSummaries(List.of(NewsTestData.article(), NewsTestData.article()))).hasSize(2);
+        assertThat(mapper.toSummaries(List.of())).isEmpty();
+        assertThat(mapper.toResponse(null)).isNull();
+        assertThat(mapper.toEntity(null)).isNull();
     }
 }

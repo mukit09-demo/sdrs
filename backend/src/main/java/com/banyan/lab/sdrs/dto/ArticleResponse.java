@@ -1,6 +1,7 @@
 package com.banyan.lab.sdrs.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.banyan.lab.sdrs.entity.NewsType;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -30,6 +31,11 @@ import java.util.List;
  *       would make that conversion wrong rather than fail.
  * </ul>
  *
+ * <p>{@code imageUrl} is {@code NON_NULL}: an article with no image yet omits
+ * the key rather than sending {@code null}, matching the optional field in the
+ * TypeScript interface, so the front end's gradient placeholder kicks in on a
+ * plain absence.
+ *
  * <p>The audit pair rides on this one read DTO rather than an admin-only copy of
  * it. {@code core-web} receives and ignores them; the alternative is a second
  * near-identical response type and a second mapper method to keep in step.
@@ -42,7 +48,7 @@ public record ArticleResponse(
         NewsType category,
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd") LocalDate publishedAt,
         int readingMinutes,
-        MediaImageDto image,
+        @JsonInclude(JsonInclude.Include.NON_NULL) String imageUrl,
         List<String> tags,
         @JsonFormat(shape = JsonFormat.Shape.STRING) Instant createdAt,
         @JsonFormat(shape = JsonFormat.Shape.STRING) Instant updatedAt) {}

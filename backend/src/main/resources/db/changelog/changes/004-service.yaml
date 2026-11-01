@@ -1,5 +1,7 @@
 # Services. The in-house digital tools listed beside them on /services are
 # code-edited in packages/shared/data/services.ts, not stored here.
+# service_market is a real many-to-many: market_id references market,
+# and deleting a market removes its links rather than leaving them dangling.
 
 databaseChangeLog:
   - changeSet:
@@ -61,14 +63,6 @@ databaseChangeLog:
                   name: "image_url"
                   type: "varchar(600)"
               - column:
-                  name: "image_alt"
-                  type: "varchar(300)"
-                  constraints:
-                    nullable: false
-              - column:
-                  name: "image_seed"
-                  type: "varchar(160)"
-              - column:
                   name: "created_at"
                   type: "timestamp with time zone"
                   defaultValueComputed: "now()"
@@ -114,11 +108,11 @@ databaseChangeLog:
             constraintName: "fk_service_capability_owner"
             onDelete: "CASCADE"
   - changeSet:
-      id: "004-service-03-create-service-related-market"
+      id: "004-service-03-create-service-market"
       author: "mukit09"
       changes:
         - createTable:
-            tableName: "service_related_market"
+            tableName: "service_market"
             columns:
               - column:
                   name: "service_id"
@@ -131,24 +125,35 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: "market_slug"
-                  type: "varchar(160)"
+                  name: "market_id"
+                  type: "bigint"
                   constraints:
                     nullable: false
         - addPrimaryKey:
-            tableName: "service_related_market"
+            tableName: "service_market"
             columnNames: "service_id, position"
-            constraintName: "pk_service_related_market"
+            constraintName: "pk_service_market"
+        - addUniqueConstraint:
+            tableName: "service_market"
+            columnNames: "service_id, market_id"
+            constraintName: "uk_service_market"
         - addForeignKeyConstraint:
-            baseTableName: "service_related_market"
+            baseTableName: "service_market"
             baseColumnNames: "service_id"
             referencedTableName: "service"
             referencedColumnNames: "id"
-            constraintName: "fk_service_related_market_owner"
+            constraintName: "fk_service_market_owner"
+            onDelete: "CASCADE"
+        - addForeignKeyConstraint:
+            baseTableName: "service_market"
+            baseColumnNames: "market_id"
+            referencedTableName: "market"
+            referencedColumnNames: "id"
+            constraintName: "fk_service_market_market"
             onDelete: "CASCADE"
         - createIndex:
-            tableName: "service_related_market"
-            indexName: "idx_service_related_market_market_slug"
+            tableName: "service_market"
+            indexName: "idx_service_market_market_id"
             columns:
               - column:
-                  name: "market_slug"
+                  name: "market_id"

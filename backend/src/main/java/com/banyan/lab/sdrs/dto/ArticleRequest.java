@@ -2,7 +2,6 @@ package com.banyan.lab.sdrs.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.banyan.lab.sdrs.entity.NewsType;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -44,6 +43,6 @@ public record ArticleRequest(
 
         @Positive int readingMinutes,
 
-        @NotNull @Valid MediaImageDto image,
+        @Size(max = 600) String imageUrl,
 
         @NotNull List<@NotBlank @Size(max = 120) String> tags) {}

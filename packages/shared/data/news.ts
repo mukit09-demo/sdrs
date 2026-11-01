@@ -16,7 +16,6 @@ export const articles: Article[] = [
     category: "Press release",
     publishedAt: "2026-08-28",
     readingMinutes: 4,
-    image: { alt: "A stadium with a retractable roof at dusk", seed: "news-kai-tak-park" },
     tags: ["buildings", "cities-and-communities"],
   },
   {
@@ -33,7 +32,6 @@ export const articles: Article[] = [
     category: "Report",
     publishedAt: "2026-08-14",
     readingMinutes: 7,
-    image: { alt: "Cooling towers beside a data centre building", seed: "news-dc-water" },
     tags: ["data-centers-and-digital-infrastructure", "water-and-environment", "energy"],
   },
   {
@@ -50,7 +48,6 @@ export const articles: Article[] = [
     category: "Insight",
     publishedAt: "2026-07-30",
     readingMinutes: 5,
-    image: { alt: "Aerial view of forest and a planned settlement", seed: "news-nusantara" },
     tags: ["cities-and-communities", "water-and-environment"],
   },
   {
@@ -66,7 +63,6 @@ export const articles: Article[] = [
     category: "Award",
     publishedAt: "2026-07-11",
     readingMinutes: 3,
-    image: { alt: "A coastal promenade beside a sandy beach", seed: "news-porthcawl-award" },
     tags: ["water-and-environment", "cities-and-communities"],
   },
   {
@@ -83,7 +79,6 @@ export const articles: Article[] = [
     category: "Insight",
     publishedAt: "2026-06-24",
     readingMinutes: 6,
-    image: { alt: "Scaffolding around a building under refurbishment", seed: "news-retrofit" },
     tags: ["buildings", "sustainability"],
   },
   {
@@ -99,7 +94,6 @@ export const articles: Article[] = [
     category: "Press release",
     publishedAt: "2026-06-05",
     readingMinutes: 3,
-    image: { alt: "Thermal imagery overlaid on a city map", seed: "news-uheat" },
     tags: ["cities-and-communities", "digital", "climate"],
   },
   {
@@ -116,7 +110,6 @@ export const articles: Article[] = [
     category: "Insight",
     publishedAt: "2026-05-19",
     readingMinutes: 6,
-    image: { alt: "Electricity transmission pylons at sunset", seed: "news-grid-queue" },
     tags: ["energy", "advisory"],
   },
   {
@@ -133,7 +126,6 @@ export const articles: Article[] = [
     category: "Press release",
     publishedAt: "2026-04-30",
     readingMinutes: 2,
-    image: { alt: "A printed technical journal on a desk", seed: "news-journal" },
     tags: ["publication"],
   },
   {
@@ -150,7 +142,6 @@ export const articles: Article[] = [
     category: "Event",
     publishedAt: "2026-04-08",
     readingMinutes: 3,
-    image: { alt: "Young professionals collaborating around a model", seed: "news-early-careers" },
     tags: ["careers"],
   },
 ];

@@ -21,7 +21,7 @@
 
 insert into news_article (
     id, slug, title, excerpt, news_type, published_at, reading_minutes,
-    image_url, image_alt, image_seed
+    image_url
 ) values (
     nextval('news_article_id_seq'),
     'kai-tak-sports-park-opens',
@@ -30,9 +30,7 @@ insert into news_article (
     'PRESS_RELEASE',
     date '2026-08-28',
     4,
-    NULL,
-    'A stadium with a retractable roof at dusk',
-    'news-kai-tak-park'
+    NULL
 );
 insert into news_article_body (article_id, position, paragraph)
     select a.id, 0, 'Kai Tak Sports Park has opened on the site of Hong Kong''s former international airport, completing the anchor phase of a district that will eventually house 130,000 residents. The main stadium seats 50,000 under a retractable roof, alongside an indoor arena and public sports ground.' from news_article a where a.slug = 'kai-tak-sports-park-opens'
@@ -45,7 +43,7 @@ insert into news_article_tag (article_id, position, tag)
 
 insert into news_article (
     id, slug, title, excerpt, news_type, published_at, reading_minutes,
-    image_url, image_alt, image_seed
+    image_url
 ) values (
     nextval('news_article_id_seq'),
     'data-centre-water-use-report',
@@ -54,9 +52,7 @@ insert into news_article (
     'REPORT',
     date '2026-08-14',
     7,
-    NULL,
-    'Cooling towers beside a data centre building',
-    'news-dc-water'
+    NULL
 );
 insert into news_article_body (article_id, position, paragraph)
     select a.id, 0, 'The conversation about data centre growth has focused almost entirely on electricity. Our review of 40 hyperscale campuses across three continents suggests that in six of the ten fastest-growing markets, water will bind first.' from news_article a where a.slug = 'data-centre-water-use-report'
@@ -70,7 +66,7 @@ insert into news_article_tag (article_id, position, tag)
 
 insert into news_article (
     id, slug, title, excerpt, news_type, published_at, reading_minutes,
-    image_url, image_alt, image_seed
+    image_url
 ) values (
     nextval('news_article_id_seq'),
     'nusantara-spatial-framework',
@@ -79,9 +75,7 @@ insert into news_article (
     'INSIGHT',
     date '2026-07-30',
     5,
-    NULL,
-    'Aerial view of forest and a planned settlement',
-    'news-nusantara'
+    NULL
 );
 insert into news_article_body (article_id, position, paragraph)
     select a.id, 0, 'The Nusantara Capital Authority has published the spatial framework for Indonesia''s new capital, developed with our planning, water and transport teams.' from news_article a where a.slug = 'nusantara-spatial-framework'
@@ -94,7 +88,7 @@ insert into news_article_tag (article_id, position, tag)
 
 insert into news_article (
     id, slug, title, excerpt, news_type, published_at, reading_minutes,
-    image_url, image_alt, image_seed
+    image_url
 ) values (
     nextval('news_article_id_seq'),
     'porthcawl-scheme-wins-award',
@@ -103,9 +97,7 @@ insert into news_article (
     'AWARD',
     date '2026-07-11',
     3,
-    NULL,
-    'A coastal promenade beside a sandy beach',
-    'news-porthcawl-award'
+    NULL
 );
 insert into news_article_body (article_id, position, paragraph)
     select a.id, 0, 'The Porthcawl Sandy Bay coastal scheme has received a national award for civil engineering excellence, recognising the integration of flood defence renewal with intertidal habitat creation.' from news_article a where a.slug = 'porthcawl-scheme-wins-award'
@@ -117,7 +109,7 @@ insert into news_article_tag (article_id, position, tag)
 
 insert into news_article (
     id, slug, title, excerpt, news_type, published_at, reading_minutes,
-    image_url, image_alt, image_seed
+    image_url
 ) values (
     nextval('news_article_id_seq'),
     'retrofit-first-policy-briefing',
@@ -126,9 +118,7 @@ insert into news_article (
     'INSIGHT',
     date '2026-06-24',
     6,
-    NULL,
-    'Scaffolding around a building under refurbishment',
-    'news-retrofit'
+    NULL
 );
 insert into news_article_body (article_id, position, paragraph)
     select a.id, 0, 'Retrofit-first policies are spreading, and broadly they are right: keeping a structure usually avoids far more carbon than a new efficient building saves in operation. On our recent commercial projects, retention has delivered embodied carbon savings of 40 to 60 per cent.' from news_article a where a.slug = 'retrofit-first-policy-briefing'
@@ -141,7 +131,7 @@ insert into news_article_tag (article_id, position, tag)
 
 insert into news_article (
     id, slug, title, excerpt, news_type, published_at, reading_minutes,
-    image_url, image_alt, image_seed
+    image_url
 ) values (
     nextval('news_article_id_seq'),
     'uheat-expands-to-fifty-cities',
@@ -150,9 +140,7 @@ insert into news_article (
     'PRESS_RELEASE',
     date '2026-06-05',
     3,
-    NULL,
-    'Thermal imagery overlaid on a city map',
-    'news-uheat'
+    NULL
 );
 insert into news_article_body (article_id, position, paragraph)
     select a.id, 0, 'UHeat now covers fifty cities, up from twelve at launch. The tool combines satellite thermal imagery with machine learning to identify which buildings, roofs and paved surfaces contribute most to local temperature rise.' from news_article a where a.slug = 'uheat-expands-to-fifty-cities'
@@ -165,7 +153,7 @@ insert into news_article_tag (article_id, position, tag)
 
 insert into news_article (
     id, slug, title, excerpt, news_type, published_at, reading_minutes,
-    image_url, image_alt, image_seed
+    image_url
 ) values (
     nextval('news_article_id_seq'),
     'grid-connection-queue-analysis',
@@ -174,9 +162,7 @@ insert into news_article (
     'INSIGHT',
     date '2026-05-19',
     6,
-    NULL,
-    'Electricity transmission pylons at sunset',
-    'news-grid-queue'
+    NULL
 );
 insert into news_article_body (article_id, position, paragraph)
     select a.id, 0, 'Across the four markets we analysed, consented renewable generation is waiting an average of six years for a grid connection date. Construction takes two to three. The queue, not the turbine, is the schedule.' from news_article a where a.slug = 'grid-connection-queue-analysis'
@@ -189,7 +175,7 @@ insert into news_article_tag (article_id, position, tag)
 
 insert into news_article (
     id, slug, title, excerpt, news_type, published_at, reading_minutes,
-    image_url, image_alt, image_seed
+    image_url
 ) values (
     nextval('news_article_id_seq'),
     'sdrs-journal-2026-issue-one',
@@ -198,9 +184,7 @@ insert into news_article (
     'PRESS_RELEASE',
     date '2026-04-30',
     2,
-    NULL,
-    'A printed technical journal on a desk',
-    'news-journal'
+    NULL
 );
 insert into news_article_body (article_id, position, paragraph)
     select a.id, 0, 'The SDRS Journal has been publishing detailed technical accounts of our work for sixty years. Issue 1 of 2026 covers three projects in depth.' from news_article a where a.slug = 'sdrs-journal-2026-issue-one'
@@ -212,7 +196,7 @@ insert into news_article_tag (article_id, position, tag)
 
 insert into news_article (
     id, slug, title, excerpt, news_type, published_at, reading_minutes,
-    image_url, image_alt, image_seed
+    image_url
 ) values (
     nextval('news_article_id_seq'),
     'early-careers-intake-2027',
@@ -221,9 +205,7 @@ insert into news_article (
     'EVENT',
     date '2026-04-08',
     3,
-    NULL,
-    'Young professionals collaborating around a model',
-    'news-early-careers'
+    NULL
 );
 insert into news_article_body (article_id, position, paragraph)
     select a.id, 0, 'Applications are open for our 2027 early careers programmes, covering graduate engineering roles, digital apprenticeships and advisory analyst positions across twenty countries.' from news_article a where a.slug = 'early-careers-intake-2027'

@@ -29,10 +29,9 @@ databaseChangeLog:
       id: "001-01-create-news-article"
       author: "mukit09"
       comment: >-
-        The article itself. image_url and image_seed are nullable because the
-        front end renders a deterministic gradient placeholder until real asset
-        URLs exist; image_alt is not, because a placeholder still needs an
-        accessible description.
+        The article itself. image_url is the article's S3 asset, and nullable
+        because the front end renders a deterministic gradient placeholder
+        until one is uploaded.
       changes:
         - createTable:
             tableName: "news_article"
@@ -79,14 +78,6 @@ databaseChangeLog:
               - column:
                   name: "image_url"
                   type: "varchar(600)"
-              - column:
-                  name: "image_alt"
-                  type: "varchar(300)"
-                  constraints:
-                    nullable: false
-              - column:
-                  name: "image_seed"
-                  type: "varchar(160)"
               - column:
                   name: "created_at"
                   type: "timestamp with time zone"

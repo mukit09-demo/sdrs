@@ -9,7 +9,7 @@ import { SectionHeader } from "@/components/sections/SectionHeader";
 import { Tag } from "@/components/ui/Tag";
 import { routes } from "@/lib/config/routes";
 import { content } from "@/lib/content";
-import { articleToCard } from "@/lib/content/mappers";
+import { articleImage, articleToCard } from "@/lib/content/mappers";
 import { formatDate } from "@sdrs/shared/utils/format";
 
 interface ArticlePageProps {
@@ -57,7 +57,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         title={article.title}
         eyebrow={article.category}
         intro={article.excerpt}
-        image={article.image}
+        image={articleImage(article)}
         size="compact"
         crumbs={[
           { label: "Home", href: routes.home },

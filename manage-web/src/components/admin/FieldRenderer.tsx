@@ -143,7 +143,7 @@ export function FieldRenderer({
   }
 }
 
-/** A nested object — an image, a location, a film — as a fieldset. */
+/** A nested object — an image, a location — as a fieldset. */
 function MemberGroup({
   field,
   value,

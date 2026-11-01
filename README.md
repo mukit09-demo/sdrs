@@ -268,12 +268,14 @@ backend supplies URLs, `next/image` takes over — no component changes.
 
 `MediaVideo` mirrors that contract for moving image, and `Video`
 (`core-web/src/components/ui/Video.tsx`) picks the treatment from whichever field is set:
-`url` for a self-hosted file (our own controls, muted autoplay, paused for
-anyone who asks for reduced motion), `embedUrl` for a YouTube/Vimeo player, and
-the poster alone until either exists. Films are content, not markup: the home
-page's is set in `packages/shared/data/home.ts`, each market's in the `film` field on
-`packages/shared/data/markets.ts`, and both arrive as `Film` from the repository. A market
-without a `film` simply skips the band.
+`url` for the file (our own controls, muted autoplay, paused for anyone who
+asks for reduced motion), and the poster alone until it exists. Films are
+content, not markup: the home page's is a full `MediaVideo` in
+`packages/shared/data/home.ts`. A market stores only a required `filmUrl` in
+`packages/shared/data/markets.ts` and has no image at all; `marketFilm` and
+`marketBackdrop` in `core-web/src/lib/content/mappers.ts` build the rest — one
+shared graphite backdrop for every market's hero and poster, and descriptions
+generated from its name.
 
 There is no real footage yet. The home page plays
 `core-web/public/video/studio-placeholder.webm` — a silent twelve-second loop that opens
@@ -282,8 +284,7 @@ soft massing panning across it at two speeds so it reads as a film rather than a
 still. Each market plays a ten-second loop of its own from
 `core-web/public/video/markets/`, drawing that market's subject: a transport corridor in
 plan, rotors over a transmission line, ripples across a catchment, floor plates
-stacking. Each one is built on the same gradient its poster seed resolves to, so
-hero, poster and film are one continuous image.
+stacking.
 
 Those films carry the market listings as well as the market pages. The home
 page's markets band shows the first six — `MarketFilmStrip`, letterbox tiles
@@ -305,7 +306,7 @@ Those films are generated, not shot — `core-web/scripts/generate-market-films.
 the frames with PIL and encodes VP9/WebM through GStreamer. Run it with no
 arguments to rebuild all fourteen, or pass slugs to redo a subset. They stand in
 for film the way the gradients stand in for photography: drop a real cut in over
-the same filename, or swap `url` for an `embedUrl` if it lives on a platform.
+the same filename.
 
 ### Forms
 

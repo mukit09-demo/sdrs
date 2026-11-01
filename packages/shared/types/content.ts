@@ -24,31 +24,16 @@ export interface MediaImage {
 }
 
 /**
- * A video reference, and the counterpart to `MediaImage`: both asset fields are
- * optional, so a band can reserve its space and render the poster before any
- * footage exists.
+ * A video reference, and the counterpart to `MediaImage`: `url` is optional, so
+ * a band can reserve its space and render the poster before any footage exists.
  */
 export interface MediaVideo {
   /** Direct file URL (MP4/WebM), self-hosted or from the backend's CDN. */
   url?: string;
-  /** Player URL for a platform embed (YouTube/Vimeo). Used when `url` is absent. */
-  embedUrl?: string;
   /** Always required — describes the film to assistive technology. */
   alt: string;
   /** Still frame, shown before playback and in place of missing footage. */
   poster: MediaImage;
-  /** WebVTT captions track. Expected for anything with speech. */
-  captionsUrl?: string;
-}
-
-/**
- * A film and the line that says what it shows. Used by the home page and by any
- * market with footage of its own.
- */
-export interface Film {
-  video: MediaVideo;
-  /** One line placed under the film, saying what it shows. */
-  caption?: string;
 }
 
 /** A headline figure, e.g. `{ value: "714", unit: "MW", label: "…" }`. */
@@ -63,13 +48,15 @@ export interface Market {
   name: string;
   tagline: string;
   description: string;
-  image: MediaImage;
-  /** The market's own film, shown under the hero. Omit and the band is skipped. */
-  film?: Film;
+  /**
+   * The market's film, shown under the hero and on every market listing. Every
+   * market has one, and it is the market's only visual: there is no image, so
+   * the UI supplies the poster and the description.
+   */
+  filmUrl: string;
   /** What the practice actually does in this market. */
   capabilities: string[];
   stats: Stat[];
-  featuredProjectSlugs: Slug[];
 }
 
 export type ServiceCategory =
@@ -141,7 +128,12 @@ export interface Article {
   /** ISO-8601 date (`YYYY-MM-DD`). */
   publishedAt: string;
   readingMinutes: number;
-  image: MediaImage;
+  /**
+   * The article's image on S3. Its only visual field: the UI derives the alt
+   * text from the title and the placeholder seed from the slug, and renders
+   * the gradient placeholder while this is absent.
+   */
+  imageUrl?: string;
   tags: string[];
   /**
    * When the record was first stored, as an ISO-8601 *instant* with an offset
@@ -197,7 +189,7 @@ export interface ValueItem {
 
 export interface HomeContent {
   /** The film that opens the home page, directly under the hero statement. */
-  film: Film;
+  film: MediaVideo;
 }
 
 export interface AboutContent {

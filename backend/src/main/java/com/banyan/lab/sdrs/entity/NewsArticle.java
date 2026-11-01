@@ -3,7 +3,6 @@ package com.banyan.lab.sdrs.entity;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,7 +15,6 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -74,10 +72,9 @@ public class NewsArticle {
     @Column(name = "reading_minutes", nullable = false)
     private int readingMinutes;
 
-    @Valid
-    @NotNull
-    @Embedded
-    private MediaImage image;
+    @Size(max = 600)
+    @Column(name = "image_url", length = 600)
+    private String imageUrl;
 
     @BatchSize(size = 50) // batches the lazy load; without it this is N+1
     @ElementCollection(fetch = FetchType.LAZY)
@@ -117,7 +114,7 @@ public class NewsArticle {
         this.newsType = incoming.newsType;
         this.publishedAt = incoming.publishedAt;
         this.readingMinutes = incoming.readingMinutes;
-        this.image = incoming.image;
+        this.imageUrl = incoming.imageUrl;
 
         // Mutated rather than reassigned: Hibernate tracks these collection
         // instances, and swapping them for new ones orphans the originals.

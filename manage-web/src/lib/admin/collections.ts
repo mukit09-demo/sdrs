@@ -4,7 +4,6 @@ import type {
   ArticleCategory,
   CareerLevel,
   EmploymentType,
-  Film,
   JobOpeningDraft,
   JobStatus,
   Market,
@@ -249,45 +248,6 @@ function asOption<T extends string>(value: string, options: readonly T[]): T {
 
 // --- Markets ---------------------------------------------------------------
 
-const FILM_MEMBERS: ScalarSpec[] = [
-  { name: "caption", label: "Caption", kind: "textarea", maxLength: 300 },
-  {
-    name: "url",
-    label: "Film URL",
-    kind: "text",
-    maxLength: 500,
-    hint: "A self-hosted MP4 or WebM, e.g. /video/markets/energy.webm.",
-  },
-  {
-    name: "embedUrl",
-    label: "Embed URL",
-    kind: "text",
-    maxLength: 500,
-    hint: "A YouTube or Vimeo player URL. Used only when the film URL is blank.",
-  },
-  { name: "alt", label: "Film description", kind: "text", maxLength: 200 },
-];
-
-/**
- * Builds `Market.film` from the flattened group, or returns `undefined` so the
- * band is skipped. The poster is the market's own image, which is what keeps
- * hero, poster and film one continuous picture.
- */
-function toFilm(values: FieldValues, name: string): Film | undefined {
-  const film = group(values, "film");
-  if (!film.url && !film.embedUrl) return undefined;
-
-  return {
-    ...(film.caption ? { caption: film.caption } : {}),
-    video: {
-      ...(film.url ? { url: film.url } : {}),
-      ...(!film.url && film.embedUrl ? { embedUrl: film.embedUrl } : {}),
-      alt: film.alt || `Film showing ${name}`,
-      poster: image(values, "image"),
-    },
-  };
-}
-
 const markets: AdminCollection = {
   name: "markets",
   label: "Markets",
@@ -311,13 +271,13 @@ const markets: AdminCollection = {
       required: true,
       minLength: 40,
     },
-    imageField(),
     {
-      kind: "group",
-      name: "film",
-      label: "Film",
-      hint: "Optional. Leave both URLs blank and the market page skips the film band.",
-      fields: FILM_MEMBERS,
+      name: "filmUrl",
+      label: "Film URL",
+      kind: "text",
+      required: true,
+      maxLength: 600,
+      hint: "An MP4 or WebM, e.g. /video/markets/energy.webm. The market's only visual — there is no image.",
     },
     linesField(
       "capabilities",
@@ -326,11 +286,6 @@ const markets: AdminCollection = {
       true,
     ),
     statsField(),
-    linesField(
-      "featuredProjectSlugs",
-      "Featured project slugs",
-      "One project slug per line, in the order they should appear.",
-    ),
   ],
 
   async list() {
@@ -338,11 +293,7 @@ const markets: AdminCollection = {
     return entities.map((market) => ({
       id: market.slug,
       title: market.name,
-      meta: [
-        market.tagline,
-        `${market.capabilities.length} capabilities`,
-        market.film ? "Has film" : "No film",
-      ],
+      meta: [market.tagline, `${market.capabilities.length} capabilities`],
     }));
   },
 
@@ -355,32 +306,21 @@ const markets: AdminCollection = {
       name: market.name,
       tagline: market.tagline,
       description: market.description,
-      image: imageToValues(market.image),
-      film: {
-        caption: market.film?.caption ?? "",
-        url: market.film?.video.url ?? "",
-        embedUrl: market.film?.video.embedUrl ?? "",
-        alt: market.film?.video.alt ?? "",
-      },
+      filmUrl: market.filmUrl,
       capabilities: market.capabilities,
       stats: statsToValues(market.stats),
-      featuredProjectSlugs: market.featuredProjectSlugs,
     };
   },
 
   async save(values, previousId) {
-    const name = str(values, "name");
-    const film = toFilm(values, name);
     const market: Market = {
       slug: str(values, "slug"),
-      name,
+      name: str(values, "name"),
       tagline: str(values, "tagline"),
       description: str(values, "description"),
-      image: image(values, "image"),
-      ...(film ? { film } : {}),
+      filmUrl: str(values, "filmUrl"),
       capabilities: list(values, "capabilities"),
       stats: stats(values, "stats"),
-      featuredProjectSlugs: list(values, "featuredProjectSlugs"),
     };
 
     await content.saveMarket(market);
@@ -515,7 +455,7 @@ const projects: AdminCollection = {
     linesField(
       "marketSlugs",
       "Market slugs",
-      "One per line. Drives the market filter on /projects.",
+      "One per line, each an existing market. Drives the market filter on /projects and the project list on each market page.",
       true,
     ),
     linesField("serviceSlugs", "Service slugs", "One per line."),
@@ -595,6 +535,14 @@ const projects: AdminCollection = {
       highlights: list(values, "highlights"),
     };
 
+    // project_market references market by key, so the API refuses a slug that
+    // names no market. Refuse it here too, with a message the editor can act on.
+    const known = new Set((await content.listMarkets()).map((market) => market.slug));
+    const unknown = project.marketSlugs.filter((slug) => !known.has(slug));
+    if (unknown.length > 0) {
+      throw new SaveRejected(`No market has the slug: ${unknown.join(", ")}.`);
+    }
+
     await content.saveProject(project);
     await removeRenamed(previousId, project.slug, content.deleteProject);
     return project.slug;
@@ -637,7 +585,13 @@ const articles: AdminCollection = {
       "One paragraph per line. Blank lines are ignored.",
       true,
     ),
-    imageField(),
+    {
+      name: "imageUrl",
+      label: "Image URL",
+      kind: "text",
+      maxLength: 600,
+      hint: "The image on S3. Leave blank to use the generated gradient placeholder.",
+    },
     {
       kind: "tags",
       name: "tags",
@@ -679,12 +633,13 @@ const articles: AdminCollection = {
       readingMinutes: article.readingMinutes,
       excerpt: article.excerpt,
       body: article.body,
-      image: imageToValues(article.image),
+      imageUrl: article.imageUrl ?? "",
       tags: article.tags,
     };
   },
 
   async save(values, previousId) {
+    const imageUrl = str(values, "imageUrl");
     const article: Article = {
       slug: str(values, "slug"),
       title: str(values, "title"),
@@ -693,7 +648,7 @@ const articles: AdminCollection = {
       category: asOption(str(values, "category"), ARTICLE_CATEGORIES),
       publishedAt: str(values, "publishedAt"),
       readingMinutes: num(values, "readingMinutes"),
-      image: image(values, "image"),
+      ...(imageUrl ? { imageUrl } : {}),
       tags: list(values, "tags"),
     };
 

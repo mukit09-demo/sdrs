@@ -1,10 +1,8 @@
 package com.banyan.lab.sdrs.support;
 
-import com.banyan.lab.sdrs.entity.MediaImage;
 import com.banyan.lab.sdrs.entity.NewsArticle;
 import com.banyan.lab.sdrs.entity.NewsType;
 import com.banyan.lab.sdrs.dto.ArticleRequest;
-import com.banyan.lab.sdrs.dto.MediaImageDto;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -39,12 +37,6 @@ public final class NewsTestData {
     public static final Instant UPDATED = Instant.parse("2026-08-28T14:42:05Z");
 
     public static NewsArticle article() {
-        // No url — the gradient-placeholder case, which is the default for
-        // every piece of bundled content.
-        MediaImage image = new MediaImage();
-        image.setAlt("A stadium with a retractable roof at dusk");
-        image.setSeed("news-kai-tak-park");
-
         NewsArticle article = new NewsArticle();
         article.setSlug(SLUG);
         article.setTitle("Kai Tak Sports Park opens to the public in Hong Kong");
@@ -53,7 +45,9 @@ public final class NewsTestData {
         article.setNewsType(NewsType.PRESS_RELEASE);
         article.setPublishedAt(PUBLISHED);
         article.setReadingMinutes(4);
-        article.setImage(image);
+        // No image url — the gradient-placeholder case, which is the default
+        // for every piece of bundled content.
+        article.setImageUrl(null);
         article.setBody(new ArrayList<>(List.of(
                 "Kai Tak Sports Park has opened on the site of Hong Kong's former airport.",
                 "Our teams worked across structural engineering and crowd movement.",
@@ -77,7 +71,7 @@ public final class NewsTestData {
                 NewsType.PRESS_RELEASE,
                 PUBLISHED,
                 4,
-                new MediaImageDto(null, "A stadium with a retractable roof at dusk", "news-kai-tak-park"),
+                null,
                 List.of("buildings", "cities-and-communities"));
     }
 

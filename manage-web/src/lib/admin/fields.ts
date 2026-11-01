@@ -84,7 +84,7 @@ export type FieldSpec =
       hint?: string;
       columns: ScalarSpec[];
     }
-  /** A fixed nested object — a location, a film. */
+  /** A fixed nested object — a location. */
   | {
       kind: "group";
       name: string;

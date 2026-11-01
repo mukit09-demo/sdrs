@@ -6,7 +6,7 @@ import type { MediaVideo } from "@sdrs/shared/types/content";
 export interface VideoProps {
   video: MediaVideo;
   ratio?: MediaRatio;
-  /** Starts a self-hosted film muted on load. Platform embeds decide for themselves. */
+  /** Starts the film muted on load. */
   autoPlay?: boolean;
   className?: string;
 }
@@ -14,9 +14,8 @@ export interface VideoProps {
 /**
  * The single video component, and the mirror of `Media`:
  *
- *   `url`      → the self-hosted player, with our own controls
- *   `embedUrl` → the platform's iframe player
- *   neither    → the poster, so the band keeps its shape until footage exists
+ *   `url`    → the player, with our own controls
+ *   no `url` → the poster, so the band keeps its shape until footage exists
  *
  * Because the frame is reserved in every case, adding a film later never moves
  * the rest of the page.
@@ -34,27 +33,6 @@ export function Video({
         autoPlay={autoPlay}
         className={cn(mediaRatios[ratio], className)}
       />
-    );
-  }
-
-  if (video.embedUrl) {
-    return (
-      <div
-        className={cn(
-          "relative overflow-hidden bg-ink-900",
-          mediaRatios[ratio],
-          className,
-        )}
-      >
-        <iframe
-          src={video.embedUrl}
-          title={video.alt}
-          loading="lazy"
-          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-          allowFullScreen
-          className="absolute inset-0 size-full border-0"
-        />
-      </div>
     );
   }
 

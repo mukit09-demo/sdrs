@@ -101,7 +101,7 @@ plus a Gradle-managed Spring Boot backend that is *not* a workspace. See
   `.config`. A new collection adds one class to each, following the news classes
   already there — not a new subtree. `@Embeddable` types and the enums an entity
   persists live in `.entity` beside it; the wire types keep a `Dto` suffix so
-  `MediaImage` and `MediaImageDto` can both be named in a mapper.
+  an embeddable `Stat` and its `StatDto` can both be named in a mapper.
 - **If the CMS cannot edit it, it does not get a table.** The database holds the
   five collections registered in `manage-web/src/lib/admin/collections.ts` —
   markets, services, projects, news, vacancies — plus the enquiry inbox. Page
@@ -132,8 +132,8 @@ plus a Gradle-managed Spring Boot backend that is *not* a workspace. See
   repeat — and `root.join("tags")` then returns the owner once per matching row,
   which silently breaks both the result and `limit`. `isMember` compiles to an
   `exists` subquery: one row per owner. This applies to `tags`, and to
-  `project_market`, `project_service`, `service_related_market` and
-  `market_featured_project` when their filters get written.
+  `project_market`, `project_service` and `service_market` when their
+  filters get written.
 - **Collections are `LAZY`, and every one carries `@BatchSize`.** Lazy is the
   default the mapping should state, so a query that does not need a collection
   can avoid loading it. `@BatchSize` is what keeps that safe: without it, a list

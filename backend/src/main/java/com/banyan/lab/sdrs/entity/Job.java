@@ -77,19 +77,10 @@ public class Job {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    /**
-     * Whether a candidate should see this job today.
-     *
-     * <p>The single definition of "an opening". The repository query has to
-     * express the same predicate in SQL to filter in the database rather than in
-     * Java — if you change one, change both, and the controller test is where
-     * that gets caught.
-     */
     public boolean isPubliclyVisible() {
         return isPubliclyVisibleOn(LocalDate.now());
     }
 
-    /** Takes the date so the rule is testable without mocking the clock. */
     public boolean isPubliclyVisibleOn(LocalDate today) {
         return status == JobStatus.OPEN
                 && (deadline == null || !deadline.isBefore(today));

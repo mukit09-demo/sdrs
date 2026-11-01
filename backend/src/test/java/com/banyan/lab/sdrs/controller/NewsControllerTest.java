@@ -71,7 +71,7 @@ class NewsControllerTest {
               "category": "Press release",
               "publishedAt": "2026-08-28",
               "readingMinutes": 4,
-              "image": { "alt": "A stadium at dusk", "seed": "news-kai-tak-park" },
+              "imageUrl": "https://sdrs-media.s3.amazonaws.com/news/kai-tak.jpg",
               "tags": ["buildings"]
             }
             """;
@@ -92,7 +92,7 @@ class NewsControllerTest {
 
     @Test
     @DisplayName("GET /api/articles serves the ArticleSummary shape the front end types")
-    void listMatchesTheSharedContract() throws Exception {
+    void testIfListMatchesTheSharedContract() throws Exception {
         when(service.list(null, null, null)).thenReturn(List.of(summary()));
 
         mvc.perform(get("/api/articles"))
@@ -120,20 +120,20 @@ class NewsControllerTest {
     }
 
     @Test
-    @DisplayName("an image with no url omits the key rather than sending null")
-    void absentImageUrlIsOmitted() throws Exception {
+    @DisplayName("an article with no image url omits the key rather than sending null")
+    void testIfAbsentImageUrlIsOmitted() throws Exception {
         when(service.list(null, null, null)).thenReturn(List.of(summary()));
 
         mvc.perform(get("/api/articles"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].image.url").doesNotExist())
-                .andExpect(jsonPath("$[0].image.alt").exists())
-                .andExpect(jsonPath("$[0].image.seed").value("news-kai-tak-park"));
+                .andExpect(jsonPath("$[0].imageUrl").doesNotExist())
+                // The embedded shape is gone; the old key must not come back.
+                .andExpect(jsonPath("$[0].image").doesNotExist());
     }
 
     @Test
     @DisplayName("tag, limit and exclude reach the service under the names the client sends")
-    void passesQueryParameters() throws Exception {
+    void testIfQueryParametersReachTheService() throws Exception {
         when(service.list("buildings", "other-slug", 3)).thenReturn(List.of());
 
         mvc.perform(get("/api/articles")
@@ -147,7 +147,7 @@ class NewsControllerTest {
 
     @Test
     @DisplayName("GET /api/articles/{slug} serves the full Article, body included")
-    void getMatchesTheSharedContract() throws Exception {
+    void testIfGetMatchesTheSharedContract() throws Exception {
         when(service.get(NewsTestData.SLUG)).thenReturn(response());
 
         mvc.perform(get("/api/articles/" + NewsTestData.SLUG))
@@ -162,7 +162,7 @@ class NewsControllerTest {
 
     @Test
     @DisplayName("a missing slug is a 404 carrying the error body")
-    void missingSlugIsNotFound() throws Exception {
+    void testIfMissingSlugIsNotFound() throws Exception {
         when(service.get("nope")).thenThrow(new ResourceNotFoundException("article", "nope"));
 
         mvc.perform(get("/api/articles/nope"))
@@ -173,7 +173,7 @@ class NewsControllerTest {
 
     @Test
     @DisplayName("writes are rejected without a credential")
-    void unauthenticatedWriteIsRejected() throws Exception {
+    void testIfUnauthenticatedWriteIsRejected() throws Exception {
         mvc.perform(post("/api/articles")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_BODY))
@@ -188,7 +188,7 @@ class NewsControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("an admin can create, and gets a Location header back")
-    void adminCanCreate() throws Exception {
+    void testIfAdminCanCreate() throws Exception {
         when(service.create(any())).thenReturn(response());
 
         mvc.perform(post("/api/articles")
@@ -201,7 +201,7 @@ class NewsControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("an unknown category is a 400 that names the valid ones")
-    void unknownCategoryIsBadRequest() throws Exception {
+    void testIfUnknownCategoryIsBadRequest() throws Exception {
         mvc.perform(post("/api/articles")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_BODY.replace("\"Press release\"", "\"Hot take\"")))
@@ -213,7 +213,7 @@ class NewsControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("validation failures come back per field")
-    void validationFailuresAreFieldKeyed() throws Exception {
+    void testIfValidationFailuresAreFieldKeyed() throws Exception {
         mvc.perform(post("/api/articles")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_BODY.replace("\"body\": [\"One paragraph.\"]", "\"body\": []")))
@@ -225,7 +225,7 @@ class NewsControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("delete returns 204 with no body")
-    void adminCanDelete() throws Exception {
+    void testIfAdminCanDelete() throws Exception {
         mvc.perform(delete("/api/articles/" + NewsTestData.SLUG))
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(""));

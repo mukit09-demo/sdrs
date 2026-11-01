@@ -10,6 +10,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
@@ -77,10 +79,9 @@ public class Project {
     @Column(name = "description", length = 2000, nullable = false)
     private String description;
 
-    @Valid
-    @NotNull
-    @Embedded
-    private MediaImage image;
+    @Size(max = 600)
+    @Column(name = "image_url", length = 600)
+    private String imageUrl;
 
     @BatchSize(size = 50) // batches the lazy load; without it this is N+1
     @ElementCollection(fetch = FetchType.LAZY)
@@ -98,20 +99,20 @@ public class Project {
     private List<String> highlights = new ArrayList<>();
 
     @BatchSize(size = 50) // batches the lazy load; without it this is N+1
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "project_market",
-            joinColumns = @JoinColumn(name = "project_id", nullable = false))
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "project_market",
+            joinColumns = @JoinColumn(name = "project_id", nullable = false),
+            inverseJoinColumns = @JoinColumn(name = "market_id", nullable = false))
     @OrderColumn(name = "position", nullable = false)
-    @Column(name = "market_slug", length = 160, nullable = false)
-    private List<String> marketSlugs = new ArrayList<>();
+    private List<Market> markets = new ArrayList<>();
 
     @BatchSize(size = 50) // batches the lazy load; without it this is N+1
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "project_service",
-            joinColumns = @JoinColumn(name = "project_id", nullable = false))
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "project_service",
+            joinColumns = @JoinColumn(name = "project_id", nullable = false),
+            inverseJoinColumns = @JoinColumn(name = "service_id", nullable = false))
     @OrderColumn(name = "position", nullable = false)
-    @Column(name = "service_slug", length = 160, nullable = false)
-    private List<String> serviceSlugs = new ArrayList<>();
+    private List<Service> services = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

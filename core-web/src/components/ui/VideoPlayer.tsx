@@ -87,17 +87,7 @@ export function VideoPlayer({
         onPause={() => setIsPlaying(false)}
         onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
         className="absolute inset-0 size-full object-cover"
-      >
-        {video.captionsUrl && (
-          <track
-            src={video.captionsUrl}
-            kind="captions"
-            srcLang="en"
-            label="English"
-            default
-          />
-        )}
-      </video>
+      />
 
       <div className="absolute inset-x-0 bottom-0 flex justify-end gap-2 p-4 md:p-6">
         <ControlButton

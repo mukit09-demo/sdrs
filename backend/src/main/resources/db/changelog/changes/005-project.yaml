@@ -1,5 +1,8 @@
 # Projects. project_market and project_service are what the
 # market and service filters match on, so both are indexed.
+# Both are real many-to-manys: market_id references market and service_id
+# references service, and deleting either removes its links rather than
+# leaving them dangling.
 
 databaseChangeLog:
   - changeSet:
@@ -73,14 +76,6 @@ databaseChangeLog:
               - column:
                   name: "image_url"
                   type: "varchar(600)"
-              - column:
-                  name: "image_alt"
-                  type: "varchar(300)"
-                  constraints:
-                    nullable: false
-              - column:
-                  name: "image_seed"
-                  type: "varchar(160)"
               - column:
                   name: "created_at"
                   type: "timestamp with time zone"
@@ -191,14 +186,18 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: "market_slug"
-                  type: "varchar(160)"
+                  name: "market_id"
+                  type: "bigint"
                   constraints:
                     nullable: false
         - addPrimaryKey:
             tableName: "project_market"
             columnNames: "project_id, position"
             constraintName: "pk_project_market"
+        - addUniqueConstraint:
+            tableName: "project_market"
+            columnNames: "project_id, market_id"
+            constraintName: "uk_project_market"
         - addForeignKeyConstraint:
             baseTableName: "project_market"
             baseColumnNames: "project_id"
@@ -206,12 +205,19 @@ databaseChangeLog:
             referencedColumnNames: "id"
             constraintName: "fk_project_market_owner"
             onDelete: "CASCADE"
+        - addForeignKeyConstraint:
+            baseTableName: "project_market"
+            baseColumnNames: "market_id"
+            referencedTableName: "market"
+            referencedColumnNames: "id"
+            constraintName: "fk_project_market_market"
+            onDelete: "CASCADE"
         - createIndex:
             tableName: "project_market"
-            indexName: "idx_project_market_market_slug"
+            indexName: "idx_project_market_market_id"
             columns:
               - column:
-                  name: "market_slug"
+                  name: "market_id"
   - changeSet:
       id: "005-project-05-create-project-service"
       author: "mukit09"
@@ -230,14 +236,18 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: "service_slug"
-                  type: "varchar(160)"
+                  name: "service_id"
+                  type: "bigint"
                   constraints:
                     nullable: false
         - addPrimaryKey:
             tableName: "project_service"
             columnNames: "project_id, position"
             constraintName: "pk_project_service"
+        - addUniqueConstraint:
+            tableName: "project_service"
+            columnNames: "project_id, service_id"
+            constraintName: "uk_project_service"
         - addForeignKeyConstraint:
             baseTableName: "project_service"
             baseColumnNames: "project_id"
@@ -245,9 +255,16 @@ databaseChangeLog:
             referencedColumnNames: "id"
             constraintName: "fk_project_service_owner"
             onDelete: "CASCADE"
+        - addForeignKeyConstraint:
+            baseTableName: "project_service"
+            baseColumnNames: "service_id"
+            referencedTableName: "service"
+            referencedColumnNames: "id"
+            constraintName: "fk_project_service_service"
+            onDelete: "CASCADE"
         - createIndex:
             tableName: "project_service"
-            indexName: "idx_project_service_service_slug"
+            indexName: "idx_project_service_service_id"
             columns:
               - column:
-                  name: "service_slug"
+                  name: "service_id"

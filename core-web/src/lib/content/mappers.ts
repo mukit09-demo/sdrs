@@ -5,6 +5,8 @@ import type {
   CardItem,
   DigitalTool,
   Market,
+  MediaImage,
+  MediaVideo,
   Project,
   ResearchProgramme,
   Service,
@@ -19,15 +21,36 @@ import type {
  * new card component.
  */
 
+/**
+ * Markets store no image, so every one shares this backdrop: the hero behind
+ * its title, and the poster shown before its film plays. The seed is chosen
+ * for its gradient — the neutral graphite ramp, which sits under any film.
+ */
+export function marketBackdrop(market: Market): MediaImage {
+  return { alt: market.name, seed: "market-hero-band" };
+}
+
+/**
+ * A market stores only its film's URL; the poster is the shared backdrop and
+ * the description is generated from its name.
+ */
+export function marketFilm(market: Market): MediaVideo {
+  return {
+    url: market.filmUrl,
+    alt: `Film showing ${market.name}`,
+    poster: marketBackdrop(market),
+  };
+}
+
 export function marketToCard(market: Market): CardItem {
   return {
     id: market.slug,
     href: routes.market(market.slug),
     title: market.name,
     summary: market.tagline,
-    image: market.image,
+    image: marketBackdrop(market),
     // Every market carries a film, so the index moves rather than sitting still.
-    video: market.film?.video,
+    video: marketFilm(market),
     tags: [market.slug],
   };
 }
@@ -57,6 +80,18 @@ export function projectToCard(project: Project): CardItem {
   };
 }
 
+/**
+ * An article stores only its image's URL; the description is its title and the
+ * placeholder is seeded from its slug.
+ */
+export function articleImage(article: ArticleSummary): MediaImage {
+  return {
+    alt: article.title,
+    seed: article.slug,
+    ...(article.imageUrl ? { url: article.imageUrl } : {}),
+  };
+}
+
 export function articleToCard(article: ArticleSummary): CardItem {
   return {
     id: article.slug,
@@ -64,7 +99,7 @@ export function articleToCard(article: ArticleSummary): CardItem {
     title: article.title,
     eyebrow: article.category,
     summary: article.excerpt,
-    image: article.image,
+    image: articleImage(article),
     meta: [formatShortDate(article.publishedAt), `${article.readingMinutes} min read`],
     tags: [article.category, ...article.tags],
   };

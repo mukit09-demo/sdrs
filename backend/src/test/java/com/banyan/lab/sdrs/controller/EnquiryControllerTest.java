@@ -77,7 +77,7 @@ class EnquiryControllerTest {
 
     @Test
     @DisplayName("an anonymous read of the inbox is rejected, not served")
-    void anonymousInboxReadIsRejected() throws Exception {
+    void testIfAnonymousInboxReadIsRejected() throws Exception {
         mvc.perform(get("/api/admin/enquiries"))
                 .andExpect(status().isUnauthorized());
 
@@ -90,7 +90,7 @@ class EnquiryControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("GET /api/admin/enquiries serves the inbox shape, newest-first order intact")
-    void inboxMatchesTheSharedContract() throws Exception {
+    void testIfInboxMatchesTheSharedContract() throws Exception {
         when(service.list()).thenReturn(List.of(response()));
 
         mvc.perform(get("/api/admin/enquiries"))
@@ -113,7 +113,7 @@ class EnquiryControllerTest {
 
     @Test
     @DisplayName("POST /api/enquiries is public and returns only the receipt")
-    void submitIsPublicAndReturnsOnlyTheReceipt() throws Exception {
+    void testIfSubmitIsPublicAndReturnsOnlyTheReceipt() throws Exception {
         when(service.submit(any())).thenReturn(new EnquiryReceiptResponse("ENQ-M7X2Y4", RECEIVED));
 
         mvc.perform(post("/api/enquiries")
@@ -131,7 +131,7 @@ class EnquiryControllerTest {
 
     @Test
     @DisplayName("a submission missing a required field is a 400, not a constraint violation at flush")
-    void invalidSubmissionIsRejected() throws Exception {
+    void testIfInvalidSubmissionIsRejected() throws Exception {
         mvc.perform(post("/api/enquiries")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""

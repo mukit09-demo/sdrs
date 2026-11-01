@@ -3,7 +3,6 @@ package com.banyan.lab.sdrs.entity;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,9 +13,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -62,16 +59,11 @@ public class Market {
     @Column(name = "description", length = 2000, nullable = false)
     private String description;
 
-    @Valid
-    @NotNull
-    @Embedded
-    private MediaImage image;
+    @NotBlank
+    @Size(max = 600)
+    @Column(name = "film_url", length = 600, nullable = false)
+    private String filmUrl;
 
-    @Valid
-    @Embedded
-    private Film film;
-
-    /** What the practice actually does in this market. */
     @BatchSize(size = 50) // batches the lazy load; without it this is N+1
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "market_capability",
@@ -86,14 +78,6 @@ public class Market {
             joinColumns = @JoinColumn(name = "market_id", nullable = false))
     @OrderColumn(name = "position", nullable = false)
     private List<Stat> stats = new ArrayList<>();
-
-    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "market_featured_project",
-            joinColumns = @JoinColumn(name = "market_id", nullable = false))
-    @OrderColumn(name = "position", nullable = false)
-    @Column(name = "project_slug", length = 160, nullable = false)
-    private List<String> featuredProjectSlugs = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

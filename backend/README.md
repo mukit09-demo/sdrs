@@ -23,10 +23,9 @@ The one hybrid is careers: `getCareersContent()` reads the prose from
 `packages/shared/data/careers.ts` and splices in the vacancies from
 `GET /api/jobs`.
 
-**Only news is wired up over HTTP so far.** The other four collections have
-tables and entities but still need a DTO, mapper, repository, service and
-controller each — see [Adding a collection](#adding-a-collection) — and their
-tables are empty, because only `news.ts` has been turned into a seed changeSet.
+**All five collections are served over HTTP**, but only news has seed data:
+the market, service, project and job tables start empty, because only `news.ts`
+has been turned into a seed changeSet.
 
 ## Running it
 
@@ -92,6 +91,17 @@ so `./gradlew test` passes on a clean checkout.
 | `DELETE` | `/api/articles/{slug}` | `204`. Admin |
 | `POST` | `/api/enquiries` | `200` + the reference and received instant. Public |
 | `GET` | `/api/admin/enquiries` | The inbox, newest first. Admin |
+| `GET` | `/api/markets`, `/api/services` | Insertion order. Public |
+| `GET` | `/api/projects?market=&service=&slugs=&limit=` | Newest year first; `slugs` wins and keeps its order. Public |
+| `GET` | `/api/{markets,services,projects}/{slug}` | `404` when absent. Public |
+| `POST` | `/api/{markets,services,projects}` | `201`, or `409` if the slug is taken. Admin |
+| `PUT` | `/api/{markets,services,projects}/{slug}` | `204`. Admin |
+| `DELETE` | `/api/{markets,services,projects}/{slug}` | `204`. Admin |
+| `GET` | `/api/jobs` | Openings only: `Open`, deadline not passed. Public |
+| `GET` | `/api/admin/jobs`, `/api/admin/jobs/{id}` | Every status. Admin |
+| `POST` | `/api/jobs` | `201` + the job with its assigned id. Admin |
+| `PUT` | `/api/jobs/{id}` | `204`. Admin |
+| `DELETE` | `/api/jobs/{id}` | `204`. Admin |
 | `GET` | `/actuator/health` | Public |
 
 The service listens on **8085** (core-web is 3002, manage-web 3003), Postgres on
@@ -128,8 +138,9 @@ BACKEND_ORIGIN=http://localhost:8085
 the browser calls the Next origin and there is no CORS to configure. Set it in
 both or the two apps disagree about where content lives.
 
-Only news exists here, so under `api` the other collections will 404 until they
-are added. Set it back to `mock` for ordinary front-end work.
+Only news is seeded, so under `api` the other collections render empty until
+something is saved through the CMS. Set it back to `mock` for ordinary
+front-end work.
 
 ## How it is put together
 
@@ -140,12 +151,12 @@ each of these rather than a new subtree:
 ```
 com.banyan.lab.sdrs
 ├── SdrsApiApplication
-├── controller/    NewsController
-├── service/       NewsService
-├── repository/    NewsRepository
-├── entity/        6 @Entity, 4 @Embeddable, 4 enums
-├── dto/           ArticleRequest, ArticleResponse, MediaImageDto
-├── mapper/        NewsMapper
+├── controller/    News, Market, Service, Project, Job, Enquiry …Controller
+├── service/       one …Service each (ServiceService for services), References
+├── repository/    one …Repository each
+├── entity/        6 @Entity, 2 @Embeddable, 4 enums
+├── dto/           …Request / …Response per collection, StatDto, ProjectLocationDto
+├── mapper/        one …Mapper each
 ├── exception/     ResourceNotFoundException, DuplicateResourceException,
 │                  ApiError, ApiExceptionHandler
 └── config/        SecurityConfig, CacheConfig, AdminProperties, CacheNames
@@ -157,30 +168,34 @@ persistence concerns:
 | | |
 |---|---|
 | **Entities** | `Market` `Service` `Project` `NewsArticle` `Job` `Enquiry` |
-| **Embeddables** | `MediaImage` `Stat` `ProjectLocation` `Film` |
+| **Embeddables** | `Stat` `ProjectLocation` |
 | **Enums** | `NewsType` `ServiceCategory` `EmploymentType` `CareerLevel` `JobStatus` — each implements `Labelled`, storing the constant and serving the label |
 
-The wire types keep the `Dto` suffix — `MediaImageDto` against `MediaImage` —
+The wire types keep the `Dto` suffix — a `StatDto` would sit against `Stat` —
 because the mapper names both and one of them would otherwise need qualifying.
 
 ### Decisions in the schema worth knowing
 
-- **Cross-collection references carry no foreign key.**
-  `market_featured_project`, `service_related_market`, `project_market` and
-  `project_service` are plain slug columns. The read path already drops
-  references it cannot resolve, and an FK would stop the CMS saving a market
-  that names a project not yet created — an ordering the editorial workflow does
-  not have. The cost: a dangling slug is ignored, not rejected.
+- **Every cross-collection reference is a real many-to-many.**
+  `project_market` joins `project_id` to `market_id` with foreign keys, owned
+  by `Project.markets`, and it is the only copy of the relation — a market's
+  projects are the inverse query, so there is no `market_featured_project`.
+  `project_service` does the same for `Project.services`, and `service_market`
+  for `Service.relatedMarkets`. The wire still carries slugs (`marketSlugs`,
+  `serviceSlugs`, `relatedMarketSlugs`); the service converts, and a slug that
+  names no row is refused rather than stored.
 - **If it has no CMS screen, it has no table.** That is the rule that decided
   this schema's shape, and it is why there is no `about_page` or `office` table:
   nothing could ever write to them. Adding a table means adding a collection
   descriptor in `manage-web` in the same change, or it is dead weight.
-- **`Film` is flat, not nested.** `MediaImage` fixes its columns as
-  `image_url` / `image_alt` / `image_seed`, so a table with both an image and a
-  film poster would collide on all three — fixable only with a block of
-  `@AttributeOverride`s per entity, repeated and silently wrong if one is
-  missed. `Film` therefore declares `film_poster_*` itself and the mapper
-  rebuilds the nested shape for the wire.
+- **A market's only visual is `film_url`, and it is required.** There are no
+  `image_*` columns: the front end supplies one shared backdrop for every
+  market's hero and poster, and generates the screen-reader descriptions from
+  `name`.
+- **Every other visual is one nullable `image_url`.** Services, projects and
+  news store the S3 URL and nothing else — no alt text, no placeholder seed. The
+  front end describes the image from the title and seeds the gradient
+  placeholder from the slug, which it renders while the URL is absent.
 - **The table is `job`, not `job_opening`.** It holds every job — drafts and
   withdrawn roles included. An "opening" is the subset advertised right now,
   which is a query, not a table:
@@ -206,7 +221,7 @@ because the mapper names both and one of them would otherwise need qualifying.
   address lines and stats all read in sequence.
 
 Tests mirror the layer they exercise (`controller/`, `service/`, `mapper/`),
-with the shared fixture in `support/NewsTestData`.
+with the shared fixtures in `support/NewsTestData` and `support/CollectionTestData`.
 
 A few choices worth knowing before changing something:
 
@@ -236,7 +251,7 @@ A few choices worth knowing before changing something:
   the CATEGORY chips on `/news`.
 - **Reads are public, writes need the admin.** `SecurityConfig` is the only
   place that decides this; no controller carries its own access rules.
-- **Redis caches the reads**, evicted wholesale on any write. `@Cacheable` keys
+- **Redis caches the reads** for 24 hours, evicted wholesale on any write. `@Cacheable` keys
   on the tag/exclude/limit triple.
 - **Jackson 3, not 2.** Spring Boot 4 moved to `tools.jackson`. Anything naming
   `com.fasterxml.jackson` is wrong *except* `jackson-annotations`, which
@@ -245,12 +260,12 @@ A few choices worth knowing before changing something:
 
 ## Adding a collection
 
-Markets, services, projects and vacancies are each one class per layer plus a
-migration — follow the news classes in each package:
+Each collection is one class per layer plus a migration — follow the news
+classes in each package:
 
 1. `db/changelog/changes/{nnn}-{collection}-schema.yaml`, plus an `include:`
    entry in `db.changelog-master.yaml`.
-2. `entity/` — the entity, reusing `MediaImage` where it fits.
+2. `entity/` — the entity; an image is a nullable `image_url` column.
    `Stat` will need adding for markets and projects.
 3. `dto/` — request and response records matching the TypeScript interface
    exactly, and a controller test that asserts it does.
@@ -268,9 +283,10 @@ load-bearing rather than tidy: `SecurityConfig` permits every `GET /api/**`
 before it reaches any enquiry rule, so at the unprefixed path the submitted
 names, addresses and message bodies would be world-readable. Nothing in the
 controller would fail if the path moved — `EnquiryControllerTest` is what holds
-it there.
+it there. `/api/admin/jobs` is the same arrangement for draft vacancies, held by
+`JobControllerTest`.
 
-Still to do beyond the four remaining collections: seed changeSets for markets,
+Still to do: seed changeSets for markets,
 services, projects and vacancies, and moving CMS accounts off
 `manage-web/.data/users.json` behind a `POST /api/auth/login` — see the root
 README's admin section for why that one is not just a port of the existing code.

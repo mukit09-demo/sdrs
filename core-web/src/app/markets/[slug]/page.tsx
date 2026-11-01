@@ -10,7 +10,12 @@ import { SectionHeader } from "@/components/sections/SectionHeader";
 import { StatList } from "@/components/ui/StatList";
 import { routes } from "@/lib/config/routes";
 import { content } from "@/lib/content";
-import { projectToCard, serviceToCard } from "@/lib/content/mappers";
+import {
+  marketBackdrop,
+  marketFilm,
+  projectToCard,
+  serviceToCard,
+} from "@/lib/content/mappers";
 
 interface MarketPageProps {
   params: Promise<{ slug: string }>;
@@ -38,7 +43,7 @@ export default async function MarketPage({ params }: MarketPageProps) {
   if (!market) notFound();
 
   const [featuredProjects, services] = await Promise.all([
-    content.listProjects({ slugs: market.featuredProjectSlugs, limit: 6 }),
+    content.listProjects({ marketSlug: market.slug, limit: 6 }),
     content.listServices(),
   ]);
 
@@ -52,7 +57,7 @@ export default async function MarketPage({ params }: MarketPageProps) {
         title={market.name}
         eyebrow="Market"
         intro={market.tagline}
-        image={market.image}
+        image={marketBackdrop(market)}
         size="compact"
         crumbs={[
           { label: "Home", href: routes.home },
@@ -61,9 +66,7 @@ export default async function MarketPage({ params }: MarketPageProps) {
         ]}
       />
 
-      {market.film && (
-        <FilmBand video={market.film.video} caption={market.film.caption} />
-      )}
+      <FilmBand video={marketFilm(market)} />
 
       <Section>
         <div className="grid gap-14 lg:grid-cols-[1.4fr_1fr]">

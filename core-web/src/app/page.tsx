@@ -41,7 +41,7 @@ We design, research and share knowledge to create places and infrastructure that
         ]}
       />
 
-      <FilmBand video={home.film.video} caption={home.film.caption} />
+      <FilmBand video={home.film} />
 
       <Section tone="muted" spacing="sm">
         <StatList stats={about.stats} columns={4} />

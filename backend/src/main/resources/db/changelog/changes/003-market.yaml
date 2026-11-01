@@ -1,7 +1,5 @@
-# Markets — the sectors the practice works in.
-# market_featured_project holds plain slugs with no foreign key to project:
-# the read path already drops references it cannot resolve, and an FK would
-# stop the CMS saving a market that names a project not yet created.
+# Markets — the sectors the practice works in. Which projects are in a market
+# is not stored here: project_market (005) is the one copy of that relation.
 
 databaseChangeLog:
   - changeSet:
@@ -55,40 +53,10 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: "image_url"
+                  name: "film_url"
                   type: "varchar(600)"
-              - column:
-                  name: "image_alt"
-                  type: "varchar(300)"
                   constraints:
                     nullable: false
-              - column:
-                  name: "image_seed"
-                  type: "varchar(160)"
-              - column:
-                  name: "film_video_url"
-                  type: "varchar(600)"
-              - column:
-                  name: "film_video_embed_url"
-                  type: "varchar(600)"
-              - column:
-                  name: "film_video_alt"
-                  type: "varchar(300)"
-              - column:
-                  name: "film_video_captions_url"
-                  type: "varchar(600)"
-              - column:
-                  name: "film_poster_url"
-                  type: "varchar(600)"
-              - column:
-                  name: "film_poster_alt"
-                  type: "varchar(300)"
-              - column:
-                  name: "film_poster_seed"
-                  type: "varchar(160)"
-              - column:
-                  name: "film_caption"
-                  type: "varchar(600)"
               - column:
                   name: "created_at"
                   type: "timestamp with time zone"
@@ -175,42 +143,3 @@ databaseChangeLog:
             referencedColumnNames: "id"
             constraintName: "fk_market_stat_owner"
             onDelete: "CASCADE"
-  - changeSet:
-      id: "003-market-04-create-market-featured-project"
-      author: "mukit09"
-      changes:
-        - createTable:
-            tableName: "market_featured_project"
-            columns:
-              - column:
-                  name: "market_id"
-                  type: "bigint"
-                  constraints:
-                    nullable: false
-              - column:
-                  name: "position"
-                  type: "int"
-                  constraints:
-                    nullable: false
-              - column:
-                  name: "project_slug"
-                  type: "varchar(160)"
-                  constraints:
-                    nullable: false
-        - addPrimaryKey:
-            tableName: "market_featured_project"
-            columnNames: "market_id, position"
-            constraintName: "pk_market_featured_project"
-        - addForeignKeyConstraint:
-            baseTableName: "market_featured_project"
-            baseColumnNames: "market_id"
-            referencedTableName: "market"
-            referencedColumnNames: "id"
-            constraintName: "fk_market_featured_project_owner"
-            onDelete: "CASCADE"
-        - createIndex:
-            tableName: "market_featured_project"
-            indexName: "idx_market_featured_project_project_slug"
-            columns:
-              - column:
-                  name: "project_slug"
