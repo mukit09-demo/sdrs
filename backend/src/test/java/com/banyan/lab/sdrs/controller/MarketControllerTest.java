@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -132,5 +133,34 @@ class MarketControllerTest {
                         .content(VALID_BODY.replace("\"/video/markets/buildings.webm\"", "\"\"")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors.filmUrl").exists());
+    }
+
+    @Test
+    @DisplayName("an unknown public path is a 404 in the API's error shape, not a 500")
+    void testIfUnknownPathIsNotFound() throws Exception {
+        mvc.perform(get("/api/markets/buildings/nope"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.path").value("/api/markets/buildings/nope"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("an unsupported method is a 405 that names the allowed ones")
+    void testIfUnsupportedMethodIsMethodNotAllowed() throws Exception {
+        mvc.perform(patch("/api/markets/buildings").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.status").value(405))
+                .andExpect(header().exists("Allow"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("a body that is not JSON is a 415, not a 500")
+    void testIfWrongContentTypeIsUnsupportedMediaType() throws Exception {
+        mvc.perform(post("/api/markets").contentType(MediaType.TEXT_PLAIN).content("buildings"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.status").value(415));
+        verify(service, never()).create(any());
     }
 }

@@ -3,10 +3,12 @@ package com.banyan.lab.sdrs.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -74,9 +76,32 @@ public class ApiExceptionHandler {
         return respond(HttpStatus.BAD_REQUEST, ex.getMessage(), ex, request);
     }
 
+    /**
+     * Everything without a handler above. Spring MVC's own exceptions — an
+     * unknown path ({@code NoResourceFoundException}), a wrong method, an
+     * unsupported content type, a missing parameter — implement
+     * {@link ErrorResponse} and already know their status, so they keep it
+     * rather than becoming a 500 logged as a server failure.
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> unexpected(Exception ex, HttpServletRequest request) {
+        if (ex instanceof ErrorResponse exception) {
+            HttpStatus status = HttpStatus.resolve(exception.getStatusCode().value());
+            if (status != null && !status.is5xxServerError()) {
+                return respond(status, clientMessage(exception, status), Map.of(), exception.getHeaders(), ex, request);
+            }
+        }
         return respond(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong", ex, request);
+    }
+
+    /**
+     * Spring's detail ("Method 'PATCH' is not supported.") is written for the
+     * caller and names nothing internal; fall back to the reason phrase if it
+     * is absent.
+     */
+    private static String clientMessage(ErrorResponse spring, HttpStatus status) {
+        String detail = spring.getBody().getDetail();
+        return detail == null || detail.isBlank() ? status.getReasonPhrase() : detail;
     }
 
     private static ResponseEntity<ApiError> respond(
@@ -90,9 +115,24 @@ public class ApiExceptionHandler {
             Map<String, String> fieldErrors,
             Exception ex,
             HttpServletRequest request) {
+        return respond(status, message, fieldErrors, HttpHeaders.EMPTY, ex, request);
+    }
+
+    /**
+     * {@code headers} carries what the status obliges — the {@code Allow} list
+     * on a 405, {@code Accept} on a 415.
+     */
+    private static ResponseEntity<ApiError> respond(
+            HttpStatus status,
+            String message,
+            Map<String, String> fieldErrors,
+            HttpHeaders headers,
+            Exception ex,
+            HttpServletRequest request) {
 
         log(status, ex, request);
         return ResponseEntity.status(status)
+                .headers(headers)
                 .body(ApiError.of(
                         status.value(), status.getReasonPhrase(), message, request.getRequestURI(), fieldErrors));
     }

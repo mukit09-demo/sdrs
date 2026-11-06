@@ -4,19 +4,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.banyan.lab.sdrs.entity.NewsType;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponseException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * Each handler called directly: the status, the message the caller sees, and
@@ -167,6 +176,68 @@ class ApiExceptionHandlerTest {
                 new IllegalStateException("connection to db-primary:5432 refused"), request());
 
         ApiError body = assertError(response, HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+        assertThat(body.message()).doesNotContain("db-primary");
+    }
+
+    @Test
+    @DisplayName("an unknown path keeps Spring's 404 instead of becoming a 500")
+    void testIfUnknownPathReturnsNotFound() {
+        NoResourceFoundException ex = new NoResourceFoundException(HttpMethod.GET, PATH, "api/articles/kai-tak");
+
+        ApiError body = assertError(
+                handler.unexpected(ex, request()), HttpStatus.NOT_FOUND, ex.getBody().getDetail());
+        assertThat(body.message()).isNotBlank();
+    }
+
+    @Test
+    @DisplayName("an unsupported method is a 405 that carries the Allow header")
+    void testIfUnsupportedMethodReturnsMethodNotAllowedWithAllowHeader() {
+        HttpRequestMethodNotSupportedException ex =
+                new HttpRequestMethodNotSupportedException("PATCH", List.of("GET", "PUT", "DELETE"));
+
+        ResponseEntity<ApiError> response = handler.unexpected(ex, request());
+
+        assertError(response, HttpStatus.METHOD_NOT_ALLOWED, ex.getBody().getDetail());
+        assertThat(response.getHeaders().getFirst(HttpHeaders.ALLOW)).contains("GET", "PUT", "DELETE");
+    }
+
+    @Test
+    @DisplayName("an unsupported content type is a 415, not a 500")
+    void testIfUnsupportedMediaTypeReturns415() {
+        HttpMediaTypeNotSupportedException ex = new HttpMediaTypeNotSupportedException(
+                MediaType.TEXT_PLAIN, List.of(MediaType.APPLICATION_JSON));
+
+        ResponseEntity<ApiError> response = handler.unexpected(ex, request());
+
+        assertError(response, HttpStatus.UNSUPPORTED_MEDIA_TYPE, ex.getBody().getDetail());
+        assertThat(response.getHeaders().getAccept()).contains(MediaType.APPLICATION_JSON);
+    }
+
+    @Test
+    @DisplayName("a missing required parameter is a 400, not a 500")
+    void testIfMissingParameterReturnsBadRequest() {
+        MissingServletRequestParameterException ex = new MissingServletRequestParameterException("limit", "int");
+
+        assertError(handler.unexpected(ex, request()), HttpStatus.BAD_REQUEST, ex.getBody().getDetail());
+    }
+
+    @Test
+    @DisplayName("a Spring error response with no detail falls back to the reason phrase")
+    void testIfSpringErrorWithoutDetailUsesReasonPhrase() {
+        ErrorResponseException ex = new ErrorResponseException(HttpStatus.NOT_ACCEPTABLE);
+        ex.getBody().setDetail(null);
+
+        assertError(handler.unexpected(ex, request()), HttpStatus.NOT_ACCEPTABLE, "Not Acceptable");
+    }
+
+    @Test
+    @DisplayName("a Spring error response that is itself a 5xx stays a generic 500")
+    void testIfSpringServerErrorStaysGeneric() {
+        ErrorResponseException ex = new ErrorResponseException(HttpStatus.SERVICE_UNAVAILABLE);
+        ex.getBody().setDetail("pool exhausted on db-primary");
+
+        ApiError body = assertError(
+                handler.unexpected(ex, request()), HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
         assertThat(body.message()).doesNotContain("db-primary");
     }
 
