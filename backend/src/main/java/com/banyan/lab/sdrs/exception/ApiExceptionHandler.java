@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -21,11 +22,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+@Slf4j
 @RestControllerAdvice
 public class ApiExceptionHandler {
-
-    private static final org.slf4j.Logger log =
-            org.slf4j.LoggerFactory.getLogger(ApiExceptionHandler.class);
 
     /**
      * The unique columns, so a multi-word table ({@code news_article}) splits
@@ -204,14 +203,14 @@ public class ApiExceptionHandler {
             Exception ex,
             HttpServletRequest request) {
 
-        log(status, ex, request);
+        logFailure(status, ex, request);
         return ResponseEntity.status(status)
                 .headers(headers)
                 .body(ApiError.of(
                         status.value(), status.getReasonPhrase(), message, request.getRequestURI(), fieldErrors));
     }
 
-    private static void log(HttpStatus status, Exception ex, HttpServletRequest request) {
+    private static void logFailure(HttpStatus status, Exception ex, HttpServletRequest request) {
         if (status.is5xxServerError()) {
             log.error("Unhandled failure on {} {}", request.getMethod(), request.getRequestURI(), ex);
         } else {
