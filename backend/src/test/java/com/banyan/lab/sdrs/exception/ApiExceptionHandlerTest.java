@@ -4,11 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.banyan.lab.sdrs.entity.NewsType;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -239,6 +244,72 @@ class ApiExceptionHandlerTest {
         ApiError body = assertError(
                 handler.unexpected(ex, request()), HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
         assertThat(body.message()).doesNotContain("db-primary");
+    }
+
+    /** What Spring's JPA dialect hands back when Postgres refuses the commit. */
+    private static DataIntegrityViolationException integrity(ConstraintKind kind, String constraint) {
+        SQLException sql = new SQLException("ERROR: violates constraint \"" + constraint + "\" Detail: Key (slug)=(buildings)");
+        return new DataIntegrityViolationException(
+                "could not execute statement",
+                new ConstraintViolationException("could not execute statement", sql, "insert into market ...", kind, constraint));
+    }
+
+    @Test
+    @DisplayName("a unique-constraint race is a 409 naming the collection and column, not the SQL")
+    void testIfUniqueViolationReturnsConflictWithoutSql() {
+        ResponseEntity<ApiError> response =
+                handler.integrityViolation(integrity(ConstraintKind.UNIQUE, "uk_market_slug"), request());
+
+        ApiError body = assertError(response, HttpStatus.CONFLICT, "Another market already uses that slug");
+        assertThat(body.message()).doesNotContain("insert", "buildings");
+    }
+
+    @Test
+    @DisplayName("a multi-word table reads as words")
+    void testIfMultiWordTableReadsNaturally() {
+        assertError(
+                handler.integrityViolation(integrity(ConstraintKind.UNIQUE, "uk_news_article_slug"), request()),
+                HttpStatus.CONFLICT,
+                "Another news article already uses that slug");
+    }
+
+    @Test
+    @DisplayName("a unique constraint off the naming convention gets the generic wording")
+    void testIfUnconventionalConstraintGetsGenericMessage() {
+        assertThat(ApiExceptionHandler.uniqueMessage("market_pkey")).isEqualTo("That conflicts with an existing record");
+        assertThat(ApiExceptionHandler.uniqueMessage("uk_slug")).isEqualTo("That conflicts with an existing record");
+        assertThat(ApiExceptionHandler.uniqueMessage(null)).isEqualTo("That conflicts with an existing record");
+    }
+
+    @Test
+    @DisplayName("a DuplicateKeyException with no Hibernate cause is still a 409")
+    void testIfBareDuplicateKeyReturnsConflict() {
+        assertError(
+                handler.integrityViolation(new DuplicateKeyException("duplicate key"), request()),
+                HttpStatus.CONFLICT,
+                "That conflicts with an existing record");
+    }
+
+    @Test
+    @DisplayName("a foreign-key race is a 409")
+    void testIfForeignKeyViolationReturnsConflict() {
+        assertError(
+                handler.integrityViolation(integrity(ConstraintKind.FOREIGN_KEY, "fk_project_market_market"), request()),
+                HttpStatus.CONFLICT,
+                "It refers to something that no longer exists");
+    }
+
+    @Test
+    @DisplayName("a not-null or check violation is a validation gap, so it stays a generic 500")
+    void testIfNotNullViolationStaysServerError() {
+        assertError(
+                handler.integrityViolation(integrity(ConstraintKind.NOT_NULL, "market_name_nn"), request()),
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Something went wrong");
+        assertError(
+                handler.integrityViolation(new DataIntegrityViolationException("no cause"), request()),
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Something went wrong");
     }
 
     @Test

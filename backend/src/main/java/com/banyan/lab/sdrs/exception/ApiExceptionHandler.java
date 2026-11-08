@@ -2,7 +2,13 @@ package com.banyan.lab.sdrs.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +27,16 @@ public class ApiExceptionHandler {
     private static final org.slf4j.Logger log =
             org.slf4j.LoggerFactory.getLogger(ApiExceptionHandler.class);
 
+    /**
+     * The unique columns, so a multi-word table ({@code news_article}) splits
+     * from its column correctly. Add one here when a changeSet adds a new one.
+     */
+
+    private static final List<String> UNIQUE_COLUMNS = List.of("slug", "reference");
+
+    /** How every unique constraint's name starts — {@code uk_<table>_<column>}. */
+    private static final String UNIQUE_PREFIX = "uk_";
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiError> notFound(ResourceNotFoundException ex, HttpServletRequest request) {
         return respond(HttpStatus.NOT_FOUND, ex.getMessage(), ex, request);
@@ -29,6 +45,64 @@ public class ApiExceptionHandler {
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ApiError> duplicate(DuplicateResourceException ex, HttpServletRequest request) {
         return respond(HttpStatus.CONFLICT, ex.getMessage(), ex, request);
+    }
+
+    /**
+     * The database refused a write the service's own checks let through.
+     *
+     * <p>Every {@code create()} asks {@code existsBySlug} before it saves, but two
+     * requests for the same slug can both pass that check; the second then hits
+     * the unique constraint. Ids come from sequences, so the insert is deferred
+     * to commit and this surfaces from the transaction proxy rather than the
+     * service body — which is why it is handled here and not caught in each
+     * service. A foreign key is the same race from the other side: a project
+     * saved against a market another request has just deleted.
+     *
+     * <p>Both are conflicts with the current state, so 409, worded from the
+     * constraint name and never from the SQL. A not-null or check violation is
+     * not a race — it is a request that validation should have refused — so it
+     * stays a 500 and is logged as the bug it is.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> integrityViolation(
+            DataIntegrityViolationException ex, HttpServletRequest request) {
+
+        ConstraintViolationException violation = find(ex, ConstraintViolationException.class);
+        ConstraintKind kind = violation != null
+                ? violation.getKind()
+                : ex instanceof DuplicateKeyException ? ConstraintKind.UNIQUE : ConstraintKind.OTHER;
+        String constraint = violation != null ? violation.getConstraintName() : null;
+
+        return switch (kind) {
+            case UNIQUE -> respond(HttpStatus.CONFLICT, uniqueMessage(constraint), ex, request);
+            case FOREIGN_KEY -> respond(
+                    HttpStatus.CONFLICT, "It refers to something that no longer exists", ex, request);
+            default -> unexpected(ex, request);
+        };
+    }
+
+    /**
+     * {@code uk_<table>_<column>} — the convention every changeSet here follows —
+     * becomes "Another news article already uses that slug". Anything else gets
+     * the generic wording rather than a guess.
+     */
+    static String uniqueMessage(String constraint) {
+        if (constraint != null) {
+            String name = constraint.toLowerCase(Locale.ROOT);
+            for (String column : UNIQUE_COLUMNS) {
+                String suffix = "_" + column;
+                // The length check keeps at least one character of table between
+                // prefix and suffix: "uk_slug" matches both ends but has no table.
+                if (name.startsWith(UNIQUE_PREFIX)
+                        && name.endsWith(suffix)
+                        && name.length() > UNIQUE_PREFIX.length() + suffix.length()) {
+                    String table = name.substring(UNIQUE_PREFIX.length(), name.length() - suffix.length())
+                            .replace('_', ' ');
+                    return "Another %s already uses that %s".formatted(table, column);
+                }
+            }
+        }
+        return "That conflicts with an existing record";
     }
 
     /** Bean-validation failures on a {@code @Valid} request body. */
@@ -152,5 +226,18 @@ public class ApiExceptionHandler {
             current = current.getCause();
         }
         return current;
+    }
+
+    /** The first throwable of {@code type} in the cause chain, or null. */
+    private static <T extends Throwable> T find(Throwable throwable, Class<T> type) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (type.isInstance(current)) {
+                return type.cast(current);
+            }
+            Throwable cause = current.getCause();
+            current = cause == current ? null : cause;
+        }
+        return null;
     }
 }

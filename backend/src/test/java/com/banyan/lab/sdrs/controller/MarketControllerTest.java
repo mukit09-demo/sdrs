@@ -27,6 +27,7 @@ import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
@@ -162,5 +163,17 @@ class MarketControllerTest {
                 .andExpect(status().isUnsupportedMediaType())
                 .andExpect(jsonPath("$.status").value(415));
         verify(service, never()).create(any());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("two creates racing for one slug: the loser is a 409, not a 500")
+    void testIfSlugRaceIsConflict() throws Exception {
+        when(service.create(any())).thenThrow(new DuplicateKeyException("duplicate key value violates uk_market_slug"));
+
+        mvc.perform(post("/api/markets").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.message").value("That conflicts with an existing record"));
     }
 }
