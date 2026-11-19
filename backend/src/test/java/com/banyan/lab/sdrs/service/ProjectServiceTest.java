@@ -3,6 +3,7 @@ package com.banyan.lab.sdrs.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -493,6 +494,81 @@ class ProjectServiceTest {
             assertThat(existing.getMarkets()).isSameAs(marketCollection);
             assertThat(updated.marketSlugs()).containsExactly("rail");
             verify(repository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("changed references are cleared, flushed once, then re-added")
+        void testIfChangedReferencesAreFlushedBeforeBeingReAdded() {
+            Market a = CollectionTestData.market("a", "A");
+            Market b = CollectionTestData.market("b", "B");
+            Service x = serviceRow("x");
+            Service y = serviceRow("y");
+            Project existing = CollectionTestData.project();
+            existing.setMarkets(new ArrayList<>(List.of(a, b)));
+            existing.setServices(new ArrayList<>(List.of(x, y)));
+            when(repository.findBySlug(CollectionTestData.PROJECT_SLUG)).thenReturn(Optional.of(existing));
+            when(markets.findBySlugIn(any())).thenReturn(List.of(a, b));
+            when(services.findBySlugIn(any())).thenReturn(List.of(x, y));
+            // Both lists must already be empty when the one flush runs.
+            List<Integer> sizesAtFlush = new ArrayList<>();
+            doAnswer(invocation -> {
+                sizesAtFlush.add(existing.getMarkets().size());
+                sizesAtFlush.add(existing.getServices().size());
+                return null;
+            }).when(repository).flush();
+
+            service.update(
+                    CollectionTestData.PROJECT_SLUG, request(List.of("b", "a"), List.of("y", "x")));
+
+            assertThat(sizesAtFlush).containsExactly(0, 0);
+            assertThat(existing.getMarkets()).containsExactly(b, a);
+            assertThat(existing.getServices()).containsExactly(y, x);
+        }
+
+        @Test
+        @DisplayName("an unchanged reference list is left alone; only the changed one is rewritten")
+        void testIfOnlyChangedReferencesAreRewritten() {
+            Market a = CollectionTestData.market("a", "A");
+            Market b = CollectionTestData.market("b", "B");
+            Service x = serviceRow("x");
+            Project existing = CollectionTestData.project();
+            existing.setMarkets(new ArrayList<>(List.of(a, b)));
+            existing.setServices(new ArrayList<>(List.of(x)));
+            when(repository.findBySlug(CollectionTestData.PROJECT_SLUG)).thenReturn(Optional.of(existing));
+            when(markets.findBySlugIn(any())).thenReturn(List.of(a, b));
+            when(services.findBySlugIn(any())).thenReturn(List.of(x));
+            List<Integer> sizesAtFlush = new ArrayList<>();
+            doAnswer(invocation -> {
+                sizesAtFlush.add(existing.getMarkets().size());
+                sizesAtFlush.add(existing.getServices().size());
+                return null;
+            }).when(repository).flush();
+
+            service.update(CollectionTestData.PROJECT_SLUG, request(List.of("b", "a"), List.of("x")));
+
+            // Markets cleared for the flush; services untouched throughout.
+            assertThat(sizesAtFlush).containsExactly(0, 1);
+            assertThat(existing.getMarkets()).containsExactly(b, a);
+            assertThat(existing.getServices()).containsExactly(x);
+        }
+
+        @Test
+        @DisplayName("nothing is flushed when neither reference list changed")
+        void testIfUnchangedReferencesAreNotFlushed() {
+            Project existing = CollectionTestData.project();
+            Market market = existing.getMarkets().getFirst();
+            Service row = existing.getServices().getFirst();
+            when(repository.findBySlug(CollectionTestData.PROJECT_SLUG)).thenReturn(Optional.of(existing));
+            when(markets.findBySlugIn(any())).thenReturn(List.of(market));
+            when(services.findBySlugIn(any())).thenReturn(List.of(row));
+
+            service.update(
+                    CollectionTestData.PROJECT_SLUG,
+                    request(List.of(market.getSlug()), List.of(row.getSlug())));
+
+            assertThat(existing.getMarkets()).containsExactly(market);
+            assertThat(existing.getServices()).containsExactly(row);
+            verify(repository, never()).flush();
         }
 
         @Test

@@ -11,7 +11,7 @@ export const LOGIN_FIELDS = ["username", "password"] as const;
 export type LoginField = (typeof LOGIN_FIELDS)[number];
 
 export const loginRules: Record<LoginField, TextRule> = {
-  username: { label: "Username", required: true, maxLength: 254 },
+  username: { label: "Username", required: true, maxLength: 200 },
   password: { label: "Password", required: true, maxLength: 512 },
 };
 

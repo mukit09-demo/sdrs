@@ -149,4 +149,23 @@ class EnquiryControllerTest {
 
         verify(service, never()).submit(any());
     }
+
+    @Test
+    @DisplayName("a message over 2000 characters is a 400, so the public form cannot store unbounded text")
+    void testIfOverlongMessageIsRejected() throws Exception {
+        mvc.perform(post("/api/enquiries")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Priya Raman",
+                                  "email": "priya.raman@example.org",
+                                  "topic": "Coastal resilience",
+                                  "message": "%s"
+                                }
+                                """.formatted("x".repeat(2001))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.message").exists());
+
+        verify(service, never()).submit(any());
+    }
 }

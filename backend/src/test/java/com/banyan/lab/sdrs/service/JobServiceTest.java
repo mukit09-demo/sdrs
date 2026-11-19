@@ -31,7 +31,9 @@ import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Sort;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /** The id is the database's: a client may not choose one, or move one. */
 @ExtendWith(MockitoExtension.class)
@@ -99,6 +101,18 @@ class JobServiceTest {
         assertThat(today.getValue()).isBetween(before, after);
         assertThat(sort.getValue()).isEqualTo(Sort.by("id"));
         assertThat(openings).extracting(JobResponse::id).containsExactly(CollectionTestData.JOB_ID);
+    }
+
+    @Test
+    @DisplayName("the openings cache key is today's UTC date, so an expired deadline drops out the next day")
+    void testIfOpeningsCacheKeyIsTodayInUtc() throws NoSuchMethodException {
+        String key = JobService.class.getMethod("openings").getAnnotation(Cacheable.class).key();
+        LocalDate before = LocalDate.now(ZoneOffset.UTC);
+
+        Object evaluated = new SpelExpressionParser().parseExpression(key).getValue();
+
+        LocalDate after = LocalDate.now(ZoneOffset.UTC);
+        assertThat(evaluated).isIn(before.toString(), after.toString());
     }
 
     @Test

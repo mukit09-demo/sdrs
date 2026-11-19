@@ -41,8 +41,15 @@ public class JobService {
     /**
      * Today in UTC, matching {@code todayIso()} in {@code jobs.ts}, so the two
      * sources agree on which day a deadline falls.
+     *
+     * <p>Cached per UTC day, not under one fixed key. Which jobs are open
+     * depends on the date as well as on the rows, so a single entry would keep
+     * listing a role after its deadline until the next job write or the TTL.
+     * Each day gets a fresh entry, and the old ones expire through the TTL.
      */
-    @Cacheable(cacheNames = CacheNames.OPENINGS, key = "'all'")
+    @Cacheable(
+            cacheNames = CacheNames.OPENINGS,
+            key = "T(java.time.LocalDate).now(T(java.time.ZoneOffset).UTC).toString()")
     public List<JobResponse> openings() {
         return mapper.toResponses(
                 repository.findOpenings(JobStatus.OPEN, LocalDate.now(ZoneOffset.UTC), ORDER));

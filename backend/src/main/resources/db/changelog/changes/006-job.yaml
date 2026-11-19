@@ -96,8 +96,12 @@ databaseChangeLog:
       id: "006-job-03-job-check-constraints"
       author: "mukit09"
       comment: >-
-        A deadline before the posting date is always a typo. The status values
-        are JobStatus's constants, not its labels.
+        A deadline before the posting date is always a typo. The status,
+        employment_type and level values are the constants of JobStatus,
+        EmploymentType and CareerLevel, not their labels — FULL_TIME in the
+        column, "Full time" on the wire. A value outside them, written behind
+        the API's back, would otherwise make Hibernate fail to load every job
+        list that row is in.
       changes:
         - sql:
             sql: |-
@@ -106,12 +110,22 @@ databaseChangeLog:
                   check (status in ('DRAFT', 'OPEN', 'CLOSED'));
 
               alter table job
+                  add constraint job_employment_type_known
+                  check (employment_type in ('FULL_TIME', 'PART_TIME', 'CONTRACT'));
+
+              alter table job
+                  add constraint job_level_known
+                  check (level in ('GRADUATE', 'EXPERIENCED', 'SENIOR', 'LEADERSHIP'));
+
+              alter table job
                   add constraint job_deadline_after_posted
                   check (deadline is null or deadline >= posted_at);
       rollback:
         - sql:
             sql: |-
               alter table job drop constraint job_deadline_after_posted;
+              alter table job drop constraint job_level_known;
+              alter table job drop constraint job_employment_type_known;
               alter table job drop constraint job_status_known;
   - changeSet:
       id: "006-job-04-create-job-indexes"

@@ -13,20 +13,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * The enquiry inbox: one public write, one admin read.
- *
- * <p>Not cached, unlike {@link NewsService}. The content caches pay off because
- * the public site reads them constantly and an editor writes rarely; an inbox
- * inverts that — every public submission would evict it, and the only reader is
- * one operator. A cache here would cost an eviction on the hot path to save a
- * query on the cold one.
- *
- * <p>Both methods are {@code @Transactional} with the mapper called inside, for
- * the reason in {@code AGENTS.md}: {@code open-in-view} is false, so returning
- * an entity and mapping it in the controller would work until something lazy
- * was touched.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

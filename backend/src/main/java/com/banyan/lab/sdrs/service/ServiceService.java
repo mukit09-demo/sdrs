@@ -76,8 +76,19 @@ public class ServiceService {
         Service existing = require(slug);
         List<Market> related = relatedMarkets(request);
         mapper.update(request, existing);
-        existing.getRelatedMarkets().clear();
-        existing.getRelatedMarkets().addAll(related);
+
+        // Delete the old links and flush before adding the new ones. Without the
+        // flush Hibernate rewrites service_market slot by slot, so a reorder or a
+        // removal from the front briefly puts one market in two slots, and
+        // uk_service_market rejects that UPDATE. Skipped when nothing changed, so
+        // an edit to the other fields does not rewrite every link. equals() is by
+        // identity, which holds here: one persistence context hands back the same
+        // Market instance for the same row.
+        if (!existing.getRelatedMarkets().equals(related)) {
+            existing.getRelatedMarkets().clear();
+            repository.flush();
+            existing.getRelatedMarkets().addAll(related);
+        }
         return mapper.toResponse(existing);
     }
 

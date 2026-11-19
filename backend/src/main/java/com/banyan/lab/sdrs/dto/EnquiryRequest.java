@@ -16,10 +16,15 @@ import jakarta.validation.constraints.Size;
  * <p>No {@code reference} and no {@code receivedAt}: the service mints the one
  * and Hibernate sets the other. A caller supplying either would be choosing its
  * own primary business key.
+ *
+ * <p>{@code message} is capped at 2000, the same as {@code enquiryRules} in
+ * {@code core-web/src/lib/content/enquiry.ts}. The column is unbounded
+ * {@code text}, so without this an unauthenticated caller could store a message
+ * of any size.
  */
 public record EnquiryRequest(
         @NotBlank @Size(max = 200) String name,
         @NotBlank @Email @Size(max = 200) String email,
         @Size(max = 200) String organisation,
         @NotBlank @Size(max = 120) String topic,
-        @NotBlank String message) {}
+        @NotBlank @Size(max = 2000) String message) {}

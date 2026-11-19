@@ -3,6 +3,7 @@ package com.banyan.lab.sdrs.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -156,6 +157,46 @@ class ServiceServiceTest {
         assertThat(existing.getRelatedMarkets()).extracting(Market::getSlug).containsExactly("rail");
         assertThat(existing.getRelatedMarkets()).isSameAs(related);
         assertThat(updated.relatedMarketSlugs()).containsExactly("rail");
+    }
+
+    @Test
+    @DisplayName("changed related markets are cleared and flushed before the new ones are added")
+    void testIfUpdateFlushesTheClearedMarketsBeforeAddingTheNewOnes() {
+        Market a = CollectionTestData.market("a", "A");
+        Market b = CollectionTestData.market("b", "B");
+        Service existing = CollectionTestData.service();
+        existing.setRelatedMarkets(new ArrayList<>(List.of(a, b)));
+        when(repository.findBySlug(CollectionTestData.SERVICE_SLUG)).thenReturn(Optional.of(existing));
+        when(markets.findBySlugIn(any())).thenReturn(List.of(a, b));
+        // The point of the flush: the old links are deleted before any new one
+        // is written, so a reorder never puts one market in two slots.
+        List<List<Market>> atFlush = new ArrayList<>();
+        doAnswer(invocation -> {
+            atFlush.add(new ArrayList<>(existing.getRelatedMarkets()));
+            return null;
+        }).when(repository).flush();
+
+        service.update(
+                CollectionTestData.SERVICE_SLUG, request(CollectionTestData.SERVICE_SLUG, List.of("b", "a")));
+
+        assertThat(atFlush).containsExactly(List.of());
+        assertThat(existing.getRelatedMarkets()).containsExactly(b, a);
+    }
+
+    @Test
+    @DisplayName("unchanged related markets are not rewritten")
+    void testIfUpdateLeavesUnchangedMarketsAlone() {
+        Service existing = CollectionTestData.service();
+        Market market = existing.getRelatedMarkets().getFirst();
+        when(repository.findBySlug(CollectionTestData.SERVICE_SLUG)).thenReturn(Optional.of(existing));
+        when(markets.findBySlugIn(any())).thenReturn(List.of(market));
+
+        service.update(
+                CollectionTestData.SERVICE_SLUG,
+                request(CollectionTestData.SERVICE_SLUG, List.of(market.getSlug())));
+
+        assertThat(existing.getRelatedMarkets()).containsExactly(market);
+        verify(repository, never()).flush();
     }
 
     @Test

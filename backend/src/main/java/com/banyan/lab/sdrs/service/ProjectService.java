@@ -121,10 +121,28 @@ public class ProjectService {
         List<Service> resolvedServices = servicesOf(request);
 
         mapper.update(request, existing);
-        existing.getMarkets().clear();
-        existing.getMarkets().addAll(resolvedMarkets);
-        existing.getServices().clear();
-        existing.getServices().addAll(resolvedServices);
+
+        // Clear, flush, then add — see ServiceService.update for why the flush
+        // matters (uk_project_market and uk_project_service here). Both lists
+        // are cleared before the one flush, and a list that did not change is
+        // left alone.
+        boolean marketsChanged = !existing.getMarkets().equals(resolvedMarkets);
+        boolean servicesChanged = !existing.getServices().equals(resolvedServices);
+        if (marketsChanged) {
+            existing.getMarkets().clear();
+        }
+        if (servicesChanged) {
+            existing.getServices().clear();
+        }
+        if (marketsChanged || servicesChanged) {
+            repository.flush();
+        }
+        if (marketsChanged) {
+            existing.getMarkets().addAll(resolvedMarkets);
+        }
+        if (servicesChanged) {
+            existing.getServices().addAll(resolvedServices);
+        }
         return mapper.toResponse(existing);
     }
 

@@ -53,12 +53,19 @@ export function validateText(value: string, rule: TextRule): string | undefined 
   return rule.refine?.(value);
 }
 
-/** Rule fragment for email fields: `{ ...emailRule("Email") }`. */
+/**
+ * Rule fragment for email fields: `{ ...emailRule("Email") }`.
+ *
+ * 200 is the project-wide email limit, matching the backend's `@Size(max = 200)`
+ * and `varchar(200)` columns. SMTP allows up to 254, but no address a person
+ * types into a form comes near 200, and one number everywhere means the form
+ * and the API can never disagree.
+ */
 export function emailRule(label: string): TextRule {
   return {
     label,
     required: true,
-    maxLength: 254,
+    maxLength: 200,
     refine: (value) =>
       EMAIL_PATTERN.test(value) ? undefined : "Enter a valid email address.",
   };

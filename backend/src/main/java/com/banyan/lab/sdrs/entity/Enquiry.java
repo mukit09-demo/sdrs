@@ -57,7 +57,9 @@ public class Enquiry {
     @Column(name = "topic", length = 120, nullable = false)
     private String topic;
 
+    /** Capped at 2000 to match {@code EnquiryRequest}; the column itself is unbounded. */
     @NotBlank
+    @Size(max = 2000)
     @Column(name = "message", nullable = false, columnDefinition = "text")
     private String message;
 
