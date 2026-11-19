@@ -28,16 +28,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-/**
- * The enquiry HTTP contract, and the access rule that protects it.
- *
- * <p>The read is the only endpoint in this backend that serves personal data —
- * names, email addresses and message bodies — and it is authorised purely by
- * sitting under {@code /api/admin/}, because {@code SecurityConfig} permits
- * every {@code GET /api/**} before any enquiry-specific rule is reached. There
- * is nothing in {@link EnquiryController} that would fail if the path moved, so
- * {@code anonymousInboxReadIsRejected} is the test holding it there.
- */
 @WebMvcTest(EnquiryController.class)
 @Import(SecurityConfig.class)
 @TestPropertySource(properties = {
@@ -81,9 +71,6 @@ class EnquiryControllerTest {
         mvc.perform(get("/api/admin/enquiries"))
                 .andExpect(status().isUnauthorized());
 
-        // Not merely "did not return 200": the service must never have been
-        // asked, so no enquiry was loaded out of the database to be discarded
-        // by a later filter.
         verify(service, never()).list();
     }
 
@@ -104,10 +91,6 @@ class EnquiryControllerTest {
                 .andExpect(jsonPath("$[0].topic").value("Coastal resilience"))
                 .andExpect(jsonPath("$[0].message").value(
                         "We are scoping a breakwater refurbishment and would like to talk."))
-                // An instant with an offset, not an epoch number and not a
-                // zoneless local string. The CMS converts this to the
-                // operator's own zone, so either drift renders hours out
-                // instead of failing.
                 .andExpect(jsonPath("$[0].receivedAt").value("2026-10-09T16:04:21Z"));
     }
 
@@ -122,8 +105,6 @@ class EnquiryControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.reference").value("ENQ-M7X2Y4"))
                 .andExpect(jsonPath("$.receivedAt").value("2026-10-09T16:04:21Z"))
-                // The receipt is not the enquiry. A public endpoint that echoed
-                // the submission back would reflect whatever was posted to it.
                 .andExpect(jsonPath("$.message").doesNotExist())
                 .andExpect(jsonPath("$.email").doesNotExist())
                 .andExpect(jsonPath("$.name").doesNotExist());

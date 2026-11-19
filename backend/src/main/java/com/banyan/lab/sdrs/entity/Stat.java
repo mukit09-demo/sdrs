@@ -7,17 +7,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
-/**
- * A headline figure — {@code { value: "714", unit: "MW", label: "…" }}.
- *
- * <p>{@code value} is a string, not a number: the content says "714", "1,200+"
- * and "Top 3", and the UI renders it verbatim. Making it numeric here would mean
- * the CMS could not express two of those three.
- *
- * <p>Used from {@code @ElementCollection}, so the column names are unqualified
- * and the owning table supplies the context. {@code stat_value} rather than
- * {@code value} because {@code VALUE} is a reserved word in standard SQL.
- */
 @Embeddable
 @Getter
 @Setter

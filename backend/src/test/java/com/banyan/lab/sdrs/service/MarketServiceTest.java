@@ -30,7 +30,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 
-/** Plain CRUD by slug: insertion order, conflict on create, slug fixed on update. */
 @ExtendWith(MockitoExtension.class)
 class MarketServiceTest {
 

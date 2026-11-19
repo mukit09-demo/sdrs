@@ -37,24 +37,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
-/**
- * The service's rules, with a mocked repository.
- *
- * <p>The real mapper is used rather than a mock: it is generated code with no
- * dependencies, and stubbing it would mean these tests passed while the
- * mapping was broken.
- */
 @ExtendWith(MockitoExtension.class)
 class NewsServiceTest {
 
     @Mock
     private NewsRepository repository;
 
-    /**
-     * {@code any(Specification.class)} is a raw type, which costs an
-     * unchecked-conversion warning at every call site. One typed matcher
-     * instead.
-     */
     private static Specification<NewsArticle> anySpec() {
         return ArgumentMatchers.any();
     }
@@ -86,7 +74,6 @@ class NewsServiceTest {
         assertThatThrownBy(() -> service().create(NewsTestData.request()))
                 .isInstanceOf(DuplicateResourceException.class);
 
-        // The important half: nothing was written.
         verify(repository, never()).save(any());
     }
 
@@ -101,7 +88,6 @@ class NewsServiceTest {
         ArgumentCaptor<Sort> sort = ArgumentCaptor.forClass(Sort.class);
         verify(repository).findAll(anySpec(), sort.capture());
 
-        // getOrderFor is null for a property the sort does not mention.
         Sort.Order publishedAt = sort.getValue().getOrderFor("publishedAt");
         Sort.Order slug = sort.getValue().getOrderFor("slug");
         assertThat(publishedAt).isNotNull();
@@ -301,7 +287,6 @@ class NewsServiceTest {
 
         assertThat(existing.getBody()).isSameAs(body).first().asString().startsWith("Kai Tak Sports Park");
         assertThat(existing.getTags()).isSameAs(tags);
-        // The audit pair belongs to Hibernate and survives an update.
         assertThat(existing.getCreatedAt()).isEqualTo(NewsTestData.CREATED);
         verify(repository, never()).save(any());
     }

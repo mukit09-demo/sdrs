@@ -26,13 +26,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-/**
- * Reads and writes for projects.
- *
- * <p>{@link #list} reproduces {@code listProjects} in {@code mock.repository.ts}:
- * explicit slugs win and keep the caller's order; otherwise filter by market and
- * service, newest year first; then limit.
- */
 @org.springframework.stereotype.Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -40,7 +33,6 @@ public class ProjectService {
 
     private static final String RESOURCE = "project";
 
-    /** Newest first, slug as the tiebreaker so {@code limit} is stable. */
     private static final Sort NEWEST_FIRST =
             Sort.by(Sort.Direction.DESC, "year").and(Sort.by(Sort.Direction.ASC, "slug"));
 
@@ -62,7 +54,6 @@ public class ProjectService {
             return mapper.toResponses(limited ? ordered.stream().limit(limit).toList() : ordered);
         }
 
-        // An unknown market or service matches nothing, as it does in the mock.
         Optional<Market> market = Optional.empty();
         if (StringUtils.hasText(marketSlug)) {
             market = markets.findBySlug(marketSlug);
@@ -107,7 +98,6 @@ public class ProjectService {
         return mapper.toResponse(repository.save(project));
     }
 
-    /** The body's slug must match the path — see {@link NewsService#update}. */
     @Transactional
     @Caching(evict = {
         @CacheEvict(cacheNames = CacheNames.PROJECTS, allEntries = true),
@@ -122,10 +112,6 @@ public class ProjectService {
 
         mapper.update(request, existing);
 
-        // Clear, flush, then add — see ServiceService.update for why the flush
-        // matters (uk_project_market and uk_project_service here). Both lists
-        // are cleared before the one flush, and a list that did not change is
-        // left alone.
         boolean marketsChanged = !existing.getMarkets().equals(resolvedMarkets);
         boolean servicesChanged = !existing.getServices().equals(resolvedServices);
         if (marketsChanged) {
@@ -170,7 +156,6 @@ public class ProjectService {
                 request.serviceSlugs(), services::findBySlugIn, Service::getSlug, "service");
     }
 
-    /** In the order asked for; a slug that names nothing is skipped, as in the mock. */
     private static List<Project> orderedBySlug(List<String> slugs, List<Project> found) {
         return slugs.stream()
                 .distinct()
@@ -178,11 +163,6 @@ public class ProjectService {
                 .toList();
     }
 
-    /**
-     * {@code isMember} rather than a join, for the reason on
-     * {@code NewsService.filter}: {@code project_market} is keyed on
-     * {@code (project_id, position)}, so a join can return a project twice.
-     */
     private static Specification<Project> filter(Market market, Service service) {
         return (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();

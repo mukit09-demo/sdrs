@@ -23,13 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-/**
- * Reads and writes for news.
- *
- * <p>The read methods reproduce what {@code mock.repository.ts} does, so the
- * site renders identically either side of the {@code NEXT_PUBLIC_CONTENT_SOURCE}
- * switch: newest first, then tag, then exclude, then limit.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -37,21 +30,12 @@ public class NewsService {
 
     private static final String RESOURCE = "article";
 
-    /**
-     * Newest first. The slug tiebreaker is not decoration — two articles
-     * published on the same day would otherwise come back in whatever order the
-     * database felt like, and paging with {@code limit} would be unstable.
-     */
     private static final Sort NEWEST_FIRST =
             Sort.by(Sort.Direction.DESC, "publishedAt").and(Sort.by(Sort.Direction.ASC, "slug"));
 
     private final NewsRepository repository;
     private final NewsMapper mapper;
 
-    /**
-     * Summaries, not full articles: a list renders cards, which never show the
-     * body, so it is not loaded. {@link #get} is where the body comes from.
-     */
     @Cacheable(cacheNames = CacheNames.ARTICLES, key = "{#tag, #excludeSlug, #limit}")
     public List<ArticleSummaryResponse> list(String tag, String excludeSlug, Integer limit) {
         Specification<NewsArticle> specification = filter(tag, excludeSlug);
@@ -81,14 +65,6 @@ public class NewsService {
         return mapper.toResponse(repository.save(mapper.toEntity(request)));
     }
 
-    /**
-     * Replaces the article at {@code slug}.
-     *
-     * <p>The body's slug must match the path. The CMS always PUTs to the id it
-     * is writing — a rename is a POST of the new slug plus a DELETE of the old,
-     * not a PUT that moves one — so a mismatch is a caller bug, and silently
-     * honouring either value would make it ambiguous which one won.
-     */
     @Transactional
     @Caching(evict = {
         @CacheEvict(cacheNames = CacheNames.ARTICLES, allEntries = true),
@@ -119,21 +95,6 @@ public class NewsService {
                 .orElseThrow(() -> new ResourceNotFoundException(RESOURCE, slug));
     }
 
-    /**
-     * {@code tag} filters in the database rather than in Java, and
-     * {@code exclude} is the "related reading" case — show me recent articles,
-     * but not the one already on screen.
-     *
-     * <p>{@code isMember} rather than {@code root.join("tags")}, which is what
-     * this was. A join multiplies the root row by every matching tag row, and
-     * {@code news_article_tag} is keyed on {@code (article_id, position)} — so
-     * an article carrying the same tag twice came back twice, and {@code limit}
-     * then returned fewer distinct articles than asked for. {@code isMember}
-     * compiles to an {@code exists} subquery: one row per article, whatever the
-     * tags do. It also keeps the filter away from the collection Hibernate
-     * fetches, so there is no way for a restricted join to populate
-     * {@code tags} with only the matched value.
-     */
     private static Specification<NewsArticle> filter(String tag, String excludeSlug) {
         return (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();

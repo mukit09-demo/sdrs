@@ -24,7 +24,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-/** The {@code Service} contract. */
 @WebMvcTest(ServiceController.class)
 @Import(SecurityConfig.class)
 @TestPropertySource(properties = {
@@ -64,15 +63,12 @@ class ServiceControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.slug").value("structural-engineering"))
                 .andExpect(jsonPath("$.name").value("Structural Engineering"))
-                // The label, not DESIGN_AND_ENGINEERING.
                 .andExpect(jsonPath("$.category").value("Design & Engineering"))
                 .andExpect(jsonPath("$.tagline").exists())
                 .andExpect(jsonPath("$.description").exists())
                 .andExpect(jsonPath("$.capabilities[0]").value("Tall and supertall buildings"))
-                // Slugs on the wire, not embedded markets.
                 .andExpect(jsonPath("$.relatedMarketSlugs[0]").value("buildings"))
                 .andExpect(jsonPath("$.relatedMarkets").doesNotExist())
-                // No image yet: the key is absent, not null.
                 .andExpect(jsonPath("$.imageUrl").doesNotExist());
     }
 

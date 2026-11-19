@@ -35,7 +35,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Sort;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
-/** The id is the database's: a client may not choose one, or move one. */
 @ExtendWith(MockitoExtension.class)
 class JobServiceTest {
 
@@ -97,7 +96,6 @@ class JobServiceTest {
         ArgumentCaptor<LocalDate> today = ArgumentCaptor.forClass(LocalDate.class);
         ArgumentCaptor<Sort> sort = ArgumentCaptor.forClass(Sort.class);
         verify(repository).findOpenings(eq(JobStatus.OPEN), today.capture(), sort.capture());
-        // Bracketed, so the test does not flake across a UTC midnight.
         assertThat(today.getValue()).isBetween(before, after);
         assertThat(sort.getValue()).isEqualTo(Sort.by("id"));
         assertThat(openings).extracting(JobResponse::id).containsExactly(CollectionTestData.JOB_ID);

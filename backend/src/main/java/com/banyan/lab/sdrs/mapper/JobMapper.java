@@ -9,7 +9,6 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 
-/** Entity ↔ DTO for jobs. The id is the database's, in both directions. */
 @Mapper(componentModel = "spring", unmappedSourcePolicy = ReportingPolicy.IGNORE)
 public interface JobMapper {
 

@@ -30,11 +30,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-/**
- * The {@code JobOpening} contract, and the path split that keeps drafts private:
- * nothing in the controller would fail if the every-status read moved off
- * {@code /api/admin/}, so this test is what holds it there.
- */
 @WebMvcTest(JobController.class)
 @Import(SecurityConfig.class)
 @TestPropertySource(properties = {
@@ -76,12 +71,10 @@ class JobControllerTest {
                 .andExpect(jsonPath("$[0].title").exists())
                 .andExpect(jsonPath("$[0].discipline").value("Structural engineering"))
                 .andExpect(jsonPath("$[0].location").value("London, United Kingdom"))
-                // Labels, not constants.
                 .andExpect(jsonPath("$[0].employmentType").value("Full time"))
                 .andExpect(jsonPath("$[0].level").value("Senior"))
                 .andExpect(jsonPath("$[0].status").value("Open"))
                 .andExpect(jsonPath("$[0].postedAt").value("2026-09-12"))
-                // Open until filled: absent, because isOpening tests for undefined.
                 .andExpect(jsonPath("$[0].deadline").doesNotExist());
 
         verify(service, never()).list();

@@ -18,25 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class EnquiryService {
 
-    /**
-     * Newest first. The id tiebreaker is not decoration: two enquiries can share
-     * a {@code received_at} — the column is microsecond-precision but a batch
-     * import or a double submit can still collide — and without it their order
-     * would be whatever the database felt like, which makes the inbox reshuffle
-     * between reloads.
-     */
     private static final Sort NEWEST_FIRST =
             Sort.by(Sort.Direction.DESC, "receivedAt").and(Sort.by(Sort.Direction.DESC, "id"));
 
-    /**
-     * Ambiguity-free alphabet: no {@code I}, {@code O}, {@code 0} or {@code 1},
-     * because a reference gets read down a phone and typed back in.
-     */
     private static final char[] REFERENCE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".toCharArray();
     private static final int REFERENCE_LENGTH = 6;
     private static final String REFERENCE_PREFIX = "ENQ-";
 
-    /** Collisions are vanishing at 32^6, but "vanishing" is not "never". */
     private static final int REFERENCE_ATTEMPTS = 5;
 
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -44,17 +32,10 @@ public class EnquiryService {
     private final EnquiryRepository repository;
     private final EnquiryMapper mapper;
 
-    /** The whole inbox, newest first. Admin-only — see {@code SecurityConfig}. */
     public List<EnquiryResponse> list() {
         return mapper.toResponses(repository.findAll(NEWEST_FIRST));
     }
 
-    /**
-     * Stores a submission and returns the receipt.
-     *
-     * <p>The reference is minted here rather than derived from the id, so it
-     * leaks neither how many enquiries exist nor the order they arrived in.
-     */
     @Transactional
     public EnquiryReceiptResponse submit(EnquiryRequest request) {
         Enquiry enquiry = mapper.toEntity(request);

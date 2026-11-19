@@ -9,7 +9,6 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** {@code replaceWith}: every editable field copied, identity and collection instances kept. */
 class NewsArticleTest {
 
     private static NewsArticle incoming() {

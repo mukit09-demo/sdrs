@@ -14,14 +14,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/**
- * The label is what goes on the wire and the constant is what goes in the
- * column; {@code fromLabel} has to accept both, forgivingly, and refuse anything
- * else with a message naming the valid labels.
- */
 class LabelledTest {
 
-    /** Every {@link Labelled} enum, with its {@code @JsonCreator}. */
     static Stream<Arguments> everyConstant() {
         return Stream.of(
                         constants(NewsType.class, NewsType::fromLabel),

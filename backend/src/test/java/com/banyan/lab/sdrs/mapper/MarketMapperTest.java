@@ -15,7 +15,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
-/** Market ↔ DTO, including the embeddable stats and the in-place update. */
 class MarketMapperTest {
 
     private final MarketMapper mapper = Mappers.getMapper(MarketMapper.class);
@@ -74,7 +73,6 @@ class MarketMapperTest {
         assertThat(existing.getName()).isEqualTo("Energy");
         assertThat(existing.getCapabilities()).isSameAs(capabilities)
                 .containsExactly("Grid connection", "Storage");
-        // An empty list in the request empties the stats rather than keeping the old ones.
         assertThat(existing.getStats()).isSameAs(stats).isEmpty();
     }
 

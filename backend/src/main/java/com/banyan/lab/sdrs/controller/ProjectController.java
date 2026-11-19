@@ -19,11 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * {@code /api/projects} — the endpoints {@code http.repository.ts} calls for projects.
- * The query parameter names ({@code market}, {@code service}, {@code slugs},
- * {@code limit}) come from there. Access rules are in {@code config/SecurityConfig.java}, not here.
- */
 @RestController
 @RequestMapping("/api/projects")
 @RequiredArgsConstructor
@@ -31,10 +26,6 @@ public class ProjectController {
 
     private final ProjectService service;
 
-    /**
-     * {@code slugs} arrives comma-separated ({@code ?slugs=a,b}), which Spring
-     * splits into the list.
-     */
     @GetMapping
     public List<ProjectResponse> list(
             @RequestParam(name = "market", required = false) String marketSlug,
@@ -55,7 +46,6 @@ public class ProjectController {
         return ResponseEntity.created(URI.create("/api/projects/" + created.slug())).body(created);
     }
 
-    /** 204, as on {@code NewsController.update}. */
     @PutMapping("/{slug}")
     public ResponseEntity<Void> update(
             @PathVariable String slug, @Valid @RequestBody ProjectRequest request) {

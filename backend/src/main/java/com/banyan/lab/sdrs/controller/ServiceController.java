@@ -17,10 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * {@code /api/services} — the endpoints {@code http.repository.ts} calls for services.
- * Access rules are in {@code config/SecurityConfig.java}, not here.
- */
 @RestController
 @RequestMapping("/api/services")
 @RequiredArgsConstructor
@@ -44,7 +40,6 @@ public class ServiceController {
         return ResponseEntity.created(URI.create("/api/services/" + created.slug())).body(created);
     }
 
-    /** 204, as on {@code NewsController.update}. */
     @PutMapping("/{slug}")
     public ResponseEntity<Void> update(
             @PathVariable String slug, @Valid @RequestBody ServiceRequest request) {

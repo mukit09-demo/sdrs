@@ -15,7 +15,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
-/** The id is the database's, in both directions. */
 class JobMapperTest {
 
     private final JobMapper mapper = Mappers.getMapper(JobMapper.class);

@@ -26,14 +26,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
-    /**
-     * The unique columns, so a multi-word table ({@code news_article}) splits
-     * from its column correctly. Add one here when a changeSet adds a new one.
-     */
-
     private static final List<String> UNIQUE_COLUMNS = List.of("slug", "reference");
 
-    /** How every unique constraint's name starts — {@code uk_<table>_<column>}. */
     private static final String UNIQUE_PREFIX = "uk_";
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -46,22 +40,6 @@ public class ApiExceptionHandler {
         return respond(HttpStatus.CONFLICT, ex.getMessage(), ex, request);
     }
 
-    /**
-     * The database refused a write the service's own checks let through.
-     *
-     * <p>Every {@code create()} asks {@code existsBySlug} before it saves, but two
-     * requests for the same slug can both pass that check; the second then hits
-     * the unique constraint. Ids come from sequences, so the insert is deferred
-     * to commit and this surfaces from the transaction proxy rather than the
-     * service body — which is why it is handled here and not caught in each
-     * service. A foreign key is the same race from the other side: a project
-     * saved against a market another request has just deleted.
-     *
-     * <p>Both are conflicts with the current state, so 409, worded from the
-     * constraint name and never from the SQL. A not-null or check violation is
-     * not a race — it is a request that validation should have refused — so it
-     * stays a 500 and is logged as the bug it is.
-     */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> integrityViolation(
             DataIntegrityViolationException ex, HttpServletRequest request) {
@@ -80,18 +58,11 @@ public class ApiExceptionHandler {
         };
     }
 
-    /**
-     * {@code uk_<table>_<column>} — the convention every changeSet here follows —
-     * becomes "Another news article already uses that slug". Anything else gets
-     * the generic wording rather than a guess.
-     */
     static String uniqueMessage(String constraint) {
         if (constraint != null) {
             String name = constraint.toLowerCase(Locale.ROOT);
             for (String column : UNIQUE_COLUMNS) {
                 String suffix = "_" + column;
-                // The length check keeps at least one character of table between
-                // prefix and suffix: "uk_slug" matches both ends but has no table.
                 if (name.startsWith(UNIQUE_PREFIX)
                         && name.endsWith(suffix)
                         && name.length() > UNIQUE_PREFIX.length() + suffix.length()) {
@@ -104,7 +75,6 @@ public class ApiExceptionHandler {
         return "That conflicts with an existing record";
     }
 
-    /** Bean-validation failures on a {@code @Valid} request body. */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> invalidBody(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
@@ -117,12 +87,6 @@ public class ApiExceptionHandler {
         return respond(HttpStatus.BAD_REQUEST, "Request body failed validation", fields, ex, request);
     }
 
-    /**
-     * Malformed JSON, or a value Jackson could not convert — which includes an
-     * unrecognised news category, since {@code NewsType.fromLabel} throws. The
-     * root cause's message is surfaced so the response names the five valid
-     * labels instead of just saying the body was unreadable.
-     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> unreadable(
             HttpMessageNotReadableException ex, HttpServletRequest request) {
@@ -133,11 +97,6 @@ public class ApiExceptionHandler {
         return respond(HttpStatus.BAD_REQUEST, detail, ex, request);
     }
 
-    /**
-     * A path or query value that does not convert or fails a constraint — a job
-     * id of {@code abc}, a {@code limit} of {@code 0}. Without this they fall
-     * through to the 500 below.
-     */
     @ExceptionHandler({MethodArgumentTypeMismatchException.class, HandlerMethodValidationException.class})
     public ResponseEntity<ApiError> invalidParameter(Exception ex, HttpServletRequest request) {
         return respond(HttpStatus.BAD_REQUEST, "Invalid request parameter", ex, request);
@@ -149,13 +108,6 @@ public class ApiExceptionHandler {
         return respond(HttpStatus.BAD_REQUEST, ex.getMessage(), ex, request);
     }
 
-    /**
-     * Everything without a handler above. Spring MVC's own exceptions — an
-     * unknown path ({@code NoResourceFoundException}), a wrong method, an
-     * unsupported content type, a missing parameter — implement
-     * {@link ErrorResponse} and already know their status, so they keep it
-     * rather than becoming a 500 logged as a server failure.
-     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> unexpected(Exception ex, HttpServletRequest request) {
         if (ex instanceof ErrorResponse exception) {
@@ -167,11 +119,6 @@ public class ApiExceptionHandler {
         return respond(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong", ex, request);
     }
 
-    /**
-     * Spring's detail ("Method 'PATCH' is not supported.") is written for the
-     * caller and names nothing internal; fall back to the reason phrase if it
-     * is absent.
-     */
     private static String clientMessage(ErrorResponse spring, HttpStatus status) {
         String detail = spring.getBody().getDetail();
         return detail == null || detail.isBlank() ? status.getReasonPhrase() : detail;
@@ -191,10 +138,6 @@ public class ApiExceptionHandler {
         return respond(status, message, fieldErrors, HttpHeaders.EMPTY, ex, request);
     }
 
-    /**
-     * {@code headers} carries what the status obliges — the {@code Allow} list
-     * on a 405, {@code Accept} on a 415.
-     */
     private static ResponseEntity<ApiError> respond(
             HttpStatus status,
             String message,
@@ -227,7 +170,6 @@ public class ApiExceptionHandler {
         return current;
     }
 
-    /** The first throwable of {@code type} in the cause chain, or null. */
     private static <T extends Throwable> T find(Throwable throwable, Class<T> type) {
         Throwable current = throwable;
         while (current != null) {

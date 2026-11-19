@@ -7,11 +7,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 
-/**
- * What the CMS sends to {@code POST /api/services} and
- * {@code PUT /api/services/{slug}}. {@code relatedMarketSlugs} must each name an
- * existing market; the service refuses one that does not.
- */
 public record ServiceRequest(
         @NotBlank
         @Size(max = 160)

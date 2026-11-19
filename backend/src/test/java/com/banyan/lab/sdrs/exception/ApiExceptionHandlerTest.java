@@ -32,10 +32,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-/**
- * Each handler called directly: the status, the message the caller sees, and
- * the path. The controller tests cover the wiring; this covers the branches.
- */
 class ApiExceptionHandlerTest {
 
     private static final String PATH = "/api/articles/kai-tak";
@@ -46,7 +42,6 @@ class ApiExceptionHandlerTest {
         return new MockHttpServletRequest("PUT", PATH);
     }
 
-    /** Somewhere for a {@link MethodParameter} to point. */
     @SuppressWarnings("unused")
     private void endpoint(String body) {}
 
@@ -55,11 +50,6 @@ class ApiExceptionHandlerTest {
         return new MethodParameter(method, 0);
     }
 
-    /**
-     * Asserts the common shape and returns the body, checked non-null, so a test
-     * reads further fields from it rather than calling the nullable
-     * {@code getBody()} again.
-     */
     private static ApiError assertError(ResponseEntity<ApiError> response, HttpStatus status, String message) {
         assertThat(response.getStatusCode()).isEqualTo(status);
         ApiError body = response.getBody();
@@ -246,7 +236,6 @@ class ApiExceptionHandlerTest {
         assertThat(body.message()).doesNotContain("db-primary");
     }
 
-    /** What Spring's JPA dialect hands back when Postgres refuses the commit. */
     private static DataIntegrityViolationException integrity(ConstraintKind kind, String constraint) {
         SQLException sql = new SQLException("ERROR: violates constraint \"" + constraint + "\" Detail: Key (slug)=(buildings)");
         return new DataIntegrityViolationException(
@@ -321,7 +310,6 @@ class ApiExceptionHandlerTest {
         assertError(handler.unreadable(ex, request()), HttpStatus.BAD_REQUEST, "Malformed request body");
     }
 
-    /** {@code getCause()} returns itself, which {@code rootCause} must stop at. */
     private static final class SelfCaused extends RuntimeException {
         @Override
         public synchronized Throwable getCause() {

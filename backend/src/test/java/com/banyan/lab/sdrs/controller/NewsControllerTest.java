@@ -35,25 +35,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-/**
- * The HTTP contract.
- *
- * <p>This is the test that matters most, because it is the only place the
- * backend and {@code packages/shared/types/content.ts} are checked against each
- * other. If {@code category} starts serialising as {@code "PRESS_RELEASE"} or
- * {@code publishedAt} as a timestamp, nothing else fails — the site just renders
- * wrongly.
- *
- * <p>{@link SecurityConfig} is imported explicitly: {@code @WebMvcTest} scans
- * controllers and {@code @ControllerAdvice}, not {@code @Configuration}, so
- * without this the filter chain under test would be Boot's default rather than
- * ours.
- *
- * <p>Note the import: Spring Boot 4's module split moved {@code @WebMvcTest}
- * from {@code org.springframework.boot.test.autoconfigure.web.servlet} to
- * {@code org.springframework.boot.webmvc.test.autoconfigure}. Every 3.x example
- * online still shows the old one.
- */
 @WebMvcTest(NewsController.class)
 @Import(SecurityConfig.class)
 @TestPropertySource(properties = {
@@ -100,21 +81,13 @@ class NewsControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].slug").value(NewsTestData.SLUG))
-                // The label, not the enum constant.
                 .andExpect(jsonPath("$[0].category").value("Press release"))
-                // A bare date, not an ISO timestamp and not an epoch number.
                 .andExpect(jsonPath("$[0].publishedAt").value("2026-08-28"))
                 .andExpect(jsonPath("$[0].readingMinutes").value(4))
-                // The byline was removed from the contract; the key must not come back.
                 .andExpect(jsonPath("$[0].author").doesNotExist())
-                // A list is cards; the body is only served for one article.
                 .andExpect(jsonPath("$[0].body").doesNotExist())
                 .andExpect(jsonPath("$[0].excerpt").exists())
                 .andExpect(jsonPath("$[0].tags[0]").value("buildings"))
-                // The audit pair is the mirror image of publishedAt: a full
-                // instant with an offset, not a bare date and not an epoch
-                // number. The CMS converts these to the operator's zone, so a
-                // drift to either would still render — just hours out.
                 .andExpect(jsonPath("$[0].createdAt").value("2026-08-26T09:15:30Z"))
                 .andExpect(jsonPath("$[0].updatedAt").value("2026-08-28T14:42:05Z"));
     }
@@ -127,7 +100,6 @@ class NewsControllerTest {
         mvc.perform(get("/api/articles"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].imageUrl").doesNotExist())
-                // The embedded shape is gone; the old key must not come back.
                 .andExpect(jsonPath("$[0].image").doesNotExist());
     }
 

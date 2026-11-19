@@ -31,7 +31,6 @@ public class Enquiry {
     @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
-    /** The reference quoted back to the visitor, e.g. {@code ENQ-M1X2Y3}. */
     @NotBlank
     @Size(max = 40)
     @Column(name = "reference", length = 40, nullable = false, updatable = false)
@@ -57,7 +56,6 @@ public class Enquiry {
     @Column(name = "topic", length = 120, nullable = false)
     private String topic;
 
-    /** Capped at 2000 to match {@code EnquiryRequest}; the column itself is unbounded. */
     @NotBlank
     @Size(max = 2000)
     @Column(name = "message", nullable = false, columnDefinition = "text")

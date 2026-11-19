@@ -31,17 +31,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/enquiries").permitAll()
-                        // Every other write: the admin account, and nothing else.
                         .requestMatchers("/api/**").hasRole("ADMIN")
                         .anyRequest().denyAll())
                 .httpBasic(Customizer.withDefaults())
                 .build();
     }
 
-    /**
-     * The admin account, hashed at startup so the plaintext from the
-     * environment is never held in the user store.
-     */
     @Bean
     public UserDetailsService userDetailsService(AdminProperties admin, PasswordEncoder encoder) {
         return new InMemoryUserDetailsManager(

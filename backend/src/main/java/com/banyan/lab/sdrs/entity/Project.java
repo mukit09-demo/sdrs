@@ -59,7 +59,6 @@ public class Project {
     @Embedded
     private ProjectLocation location;
 
-    /** Completion or delivery year. */
     @NotNull
     @Column(name = "year", nullable = false)
     private Integer year;
@@ -83,14 +82,14 @@ public class Project {
     @Column(name = "image_url", length = 600)
     private String imageUrl;
 
-    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @BatchSize(size = 50)
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "project_stat",
             joinColumns = @JoinColumn(name = "project_id", nullable = false))
     @OrderColumn(name = "position", nullable = false)
     private List<Stat> stats = new ArrayList<>();
 
-    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @BatchSize(size = 50)
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "project_highlight",
             joinColumns = @JoinColumn(name = "project_id", nullable = false))
@@ -98,7 +97,7 @@ public class Project {
     @Column(name = "highlight", length = 600, nullable = false)
     private List<String> highlights = new ArrayList<>();
 
-    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @BatchSize(size = 50)
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "project_market",
             joinColumns = @JoinColumn(name = "project_id", nullable = false),
@@ -106,7 +105,7 @@ public class Project {
     @OrderColumn(name = "position", nullable = false)
     private List<Market> markets = new ArrayList<>();
 
-    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @BatchSize(size = 50)
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "project_service",
             joinColumns = @JoinColumn(name = "project_id", nullable = false),

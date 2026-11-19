@@ -11,15 +11,6 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * What the CMS sends to {@code POST /api/articles} and
- * {@code PUT /api/articles/{slug}} — the same shape it reads, because the admin
- * form submits the whole entity either way.
- *
- * <p>Validation lives here rather than only on the entity so a bad payload is
- * a 400 describing the field, not a constraint violation from the flush at the
- * end of the transaction.
- */
 public record ArticleRequest(
         @NotBlank
         @Size(max = 160)

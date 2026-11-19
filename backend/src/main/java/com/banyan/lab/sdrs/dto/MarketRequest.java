@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 
-/** What the CMS sends to {@code POST /api/markets} and {@code PUT /api/markets/{slug}}. */
 public record MarketRequest(
         @NotBlank
         @Size(max = 160)

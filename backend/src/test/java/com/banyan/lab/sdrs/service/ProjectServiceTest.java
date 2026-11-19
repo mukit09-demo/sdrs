@@ -47,7 +47,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
-/** The rules {@code listProjects} in the mock sets, and the slug references on write. */
 @ExtendWith(MockitoExtension.class)
 class ProjectServiceTest {
 
@@ -71,7 +70,6 @@ class ProjectServiceTest {
                 repository, markets, services, Mappers.getMapper(ProjectMapper.class));
     }
 
-    /** See {@code NewsServiceTest.anySpec}: one typed matcher instead of a raw one. */
     private static Specification<Project> anySpec() {
         return ArgumentMatchers.any();
     }
@@ -278,10 +276,6 @@ class ProjectServiceTest {
         }
     }
 
-    /**
-     * The specification itself, run against mocked criteria objects — the only
-     * way to see which predicates it builds without a database.
-     */
     @Nested
     @DisplayName("filter specification")
     class FilterSpecification {
@@ -490,7 +484,6 @@ class ProjectServiceTest {
             assertThat(existing.getSlug()).isEqualTo(CollectionTestData.PROJECT_SLUG);
             assertThat(existing.getMarkets()).extracting(Market::getSlug).containsExactly("rail");
             assertThat(existing.getServices()).isEmpty();
-            // Mutated, not reassigned — Hibernate tracks the original instance.
             assertThat(existing.getMarkets()).isSameAs(marketCollection);
             assertThat(updated.marketSlugs()).containsExactly("rail");
             verify(repository, never()).save(any());
@@ -509,7 +502,6 @@ class ProjectServiceTest {
             when(repository.findBySlug(CollectionTestData.PROJECT_SLUG)).thenReturn(Optional.of(existing));
             when(markets.findBySlugIn(any())).thenReturn(List.of(a, b));
             when(services.findBySlugIn(any())).thenReturn(List.of(x, y));
-            // Both lists must already be empty when the one flush runs.
             List<Integer> sizesAtFlush = new ArrayList<>();
             doAnswer(invocation -> {
                 sizesAtFlush.add(existing.getMarkets().size());
@@ -546,7 +538,6 @@ class ProjectServiceTest {
 
             service.update(CollectionTestData.PROJECT_SLUG, request(List.of("b", "a"), List.of("x")));
 
-            // Markets cleared for the flush; services untouched throughout.
             assertThat(sizesAtFlush).containsExactly(0, 1);
             assertThat(existing.getMarkets()).containsExactly(b, a);
             assertThat(existing.getServices()).containsExactly(x);

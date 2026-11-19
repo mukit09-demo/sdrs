@@ -12,10 +12,6 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 
-/**
- * Entity ↔ DTO for projects. Markets and services go rows → slugs here and
- * slugs → rows in the service, as in {@link ServiceMapper}.
- */
 @Mapper(componentModel = "spring", unmappedSourcePolicy = ReportingPolicy.IGNORE)
 public interface ProjectMapper {
 
@@ -40,7 +36,6 @@ public interface ProjectMapper {
     @Mapping(target = "updatedAt", ignore = true)
     void update(ProjectRequest request, @MappingTarget Project entity);
 
-    /** Nulls dropped for the reason on {@link ServiceMapper#marketSlugs}. */
     default List<String> marketSlugs(List<Market> markets) {
         return markets.stream().filter(Objects::nonNull).map(Market::getSlug).toList();
     }

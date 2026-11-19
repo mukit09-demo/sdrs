@@ -76,7 +76,7 @@ public class NewsArticle {
     @Column(name = "image_url", length = 600)
     private String imageUrl;
 
-    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @BatchSize(size = 50)
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "news_article_body",
@@ -85,8 +85,7 @@ public class NewsArticle {
     @Column(name = "paragraph", nullable = false, columnDefinition = "text")
     private List<String> body = new ArrayList<>();
 
-    /** Market and theme slugs, used to build related-reading lists. */
-    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @BatchSize(size = 50)
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "news_article_tag",
@@ -103,11 +102,6 @@ public class NewsArticle {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    /**
-     * Replaces the editable fields in place, leaving the slug and the audit
-     * timestamps alone. Used by the update path so Hibernate dirty-checks one
-     * managed instance rather than being handed a detached copy to merge.
-     */
     public void replaceWith(NewsArticle incoming) {
         this.title = incoming.title;
         this.excerpt = incoming.excerpt;
@@ -116,8 +110,6 @@ public class NewsArticle {
         this.readingMinutes = incoming.readingMinutes;
         this.imageUrl = incoming.imageUrl;
 
-        // Mutated rather than reassigned: Hibernate tracks these collection
-        // instances, and swapping them for new ones orphans the originals.
         this.body.clear();
         this.body.addAll(incoming.body);
         this.tags.clear();

@@ -8,31 +8,11 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * One article, shared by the three test classes — the real Kai Tak release from
- * {@code packages/shared/data/news.ts}, so the assertions are checked against
- * content the site actually renders rather than against "foo".
- *
- * <p>Public because the tests now live in one package per layer
- * ({@code controller}, {@code service}, {@code mapper}) and this fixture is
- * shared across all three.
- */
 public final class NewsTestData {
 
     public static final String SLUG = "kai-tak-sports-park-opens";
     public static final LocalDate PUBLISHED = LocalDate.of(2026, 8, 28);
 
-    /**
-     * Hibernate assigns these in production; a unit test has no session, so the
-     * fixture sets them. They are set at all because the audit pair is the only
-     * part of the payload the CMS renders in the operator's own zone, and that
-     * conversion is correct only while they stay ISO-8601 with an offset — which
-     * is what {@code NewsControllerTest} asserts. Left null they would serialise
-     * as nothing and the assertion would pass vacuously.
-     *
-     * <p>Deliberately a non-midnight, non-UTC-looking instant: a value like
-     * {@code T00:00:00Z} survives being mangled into a bare date.
-     */
     public static final Instant CREATED = Instant.parse("2026-08-26T09:15:30Z");
     public static final Instant UPDATED = Instant.parse("2026-08-28T14:42:05Z");
 
@@ -45,8 +25,6 @@ public final class NewsTestData {
         article.setNewsType(NewsType.PRESS_RELEASE);
         article.setPublishedAt(PUBLISHED);
         article.setReadingMinutes(4);
-        // No image url — the gradient-placeholder case, which is the default
-        // for every piece of bundled content.
         article.setImageUrl(null);
         article.setBody(new ArrayList<>(List.of(
                 "Kai Tak Sports Park has opened on the site of Hong Kong's former airport.",

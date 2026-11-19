@@ -13,14 +13,12 @@ import java.util.function.Function;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** Slugs → rows: caller's order, repeats dropped, a miss refused. */
 class ReferencesTest {
 
     private static final Market BUILDINGS = CollectionTestData.market("buildings", "Buildings");
     private static final Market RAIL = CollectionTestData.market("rail", "Rail");
     private static final Market WATER = CollectionTestData.market("water", "Water");
 
-    /** A finder over a fixed table that records what it was asked for. */
     private static final class Table implements Function<Collection<String>, List<Market>> {
 
         private final List<Market> rows;

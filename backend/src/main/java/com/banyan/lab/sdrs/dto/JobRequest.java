@@ -9,13 +9,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
-/**
- * {@code JobOpeningDraft} in {@code packages/shared/types/content.ts}.
- *
- * <p>{@code id} is accepted because the CMS sends the draft whole, but it is
- * the backend's to assign: a POST carrying one and a PUT whose id disagrees with
- * the path are both refused by the service.
- */
 public record JobRequest(
         Long id,
 

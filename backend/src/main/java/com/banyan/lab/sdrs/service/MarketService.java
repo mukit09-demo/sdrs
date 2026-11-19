@@ -17,13 +17,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Reads and writes for markets.
- *
- * <p>A delete also evicts the service and project caches: {@code service_market}
- * and {@code project_market} cascade, so removing a market changes what those
- * return.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -31,7 +24,6 @@ public class MarketService {
 
     private static final String RESOURCE = "market";
 
-    /** Insertion order, which is the order the mock repository's store keeps. */
     private static final Sort ORDER = Sort.by("id");
 
     private final MarketRepository repository;
@@ -60,7 +52,6 @@ public class MarketService {
         return mapper.toResponse(repository.save(mapper.toEntity(request)));
     }
 
-    /** The body's slug must match the path — see {@link NewsService#update}. */
     @Transactional
     @Caching(evict = {
         @CacheEvict(cacheNames = CacheNames.MARKETS, allEntries = true),

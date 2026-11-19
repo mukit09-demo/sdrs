@@ -16,10 +16,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
-/**
- * The generated mapper, with no Spring context — if this needs a container to
- * pass, the mapping has a dependency it should not have.
- */
 class NewsMapperTest {
 
     private final NewsMapper mapper = Mappers.getMapper(NewsMapper.class);
@@ -30,7 +26,6 @@ class NewsMapperTest {
         ArticleResponse response = mapper.toResponse(NewsTestData.article());
 
         assertThat(response.category()).isEqualTo(NewsType.PRESS_RELEASE);
-        // The label, not the constant — this is what reaches CardItem.eyebrow.
         assertThat(response.category().getLabel()).isEqualTo("Press release");
     }
 
@@ -54,8 +49,6 @@ class NewsMapperTest {
 
         ArticleSummaryResponse summary = mapper.toSummary(article);
 
-        // On a managed entity, this call is what would fire the query against
-        // news_article_body. Not calling it is the point of the summary type.
         verify(article, never()).getBody();
         assertThat(summary.category()).isEqualTo(NewsType.PRESS_RELEASE);
         assertThat(summary.excerpt()).startsWith("The 50,000-seat stadium");
@@ -75,8 +68,6 @@ class NewsMapperTest {
     void testIfAbsentImageUrlStaysNull() {
         ArticleResponse response = mapper.toResponse(NewsTestData.article());
 
-        // An empty string would be truthy enough to break the front end's
-        // gradient placeholder, which branches on the url being absent.
         assertThat(response.imageUrl()).isNull();
     }
 
@@ -88,10 +79,6 @@ class NewsMapperTest {
 
         assertThat(response)
                 .usingRecursiveComparison()
-                // Everything a client sends must survive the trip — but the
-                // audit pair is not something a client sends. `toEntity`
-                // ignores it by design, so it is null here and set on the
-                // fixture; `ignoresAuditFields` below is what pins that.
                 .ignoringFields("createdAt", "updatedAt")
                 .isEqualTo(mapper.toResponse(NewsTestData.article()));
     }
@@ -107,7 +94,6 @@ class NewsMapperTest {
 
         NewsArticle entity = mapper.toEntity(request);
 
-        // First-use order survives: the first tag is the one related reading uses.
         assertThat(entity.getTags())
                 .containsExactly("buildings", "water-and-environment", "energy");
     }
@@ -126,7 +112,6 @@ class NewsMapperTest {
     void testIfToEntityIgnoresAuditFields() {
         NewsArticle entity = mapper.toEntity(NewsTestData.request());
 
-        // Hibernate sets these; a client must not be able to.
         assertThat(entity.getCreatedAt()).isNull();
         assertThat(entity.getUpdatedAt()).isNull();
     }

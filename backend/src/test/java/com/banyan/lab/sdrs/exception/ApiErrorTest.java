@@ -8,7 +8,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
-/** The single error shape, and the empty-field omission the CMS relies on. */
 class ApiErrorTest {
 
     private final JsonMapper json = JsonMapper.builder().build();

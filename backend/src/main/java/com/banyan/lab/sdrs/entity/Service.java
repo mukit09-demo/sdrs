@@ -73,8 +73,7 @@ public class Service {
     @Column(name = "image_url", length = 600)
     private String imageUrl;
 
-    /** The specialisms inside the service. */
-    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @BatchSize(size = 50)
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "service_capability",
             joinColumns = @JoinColumn(name = "service_id", nullable = false))
@@ -82,7 +81,7 @@ public class Service {
     @Column(name = "capability", length = 300, nullable = false)
     private List<String> capabilities = new ArrayList<>();
 
-    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @BatchSize(size = 50)
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "service_market",
             joinColumns = @JoinColumn(name = "service_id", nullable = false),

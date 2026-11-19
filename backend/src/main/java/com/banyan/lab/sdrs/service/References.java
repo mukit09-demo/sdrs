@@ -7,14 +7,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * Slugs on the wire → rows in the database, for the many-to-many references
- * ({@code relatedMarketSlugs}, {@code marketSlugs}, {@code serviceSlugs}).
- *
- * <p>Keeps the caller's order and drops repeats. A slug that names no row is a
- * 400 rather than being stored or silently skipped: the editor picked it from a
- * list, so a miss means it was deleted under them.
- */
 final class References {
 
     static <T> List<T> resolve(
@@ -40,7 +32,6 @@ final class References {
         return wanted.stream().map(found::get).toList();
     }
 
-    /** The body's slug must match the path — see {@code NewsService.update}. */
     static void requireSameSlug(String path, String body) {
         if (!path.equals(body)) {
             throw new IllegalArgumentException(

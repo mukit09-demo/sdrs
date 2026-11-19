@@ -12,7 +12,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
-/** Two shapes out — the full inbox row and the narrow receipt — and one in. */
 class EnquiryMapperTest {
 
     private static final Instant RECEIVED = Instant.parse("2026-10-10T14:32:05Z");
@@ -48,7 +47,6 @@ class EnquiryMapperTest {
         EnquiryReceiptResponse receipt = mapper.toReceipt(enquiry());
 
         assertThat(receipt).isEqualTo(new EnquiryReceiptResponse("ENQ-M2X3Y4", RECEIVED));
-        // A record component list is the shape on the wire: nothing personal in it.
         assertThat(EnquiryReceiptResponse.class.getRecordComponents())
                 .extracting(component -> component.getName())
                 .containsExactly("reference", "receivedAt");

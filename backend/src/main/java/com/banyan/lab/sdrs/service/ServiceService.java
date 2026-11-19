@@ -18,13 +18,6 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Reads and writes for services — the collection, hence the name.
- *
- * <p>The stereotype is spelled out because the entity is called {@link Service}.
- * A delete evicts the project caches too, since {@code project_service}
- * cascades.
- */
 @org.springframework.stereotype.Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -32,7 +25,6 @@ public class ServiceService {
 
     private static final String RESOURCE = "service";
 
-    /** Insertion order, which is the order the mock repository's store keeps. */
     private static final Sort ORDER = Sort.by("id");
 
     private final ServiceRepository repository;
@@ -64,7 +56,6 @@ public class ServiceService {
         return mapper.toResponse(repository.save(service));
     }
 
-    /** The body's slug must match the path — see {@link NewsService#update}. */
     @Transactional
     @Caching(evict = {
         @CacheEvict(cacheNames = CacheNames.SERVICES, allEntries = true),
@@ -77,13 +68,6 @@ public class ServiceService {
         List<Market> related = relatedMarkets(request);
         mapper.update(request, existing);
 
-        // Delete the old links and flush before adding the new ones. Without the
-        // flush Hibernate rewrites service_market slot by slot, so a reorder or a
-        // removal from the front briefly puts one market in two slots, and
-        // uk_service_market rejects that UPDATE. Skipped when nothing changed, so
-        // an edit to the other fields does not rewrite every link. equals() is by
-        // identity, which holds here: one persistence context hands back the same
-        // Market instance for the same row.
         if (!existing.getRelatedMarkets().equals(related)) {
             existing.getRelatedMarkets().clear();
             repository.flush();

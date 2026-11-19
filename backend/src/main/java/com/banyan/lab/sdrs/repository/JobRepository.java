@@ -10,13 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-/**
- * Jobs, addressed by the surrogate id — the one collection with no slug.
- *
- * <p>{@code findOpenings} is the SQL copy of {@code Job.isPubliclyVisibleOn};
- * change one, change both (and {@code isOpening} in
- * {@code packages/shared/content/jobs.ts}).
- */
 @Repository
 public interface JobRepository extends JpaRepository<Job, Long> {
 

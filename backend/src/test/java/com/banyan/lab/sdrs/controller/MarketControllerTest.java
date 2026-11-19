@@ -34,7 +34,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-/** The {@code Market} contract — see {@link NewsControllerTest} for why this test matters. */
 @WebMvcTest(MarketController.class)
 @Import(SecurityConfig.class)
 @TestPropertySource(properties = {
@@ -82,9 +81,7 @@ class MarketControllerTest {
                 .andExpect(jsonPath("$[0].stats[0].value").value("45"))
                 .andExpect(jsonPath("$[0].stats[0].unit").value("%"))
                 .andExpect(jsonPath("$[0].stats[0].label").exists())
-                // Stat.unit is optional: absent, not null.
                 .andExpect(jsonPath("$[0].stats[1].unit").doesNotExist())
-                // A market has no image and no surrogate id on the wire.
                 .andExpect(jsonPath("$[0].image").doesNotExist())
                 .andExpect(jsonPath("$[0].id").doesNotExist());
     }

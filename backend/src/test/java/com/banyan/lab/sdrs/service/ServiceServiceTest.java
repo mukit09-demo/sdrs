@@ -33,7 +33,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 
-/** CRUD by slug, plus the related-market slugs resolved to rows on write. */
 @ExtendWith(MockitoExtension.class)
 class ServiceServiceTest {
 
@@ -168,8 +167,6 @@ class ServiceServiceTest {
         existing.setRelatedMarkets(new ArrayList<>(List.of(a, b)));
         when(repository.findBySlug(CollectionTestData.SERVICE_SLUG)).thenReturn(Optional.of(existing));
         when(markets.findBySlugIn(any())).thenReturn(List.of(a, b));
-        // The point of the flush: the old links are deleted before any new one
-        // is written, so a reorder never puts one market in two slots.
         List<List<Market>> atFlush = new ArrayList<>();
         doAnswer(invocation -> {
             atFlush.add(new ArrayList<>(existing.getRelatedMarkets()));

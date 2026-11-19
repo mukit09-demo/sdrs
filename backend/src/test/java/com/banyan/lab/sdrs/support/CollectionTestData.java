@@ -14,10 +14,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * One market, service, project and job, taken from {@code packages/shared/data}
- * as {@link NewsTestData} is, so the assertions run against real content.
- */
 public final class CollectionTestData {
 
     private CollectionTestData() {}

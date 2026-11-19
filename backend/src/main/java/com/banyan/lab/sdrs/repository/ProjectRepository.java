@@ -8,11 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
-/**
- * Projects, addressed by slug. {@link JpaSpecificationExecutor} for the market
- * and service filters; {@code findBySlugIn} for the explicit {@code ?slugs=}
- * list.
- */
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long>,
         JpaSpecificationExecutor<Project> {

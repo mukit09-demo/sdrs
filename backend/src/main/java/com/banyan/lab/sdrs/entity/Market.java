@@ -64,7 +64,7 @@ public class Market {
     @Column(name = "film_url", length = 600, nullable = false)
     private String filmUrl;
 
-    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @BatchSize(size = 50)
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "market_capability",
             joinColumns = @JoinColumn(name = "market_id", nullable = false))
@@ -72,7 +72,7 @@ public class Market {
     @Column(name = "capability", length = 300, nullable = false)
     private List<String> capabilities = new ArrayList<>();
 
-    @BatchSize(size = 50) // batches the lazy load; without it this is N+1
+    @BatchSize(size = 50)
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "market_stat",
             joinColumns = @JoinColumn(name = "market_id", nullable = false))

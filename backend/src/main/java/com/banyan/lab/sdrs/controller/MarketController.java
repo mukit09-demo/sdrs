@@ -17,10 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * {@code /api/markets} — the endpoints {@code http.repository.ts} calls for markets.
- * Access rules are in {@code config/SecurityConfig.java}, not here.
- */
 @RestController
 @RequestMapping("/api/markets")
 @RequiredArgsConstructor
@@ -44,7 +40,6 @@ public class MarketController {
         return ResponseEntity.created(URI.create("/api/markets/" + created.slug())).body(created);
     }
 
-    /** 204, as on {@code NewsController.update}. */
     @PutMapping("/{slug}")
     public ResponseEntity<Void> update(
             @PathVariable String slug, @Valid @RequestBody MarketRequest request) {

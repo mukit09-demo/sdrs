@@ -7,10 +7,6 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-/**
- * Markets, addressed by slug as {@link NewsRepository} explains.
- * {@code findBySlugIn} is for resolving the slugs a service or project names.
- */
 @Repository
 public interface MarketRepository extends JpaRepository<Market, Long> {
 

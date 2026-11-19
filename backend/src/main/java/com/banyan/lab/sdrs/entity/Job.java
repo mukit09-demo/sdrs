@@ -41,7 +41,6 @@ public class Job {
     @Column(name = "discipline", length = 160, nullable = false)
     private String discipline;
 
-    /** City and country, e.g. "Manchester, United Kingdom". */
     @NotBlank
     @Size(max = 160)
     @Column(name = "location", length = 160, nullable = false)

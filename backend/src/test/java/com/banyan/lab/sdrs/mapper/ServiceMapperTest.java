@@ -13,7 +13,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
-/** Related markets go rows → slugs here; the reverse is the service's. */
 class ServiceMapperTest {
 
     private final ServiceMapper mapper = Mappers.getMapper(ServiceMapper.class);

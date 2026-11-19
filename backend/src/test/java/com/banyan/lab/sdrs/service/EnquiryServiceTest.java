@@ -29,11 +29,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 
-/** The inbox order, and the reference minted for each submission. */
 @ExtendWith(MockitoExtension.class)
 class EnquiryServiceTest {
 
-    /** {@code ENQ-} then six characters, none of them {@code I}, {@code O}, {@code 0} or {@code 1}. */
     private static final String REFERENCE = "ENQ-[A-HJ-NP-Z2-9]{6}";
 
     private static final Instant RECEIVED = Instant.parse("2026-10-10T14:32:05Z");
@@ -64,7 +62,6 @@ class EnquiryServiceTest {
         return enquiry;
     }
 
-    /** What Hibernate would do on save: stamp the instant. */
     private void saveStampsReceivedAt() {
         when(repository.save(any())).thenAnswer(invocation -> {
             Enquiry saved = invocation.getArgument(0);
@@ -164,7 +161,6 @@ class EnquiryServiceTest {
             minted.add(service.submit(request()).reference());
         }
 
-        // 20 draws from 32^6 colliding is ~2e-7; anything less than 20 is a bug.
         assertThat(minted).hasSize(20).allMatch(reference -> reference.matches(REFERENCE));
     }
 }

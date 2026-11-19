@@ -9,14 +9,6 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 
-/**
- * Entity ↔ DTO for markets, on the same terms as {@link NewsMapper}.
- *
- * <p>{@code update} writes onto the managed instance rather than building a new
- * one: MapStruct clears and refills the existing collections, which is what
- * Hibernate needs to track them. The slug is left alone — the service has
- * already checked it matches.
- */
 @Mapper(componentModel = "spring", unmappedSourcePolicy = ReportingPolicy.IGNORE)
 public interface MarketMapper {
 

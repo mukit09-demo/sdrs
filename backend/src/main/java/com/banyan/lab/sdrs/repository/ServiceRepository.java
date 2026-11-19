@@ -7,10 +7,6 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-/**
- * Services, addressed by slug. {@code findBySlugIn} is for resolving the slugs a
- * project names.
- */
 @Repository
 public interface ServiceRepository extends JpaRepository<Service, Long> {
 

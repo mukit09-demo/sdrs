@@ -9,10 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-/**
- * The Java copy of {@code JobRepository.findOpenings} and {@code isOpening} in
- * {@code jobs.ts}: open, and the deadline today or later, or none at all.
- */
 class JobTest {
 
     private static final LocalDate TODAY = LocalDate.of(2026, 11, 1);

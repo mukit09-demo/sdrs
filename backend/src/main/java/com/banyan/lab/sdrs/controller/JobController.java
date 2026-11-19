@@ -16,15 +16,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Jobs, at two read paths.
- *
- * <p>{@code GET /api/jobs} is the candidate-facing list — openings only — and
- * public. Every-status reads are under {@code /api/admin/jobs}, because
- * {@code SecurityConfig} makes every other {@code GET /api/**} public and a
- * draft vacancy should not be readable by anyone. As with the enquiry inbox,
- * the prefix is the authorisation; {@code JobControllerTest} holds it there.
- */
 @RestController
 @RequiredArgsConstructor
 public class JobController {
@@ -46,7 +37,6 @@ public class JobController {
         return service.get(id);
     }
 
-    /** 201 with the saved job: the CMS needs the id the database assigned. */
     @PostMapping("/api/jobs")
     public ResponseEntity<JobResponse> create(@Valid @RequestBody JobRequest request) {
         JobResponse created = service.create(request);

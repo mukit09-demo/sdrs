@@ -26,7 +26,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-/** The {@code Project} contract, and the query parameters {@code listProjects} sends. */
 @WebMvcTest(ProjectController.class)
 @Import(SecurityConfig.class)
 @TestPropertySource(properties = {
@@ -56,7 +55,6 @@ class ProjectControllerTest {
                 .andExpect(jsonPath("$[0].title").value("Crossrail / Elizabeth line"))
                 .andExpect(jsonPath("$[0].location.city").value("London"))
                 .andExpect(jsonPath("$[0].location.country").value("United Kingdom"))
-                // A number, not a string.
                 .andExpect(jsonPath("$[0].year").value(2022))
                 .andExpect(jsonPath("$[0].client").value("Crossrail Limited"))
                 .andExpect(jsonPath("$[0].marketSlugs[0]").value("buildings"))

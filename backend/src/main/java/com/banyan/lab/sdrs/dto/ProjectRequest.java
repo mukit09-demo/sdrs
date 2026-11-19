@@ -8,11 +8,6 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 
-/**
- * What the CMS sends to {@code POST /api/projects} and
- * {@code PUT /api/projects/{slug}}. {@code marketSlugs} and {@code serviceSlugs}
- * must each name an existing row; the service refuses one that does not.
- */
 public record ProjectRequest(
         @NotBlank
         @Size(max = 160)

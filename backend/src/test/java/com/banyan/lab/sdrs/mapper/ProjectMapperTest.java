@@ -17,7 +17,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
-/** Rows → slugs on the way out; references left to the service on the way in. */
 class ProjectMapperTest {
 
     private final ProjectMapper mapper = Mappers.getMapper(ProjectMapper.class);
@@ -89,7 +88,6 @@ class ProjectMapperTest {
         assertThat(project.getId()).isNull();
         assertThat(project.getCreatedAt()).isNull();
         assertThat(project.getUpdatedAt()).isNull();
-        // Slugs → rows is the service's job; the mapper never builds a stub row.
         assertThat(project.getMarkets()).isEmpty();
         assertThat(project.getServices()).isEmpty();
         assertThat(project.getSlug()).isEqualTo("tideway");
